@@ -98,9 +98,9 @@ void encrypt(unsigned int* data, unsigned int* _key, int rounds)
     {            
         memcpy_s(round_key, round_keys + (index * DATA_SIZE), DATA_SIZE);    
     
-        //data_xor = xor_with_key(data, round_key); // pre-whitening
+        data_xor = xor_with_key(data, round_key); // pre-whitening
         data_xor = prp(data, data_xor); // high diffusion prp
-        //xor_with_key(data, round_key); // post-whitening
+        xor_with_key(data, round_key); // post-whitening
     }
 }
 
@@ -144,16 +144,16 @@ void decrypt(unsigned int* data, unsigned int* _key, int rounds)
     {            
         memcpy_s(round_key, round_keys + (index * DATA_SIZE), DATA_SIZE);
         
-        //data_xor = xor_with_key(data, round_key);         
+        data_xor = xor_with_key(data, round_key);         
         data_xor = invert_prp(data, data_xor);
-        //xor_with_key(data, round_key);
+        xor_with_key(data, round_key);
     }
 }
         
 void test_encrypt_decrypt()
 {    
-    unsigned int data[DATA_SIZE], key[DATA_SIZE], null_string[DATA_SIZE];
-    int rounds = 1, index;
+    unsigned int data[DATA_SIZE], key[DATA_SIZE], null_string[DATA_SIZE], data_xor;
+    int rounds = 4, index;
     
     memset(null_string, 0, DATA_SIZE * WORD_SIZE);
     memcpy_s(data, null_string, DATA_SIZE);       
@@ -161,9 +161,6 @@ void test_encrypt_decrypt()
     memcpy_s(key, null_string, DATA_SIZE); 
     
     encrypt(data, key, rounds);
-        
-    print_data(data);
-    printf("%s\n", data);
     
     decrypt(data, key, rounds);
     print_data(data);
