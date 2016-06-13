@@ -13,6 +13,16 @@ void memcpy_s(unsigned char* s1, unsigned char* s2, size_t n)
 }
 #endif
 
+void print_data(unsigned char* data)
+{
+    int index;
+    printf("\n");
+    for (index = 0; index < 16; index++)
+    {
+        printf("%i: %i\n", index, data[index]);
+    }
+} 
+
 unsigned char rotate_left(unsigned char word8, int amount)
 {    
     return ((word8 << amount) | (word8 >> (8 - amount)));
@@ -74,8 +84,8 @@ void encrypt(unsigned char* data, unsigned char* _key, int rounds)
     for (index = 0; index < rounds; index++) // key schedule
     {          
         key_xor = prp(key, key_xor, 16);        
-        memcpy_s(round_key, key, 16);
-                
+        memcpy_s(round_key, key, 16);        
+        
         prf(round_key, key_xor, 16);
         memcpy_s(round_keys + (index * 16), round_key, 16);                
     }
@@ -135,17 +145,7 @@ void decrypt(unsigned char* data, unsigned char* _key, int rounds)
         xor_with_key(data, round_key);
     }
 }
- 
-void print_data(unsigned char* data)
-{
-    int index;
-    printf("\n");
-    for (index = 0; index < 16; index++)
-    {
-        printf("%i: %i\n", index, data[index]);
-    }
-}  
- 
+  
 void test_encrypt_decrypt()
 {    
     unsigned char data[16], key[16], plaintext[16], null_string[16];
@@ -159,10 +159,11 @@ void test_encrypt_decrypt()
     
     encrypt(data, key, rounds);
     
+    printf("Data:\n %s\n", data);    
     print_data(data);
-        
-    decrypt(data, key, rounds);
-    print_data(data);
+ //       
+ //   decrypt(data, key, rounds);
+ //   print_data(data);
 }
 
 void main()

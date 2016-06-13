@@ -43,8 +43,8 @@ int prp(unsigned int* data, unsigned int key)
     for (index = 0; index < DATA_SIZE; index++)
     {    
         data_byte = data[index];
-        key ^= data_byte;                       
-        data[index] = rotate_left((data_byte + key + index), 5);        
+        key ^= data_byte;                               
+        data[index] = rotate_left((data_byte + key + index), 20);        
         key ^= data[index]; 
     }
     return key;
@@ -55,7 +55,7 @@ int prf(unsigned int* data, unsigned int key)
     unsigned int index, byte;
     for (index = 0; index < DATA_SIZE; index++)
     {    
-        byte = rotate_left((data[index] + key + index), 5);  
+        byte = rotate_left((data[index] + key + index), 20);  
         key ^= byte;
         data[index] = byte;           
     }
@@ -112,7 +112,7 @@ unsigned int invert_prp(unsigned int* data, unsigned int key)
     {                    
         byte = data[index];
         key ^= byte;                
-        data[index] = rotate_right(byte, 5) - key - index;       
+        data[index] = rotate_right(byte, 20) - key - index;       
         key ^= data[index];
     }
     return key;
@@ -153,7 +153,7 @@ void decrypt(unsigned int* data, unsigned int* _key, int rounds)
 void test_encrypt_decrypt()
 {    
     unsigned int data[DATA_SIZE], key[DATA_SIZE], null_string[DATA_SIZE], data_xor;
-    int rounds = 4, index;
+    int rounds = 16, index;
     
     memset(null_string, 0, DATA_SIZE * WORD_SIZE);
     memcpy_s(data, null_string, DATA_SIZE);       
@@ -161,6 +161,7 @@ void test_encrypt_decrypt()
     memcpy_s(key, null_string, DATA_SIZE); 
     
     encrypt(data, key, rounds);
+    printf("Data:\n %s", data);
     
     decrypt(data, key, rounds);
     print_data(data);
