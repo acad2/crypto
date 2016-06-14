@@ -5,7 +5,7 @@
 #ifndef memcpy_s
 void memcpy_s(unsigned int* s1, unsigned int* s2, size_t n)
 {
-    int index;
+    unsigned int index;
     for (index = 0; index < n; index++)
     {
         s1[index] = s2[index];
@@ -17,25 +17,18 @@ void memcpy_s(unsigned int* s1, unsigned int* s2, size_t n)
 #define DATA_SIZE 16
 #define WORD_SIZE 4
 
+#include "includes/tools.h"
+
 void print_data(unsigned int* data)
 {
     int index;
     printf("\n");
     for (index = 0; index < DATA_SIZE; index++)
     {
-        printf("%u: %u\n", index, data[index]);
+        printf("%2u: ", index);
+        printbn_32(data[index]);
     }
 }   
-
-unsigned int rotate_left(unsigned int word32, int amount)
-{    
-    return ((word32 << amount) | (word32 >> (32 - amount)));
-}
-
-unsigned int rotate_right(unsigned int word32, int amount)
-{              
-    return ((word32 >> amount) | (word32 << (32 - amount)));
-}
 
 unsigned int bit_mixing(unsigned int* data, int start, int direction, int size)
 {
@@ -108,6 +101,7 @@ int prf(unsigned int* data, unsigned int key)
         key ^= byte;
         data[index] = byte;           
     }
+    return byte;
 }
     
 unsigned int xor_with_key(unsigned int* data, unsigned int* key)
@@ -139,7 +133,7 @@ void encrypt(unsigned int* data, unsigned int* _key, int rounds)
     unsigned int key[DATA_SIZE];
     unsigned int round_keys[DATA_SIZE * rounds];
     unsigned int round_key[DATA_SIZE], key_xor = 0, data_xor = 0, key_byte;
-    int index, index2;
+    int index;
     for (index = 0; index < DATA_SIZE; index++)
     {
         key_byte = _key[index];
@@ -208,7 +202,7 @@ void decrypt(unsigned int* data, unsigned int* _key, int rounds)
     unsigned int key[DATA_SIZE], round_key[DATA_SIZE];
     unsigned int round_keys[DATA_SIZE * rounds];
     unsigned int key_xor = 0, data_xor = 0, key_byte;
-    int index, index2;
+    int index;
     for (index = 0; index < DATA_SIZE; index++)
     {
         key_byte = _key[index];
@@ -230,8 +224,8 @@ void decrypt(unsigned int* data, unsigned int* _key, int rounds)
         
 void test_encrypt_decrypt()
 {    
-    unsigned int data[DATA_SIZE], key[DATA_SIZE], null_string[DATA_SIZE], data_xor;
-    int rounds = 16, index;
+    unsigned int data[DATA_SIZE], key[DATA_SIZE], null_string[DATA_SIZE];
+    int rounds = 16;
     
     memset(null_string, 0, DATA_SIZE * WORD_SIZE);
     memcpy_s(data, null_string, DATA_SIZE);       
@@ -239,13 +233,14 @@ void test_encrypt_decrypt()
     memcpy_s(key, null_string, DATA_SIZE); 
     
     encrypt(data, key, rounds);
-    printf("Data:\n %s", data);
+    print_data(data);
     
     decrypt(data, key, rounds);
     print_data(data);
 }
 
-void main()
+int main()
 {
-    test_encrypt_decrypt();    
+    test_encrypt_decrypt();
+    return 1;
 }
