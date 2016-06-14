@@ -33,9 +33,59 @@ unsigned char rotate_right(unsigned char word8, int amount)
     return ((word8 >> amount) | (word8 << (8 - amount)));
 }
 
+unsigned char bit_mixing(unsigned char* data, int start, int direction, int size)
+{
+    int index, counter, next_index;
+    unsigned char key;
+    index = start;
+    key = 0;
+    for (counter = 0; counter < size; counter++)
+    {    
+        next_index = (index + 1) % size;
+        data[next_index] ^= rotate_left(data[index], ((index + index + 1) % 8)); 
+        key ^= data[next_index];
+        index += direction;
+    }
+    return key;
+}
+
+void shuffle_bytes(unsigned char* _state)
+{
+    unsigned char temp[16];
+    
+    temp[7]  = _state[0];
+    temp[12] = _state[1];
+    temp[14] = _state[2];
+    temp[9]  = _state[3];
+    temp[2]  = _state[4];
+    temp[1]  = _state[5];
+    temp[5]  = _state[6];
+    temp[15] = _state[7];
+    temp[11] = _state[8];
+    temp[6]  = _state[9];
+    temp[13] = _state[10];
+    temp[0]  = _state[11];
+    temp[4]  = _state[12];
+    temp[8]  = _state[13];
+    temp[10] = _state[14];
+    temp[3]  = _state[15];
+    
+    memcpy_s(_state, temp, 16);   
+}    
+    
+unsigned char decorrelation_layer(unsigned char* data, int data_size)
+{    
+    unsigned char key;
+    key = bit_mixing(data, 0, 1, data_size);
+    shuffle_bytes(data);
+    return key;
+}
+
 int prp(unsigned char* data, unsigned char key, unsigned char data_size)
 {
     unsigned char index, data_byte;
+    key = decorrelation_layer(data, data_size);
+    
     for (index = 0; index < data_size; index++)
     {    
         data_byte = data[index];
@@ -100,6 +150,36 @@ void encrypt(unsigned char* data, unsigned char* _key, int rounds)
     }
 }
 
+void invert_shuffle_bytes(unsigned char* state)
+{
+    unsigned char temp[16];
+    
+    temp[11] = state[0];
+    temp[5]  = state[1];
+    temp[4]  = state[2];
+    temp[15] = state[3];
+    temp[12] = state[4];
+    temp[6]  = state[5];
+    temp[9]  = state[6];
+    temp[0]  = state[7];
+    temp[13] = state[8];
+    temp[3]  = state[9];
+    temp[14] = state[10];
+    temp[8]  = state[11];
+    temp[1]  = state[12];
+    temp[10] = state[13];
+    temp[2]  = state[14];
+    temp[7]  = state[15];
+    
+    memcpy_s(state, temp, 16);    
+}
+        
+unsigned char invert_decorrelation_layer(unsigned char* data, int data_size)
+{
+    invert_shuffle_bytes(data);
+    return bit_mixing(data, data_size - 1, -1, data_size);
+}
+    
 unsigned char invert_prp(unsigned char* data, unsigned char key, int data_size)
 {   
     unsigned char data_byte;
@@ -111,7 +191,7 @@ unsigned char invert_prp(unsigned char* data, unsigned char key, int data_size)
         data[index] = rotate_right(data_byte, 5) - key - index;       
         key ^= data[index];
     }
-    return key;
+    return invert_decorrelation_layer(data, data_size);    
 }
     
 void decrypt(unsigned char* data, unsigned char* _key, int rounds)
@@ -162,8 +242,8 @@ void test_encrypt_decrypt()
     printf("Data:\n %s\n", data);    
     print_data(data);
  //       
- //   decrypt(data, key, rounds);
- //   print_data(data);
+    decrypt(data, key, rounds);
+    print_data(data);
 }
 
 void main()
