@@ -2,8 +2,13 @@
 #include <stdio.h>
 #include <string.h>
 
+#define WORDSIZE unsigned char
+#define WORDSIZE_BITS 8
+#define ROTATIONS 5
+#define PRINT_STRING "%i: %i\n"
+
 #ifndef memcpy_s
-void memcpy_s(unsigned char* s1, unsigned char* s2, size_t n)
+void memcpy_s(WORDSIZE* s1, WORDSIZE* s2, size_t n)
 {
     int index;
     for (index = 0; index < n; index++)
@@ -13,40 +18,40 @@ void memcpy_s(unsigned char* s1, unsigned char* s2, size_t n)
 }
 #endif
 
-void print_data(unsigned char* data)
+void print_data(WORDSIZE* data)
 {
     int index;
     printf("\n");
     for (index = 0; index < 16; index++)
     {
-        printf("%i: %i\n", index, data[index]);
+        printf(PRINT_STRING, index, data[index]);
     }
 } 
 
-unsigned char rotate_left(unsigned char word8, int amount)
+WORDSIZE rotate_left(WORDSIZE word, int amount)
 {    
-    return ((word8 << amount) | (word8 >> (8 - amount)));
+    return ((word << amount) | (word >> (WORDSIZE_BITS - amount)));
 }
 
-unsigned char bit_mixing(unsigned char* data, int start, int direction, int size)
+WORDSIZE bit_mixing(WORDSIZE* data, int start, int direction, int size)
 {
     int index, counter, next_index;
-    unsigned char key;
+    WORDSIZE key;
     index = start;
     key = 0;
     for (counter = 0; counter < size; counter++)
     {    
         next_index = (index + 1) % size;
-        data[next_index] ^= rotate_left(data[index], ((index + index + 1) % 8)); 
+        data[next_index] ^= rotate_left(data[index], ((index + index + 1) % WORDSIZE_BITS)); 
         key ^= data[next_index];
         index += direction;
     }
     return key;
 }
 
-void shuffle_bytes(unsigned char* _state)
+void shuffle_bytes(WORDSIZE* _state)
 {
-    unsigned char temp[16];
+    WORDSIZE temp[16];
     
     temp[7]  = _state[0];
     temp[12] = _state[1];
@@ -68,43 +73,43 @@ void shuffle_bytes(unsigned char* _state)
     memcpy_s(_state, temp, 16);   
 }    
     
-unsigned char decorrelation_layer(unsigned char* data, int data_size)
+WORDSIZE decorrelation_layer(WORDSIZE* data, int data_size)
 {    
-    unsigned char key;
+    WORDSIZE key;
     key = bit_mixing(data, 0, 1, data_size);
     shuffle_bytes(data);
     return key;
 }
 
-int prp(unsigned char* data, unsigned char data_size)
+int prp(WORDSIZE* data, WORDSIZE data_size)
 {
-    unsigned char index, data_byte, key;
+    WORDSIZE index, data_byte, key;
     key = decorrelation_layer(data, data_size);
     
     for (index = 0; index < data_size; index++)
     {    
         data_byte = data[index];
         key ^= data_byte;                       
-        data[index] = rotate_left((data_byte + key + index), 5);        
+        data[index] = rotate_left((data_byte + key + index), ROTATIONS);        
         key ^= data[index]; 
     }
     return key;
 }
         
-int prf(unsigned char* data, unsigned char key, unsigned char data_size)
+int prf(WORDSIZE* data, WORDSIZE key, WORDSIZE data_size)
 {
-    unsigned char index, byte;
+    WORDSIZE index, byte;
     for (index = 0; index < data_size; index++)
     {    
-        byte = rotate_left((data[index] + key + index), 5);  
+        byte = rotate_left((data[index] + key + index), ROTATIONS);  
         key ^= byte;
         data[index] = byte;           
     }
 }
     
-unsigned char xor_with_key(unsigned char* data, unsigned char* key)
+WORDSIZE xor_with_key(WORDSIZE* data, WORDSIZE* key)
 {
-    unsigned char data_xor = 0, index;
+    WORDSIZE data_xor = 0, index;
     for (index = 0; index < 16; index++)
     {           
         data[index] ^= key[index];
@@ -113,10 +118,10 @@ unsigned char xor_with_key(unsigned char* data, unsigned char* key)
     return data_xor;
 }
 
-void stream_cipher(unsigned char* data, unsigned char* _seed, unsigned char* _key, unsigned char* output, unsigned long blocks)
+void stream_cipher(WORDSIZE* data, WORDSIZE* _seed, WORDSIZE* _key, WORDSIZE* output, unsigned long blocks)
 {
-    unsigned char key[16], seed[16];    
-    unsigned char key_xor = 0, data_xor = 0;
+    WORDSIZE key[16], round_key[16], seed[16];    
+    WORDSIZE key_xor = 0, data_xor = 0;
     unsigned long index;
     for (index = 0; index < 16; index++) // create working copy of the key/seed
     {        
@@ -126,21 +131,22 @@ void stream_cipher(unsigned char* data, unsigned char* _seed, unsigned char* _ke
     
     for (index = 0; index < blocks; index++)
     {            
-        key_xor = prp(key, 16);                        
-        prf(key, key_xor, 16);        
+        key_xor = prp(key, 16); 
+        memcpy_s(round_key, key, 16);
+        prf(round_key, key_xor, 16);        
             
-        data_xor = xor_with_key(seed, key);                      
+        data_xor = xor_with_key(seed, round_key);                      
         prf(seed, data_xor, 16); 
-        xor_with_key(seed, key);
+        xor_with_key(seed, round_key);
                
         
         xor_with_key(data + (index * 16), seed);
     }
 }
   
-void encrypt(unsigned char* data, unsigned char* key, unsigned char* seed, unsigned long data_size)
+void encrypt(WORDSIZE* data, WORDSIZE* key, WORDSIZE* seed, unsigned long data_size)
 {
-    unsigned char* key_material;
+    WORDSIZE* key_material;
     unsigned long blocks, extra;
     key_material = malloc(data_size);
     blocks = data_size / 16;
@@ -152,14 +158,14 @@ void encrypt(unsigned char* data, unsigned char* key, unsigned char* seed, unsig
     stream_cipher(data, seed, key, key_material, blocks);
 }
 
-void decrypt(unsigned char* data, unsigned char* key, unsigned char* seed, unsigned long data_size)
+void decrypt(WORDSIZE* data, WORDSIZE* key, WORDSIZE* seed, unsigned long data_size)
 {
     encrypt(data, key, seed, data_size);
 }
 
 void test_encrypt_decrypt()
 {    
-    unsigned char data[16], key[16], plaintext[16], null_string[16], seed[16];    
+    WORDSIZE data[16], key[16], plaintext[16], null_string[16], seed[16];    
     
     memset(null_string, 0, 16);
     memcpy_s(data, null_string, 16);       
@@ -175,8 +181,9 @@ void test_encrypt_decrypt()
     printf("Ciphertext:\n %s\n", data);    
     print_data(data);
         
- //   decrypt(data, key, seed, 16);
- //   print_data(data);
+    decrypt(data, key, seed, 16);
+    printf("Decrypted:\n");
+    print_data(data);
 }
 
 void main()
