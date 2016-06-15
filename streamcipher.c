@@ -130,8 +130,8 @@ void stream_cipher(unsigned char* data, unsigned char* _seed, unsigned char* _ke
         prf(key, key_xor, 16);        
             
         data_xor = xor_with_key(seed, key);                      
-       // prf(seed, data_xor, 16); 
-       // xor_with_key(seed, key);
+        prf(seed, data_xor, 16); 
+        xor_with_key(seed, key);
                
         
         xor_with_key(data + (index * 16), seed);
