@@ -1,3 +1,33 @@
+/* Theory of operation:
+    
+    - Generate round key
+        - prp applied to key
+        - prf applied to key copy
+            - one way nature lowers adversary's information gain from round key recovery
+            
+        - facilitates up front, on the fly, and cached key schedule designs
+        
+    - Apply Round
+        - xor - prp - xor
+        - [Single key Even-Mansour construction](https://eprint.iacr.org/2011/541.pdf)
+            - provable security up to 2 ** (n / 2)
+            
+    - prp
+        - composed bitwise mixing and bytewise transposition
+            - bytewise transposition based off of "golden" 4x4 s-box (sbox3 in hummingbirdv2)
+            - Ensures an irregular relationship amongst the bits in the state            
+        - [non-linear recursive diffusion layer](https://infoscience.epfl.ch/record/187397/files/JOC_recursive.pdf)
+        
+        - exhibits high diffusion and non-linearity after one application
+        
+    - prf
+        - Similar to non-linear recursive diffusion layer
+            - no bit/byte mixing
+            - made to be (weakly) one-way
+            
+    Q: Are multiple rounds even necessary with the EM xor-permute-xor setup?           
+*/
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
