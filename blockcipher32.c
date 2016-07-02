@@ -28,7 +28,7 @@ void print_data(unsigned int* data)
         printf("%2u: ", index);
         printbn_32(data[index]);
     }
-}   
+}
 
 unsigned int bit_mixing(unsigned int* data, int start, int direction, int size)
 {
@@ -37,9 +37,9 @@ unsigned int bit_mixing(unsigned int* data, int start, int direction, int size)
     index = start;
     key = 0;
     for (counter = 0; counter < size; counter++)
-    {    
+    {
         next_index = (index + 1) % size;
-        data[next_index] ^= rotate_left(data[index], ((index + index + 1) % 8)); 
+        data[next_index] ^= rotate_left(data[index], ((index + index + 1) % 8));
         key ^= data[next_index];
         index += direction;
     }
@@ -49,7 +49,7 @@ unsigned int bit_mixing(unsigned int* data, int start, int direction, int size)
 void shuffle_bytes(unsigned int* _state)
 {
     unsigned int temp[16];
-    
+
     temp[7]  = _state[0];
     temp[12] = _state[1];
     temp[14] = _state[2];
@@ -66,12 +66,12 @@ void shuffle_bytes(unsigned int* _state)
     temp[8]  = _state[13];
     temp[10] = _state[14];
     temp[3]  = _state[15];
-    
-    memcpy_s(_state, temp, 16);   
-}    
-    
+
+    memcpy_s(_state, temp, 16);
+}
+
 unsigned int decorrelation_layer(unsigned int* data, int data_size)
-{    
+{
     unsigned int key;
     key = bit_mixing(data, 0, 1, data_size);
     shuffle_bytes(data);
@@ -81,52 +81,52 @@ unsigned int decorrelation_layer(unsigned int* data, int data_size)
 int prp(unsigned int* data, unsigned int key)
 {
     unsigned int index, data_byte;
-    key = decorrelation_layer(data, DATA_SIZE);    
+    key = decorrelation_layer(data, DATA_SIZE);
     for (index = 0; index < DATA_SIZE; index++)
-    {    
+    {
         data_byte = data[index];
-        key ^= data_byte;                               
-        data[index] = rotate_left((data_byte + key + index), 20);        
-        key ^= data[index]; 
+        key ^= data_byte;
+        data[index] = rotate_left((data_byte + key + index), 20);
+        key ^= data[index];
     }
     return key;
 }
-        
+
 int prf(unsigned int* data, unsigned int key)
 {
     unsigned int index, byte;
     for (index = 0; index < DATA_SIZE; index++)
-    {    
-        byte = rotate_left((data[index] + key + index), 20);  
+    {
+        byte = rotate_left((data[index] + key + index), 20);
         key ^= byte;
-        data[index] = byte;           
+        data[index] = byte;
     }
     return byte;
 }
-    
+
 unsigned int xor_with_key(unsigned int* data, unsigned int* key)
 {
     unsigned int data_xor = 0, index;
     for (index = 0; index < DATA_SIZE; index++)
-    {           
+    {
         data[index] ^= key[index];
         data_xor ^= data[index];
-    }    
+    }
     return data_xor;
 }
 
 void key_schedule(unsigned int* key, unsigned int* round_keys, unsigned int* round_key, unsigned int key_xor, int rounds)
-{        
-    int index;    
+{
+    int index;
     for (index = 0; index < rounds; index++)
-    {          
-        key_xor = prp(key, key_xor);        
+    {
+        key_xor = prp(key, key_xor);
         memcpy_s(round_key, key, DATA_SIZE);
-                
+
         prf(round_key, key_xor);
-        memcpy_s(round_keys + (index * DATA_SIZE), round_key, DATA_SIZE);                
+        memcpy_s(round_keys + (index * DATA_SIZE), round_key, DATA_SIZE);
     }
-}  
+}
 
 void encrypt(unsigned int* data, unsigned int* _key, int rounds)
 {
@@ -138,15 +138,15 @@ void encrypt(unsigned int* data, unsigned int* _key, int rounds)
     {
         key_byte = _key[index];
         key[index] = key_byte;
-        key_xor ^= key_byte;                
+        key_xor ^= key_byte;
     }
-      
+
     key_schedule(key, round_keys, round_key, key_xor, rounds);
-          
+
     for (index = 0; index < rounds; index++)
-    {            
-        memcpy_s(round_key, round_keys + (index * DATA_SIZE), DATA_SIZE);    
-    
+    {
+        memcpy_s(round_key, round_keys + (index * DATA_SIZE), DATA_SIZE);
+
         data_xor = xor_with_key(data, round_key); // pre-whitening
         data_xor = prp(data, data_xor); // high diffusion prp
         xor_with_key(data, round_key); // post-whitening
@@ -156,7 +156,7 @@ void encrypt(unsigned int* data, unsigned int* _key, int rounds)
 void invert_shuffle_bytes(unsigned int* state)
 {
     unsigned int temp[16];
-    
+
     temp[11] = state[0];
     temp[5]  = state[1];
     temp[4]  = state[2];
@@ -173,10 +173,10 @@ void invert_shuffle_bytes(unsigned int* state)
     temp[10] = state[13];
     temp[2]  = state[14];
     temp[7]  = state[15];
-    
-    memcpy_s(state, temp, 16);    
+
+    memcpy_s(state, temp, 16);
 }
-        
+
 unsigned int invert_decorrelation_layer(unsigned int* data, int data_size)
 {
     invert_shuffle_bytes(data);
@@ -184,19 +184,19 @@ unsigned int invert_decorrelation_layer(unsigned int* data, int data_size)
 }
 
 unsigned int invert_prp(unsigned int* data, unsigned int key)
-{   
+{
     unsigned int byte;
-    int index;    
+    int index;
     for (index = DATA_SIZE - 1; index != -1; index--)
-    {                    
+    {
         byte = data[index];
-        key ^= byte;                
-        data[index] = rotate_right(byte, 20) - key - index;       
+        key ^= byte;
+        data[index] = rotate_right(byte, 20) - key - index;
         key ^= data[index];
     }
     return invert_decorrelation_layer(data, DATA_SIZE);
 }
-    
+
 void decrypt(unsigned int* data, unsigned int* _key, int rounds)
 {
     unsigned int key[DATA_SIZE], round_key[DATA_SIZE];
@@ -208,33 +208,33 @@ void decrypt(unsigned int* data, unsigned int* _key, int rounds)
         key_byte = _key[index];
         key_xor ^= key_byte;
         key[index] = key_byte;
-    }      
-    
+    }
+
     key_schedule(key, round_keys, round_key, key_xor, rounds);
-    
+
     for (index = rounds; index--;)
-    {            
+    {
         memcpy_s(round_key, round_keys + (index * DATA_SIZE), DATA_SIZE);
-        
-        data_xor = xor_with_key(data, round_key);         
+
+        data_xor = xor_with_key(data, round_key);
         data_xor = invert_prp(data, data_xor);
         xor_with_key(data, round_key);
     }
 }
-        
+
 void test_encrypt_decrypt()
-{    
+{
     unsigned int data[DATA_SIZE], key[DATA_SIZE], null_string[DATA_SIZE];
     int rounds = 16;
-    
+
     memset(null_string, 0, DATA_SIZE * WORD_SIZE);
-    memcpy_s(data, null_string, DATA_SIZE);       
-    data[15] = 1;    
-    memcpy_s(key, null_string, DATA_SIZE); 
-    
+    memcpy_s(data, null_string, DATA_SIZE);
+    data[15] = 1;
+    memcpy_s(key, null_string, DATA_SIZE);
+
     encrypt(data, key, rounds);
     print_data(data);
-    
+
     decrypt(data, key, rounds);
     print_data(data);
 }
