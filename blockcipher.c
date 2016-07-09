@@ -15,7 +15,8 @@
     - prp
         - composed bitwise mixing and bytewise transposition
             - bytewise transposition based off of "golden" 4x4 s-box (sbox3 in hummingbirdv2)
-            - Ensures an irregular relationship amongst the bits in the state            
+            - bitwise mixing based off of xor and rotation
+            - Ensures an irregular relationship amongst a given set of bits in the state            
         - [non-linear recursive diffusion layer](https://infoscience.epfl.ch/record/187397/files/JOC_recursive.pdf)
         
         - exhibits high diffusion and non-linearity after one application
@@ -25,7 +26,12 @@
             - no bit/byte mixing
             - made to be (weakly) one-way
             
-    Q: Are multiple rounds even necessary with the EM xor-permute-xor setup?           
+    Q: Are multiple rounds even necessary with the EM xor-permute-xor setup?   
+    Q: What is a better way to achieve bit mixing? 
+        - Current way is probably not ideal
+        - Some good other ways are very slow
+    Q: How to efficiently improve preimage/second preimage resistance of prf
+        - preimage/second preimage resistant prf could be used contribute to authentication/integrity
 */
 
 #include <stdlib.h>
