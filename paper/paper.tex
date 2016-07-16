@@ -13,6 +13,18 @@
 \documentclass[preprint]{iacrtrans}
 \usepackage[utf8]{inputenc}
 
+\usepackage{graphicx}
+\graphicspath{{images/}} % end dirs with `/'
+\usepackage{tikz}
+\usetikzlibrary{arrows}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{positioning}
+\usetikzlibrary{calc}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{arrows}
+\usetikzlibrary{crypto.symbols}
+\tikzset{shadows=no}        % Option: add shadows to XOR, ADD, etc.
+
 \author{Ella Rose\inst{1} \and Biv\inst{2}}
 \institute{Somewhere in California \email{python_pride@protonmail.com} \and Somewhere in France}
 \title[A new block cipher: \texttt{SOME NAME}]{A new block cipher: \texttt{SOME NAME}}
@@ -34,6 +46,20 @@
 % \subsection*{\textcolor{red!70!black}{FAQ:} Converting \texttt{llncs} papers to \texttt{iacrtrans}}
 
 \section{Main Idea}
+
+\begin{figure}[!ht]
+	\centering
+	\resizebox{0.8\textwidth}{!}{%
+		\input{tikz/construction.tex}
+	}%
+	\caption{Block cipher construction}
+	\label{fig:orbitals}
+\end{figure}
+
+
+\section{Security Analysis}
+
+
 
 \section*{Thanks}
 

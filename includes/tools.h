@@ -2,12 +2,12 @@
 #include <stdio.h>
 
 inline unsigned int rotate_left(const unsigned int word32,const int amount)
-{    
+{
     return ((word32 << amount) | (word32 >> (32 - amount)));
 }
 
 inline unsigned int rotate_right(const unsigned int word32,const int amount)
-{              
+{
     return ((word32 >> amount) | (word32 << (32 - amount)));
 }
 
