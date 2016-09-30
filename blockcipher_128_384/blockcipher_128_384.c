@@ -69,9 +69,8 @@
     nonlinear_mixing(d, a, b, c, 5, 17);})                                                                                                
             
 #define choice_swap(key, a, b)({\
-    _t = a;\
     a = choice(key, a, b);\
-    b = choice(key, b, _t);})
+    b = choice(~key, a, b);})
     
 #define shuffle_words(a, b, c, d, key, key_number)({\
     choice_swap(key[(4 * key_number) + 0], a, b);\
@@ -79,27 +78,26 @@
     choice_swap(key[(4 * key_number) + 2], a, c);\
     choice_swap(key[(4 * key_number) + 3], b, d);})   
             
-#define add_key(a, b, c, d, keys, key_number)({\
+#define linear_key_addition(a, b, c, d, keys, key_number)({\
     a ^= keys[(4 * key_number) + 0];\
     b ^= keys[(4 * key_number) + 1];\
     c ^= keys[(4 * key_number) + 2];\
     d ^= keys[(4 * key_number) + 3];})       
         
+#define add_key(a, b, c, d, key, key_number)({\
+    linear_key_addition(a, b, c, d, key, key_number);\
+    shuffle_words(a, b, c, d, key, key_number);})    
+    
 void encrypt(WORDSIZE* data, WORDSIZE* key)
 {           
-    WORDSIZE a, b, c, d, _t;
+    WORDSIZE a, b, c, d;
     load(data, a, b, c, d);        
     
-    add_key(a, b, c, d, key, 0);    
-    shuffle_words(a, b, c, d, key, 0);    
-    
+    add_key(a, b, c, d, key, 0);            
     iterate(permutation, a, b, c, d, ITERATIONS);
-    add_key(a, b, c, d, key, 1);
-    
+    add_key(a, b, c, d, key, 1);        
     iterate(permutation, a, b, c, d, ITERATIONS);    
-    add_key(a, b, c, d, key, 2);
-    
-    shuffle_words(a, b, c, d, key, 2);
-    
+    add_key(a, b, c, d, key, 2);    
+        
     store(data, a, b, c, d);
 }
