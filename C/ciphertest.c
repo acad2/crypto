@@ -1,0 +1,25 @@
+#include "cipher13.h"
+#include <stdio.h>
+
+int print_state(unsigned char* state)
+{
+    int index;
+    for (index = 0; index < 16; index++)
+    {
+        printf("%i: %i\n", index, state[index]);
+    }
+}
+
+int main()
+{
+    unsigned char data[16] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    unsigned char key[16] = {0xe9, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
+    int rounds = 1;
+    int index;
+    
+    encrypt(data, key, rounds);    
+    print_state(data);
+    
+    decrypt(data, key, rounds);    
+    print_state(data); 
+}

@@ -1,0 +1,216 @@
+In order to design and analyze a cipher, we have to establish what a cipher is supposed to accomplish. Put simply, we would like to be able to transform information in such a way that only those who are authorized may perform or invert the transformation. We can refer to this transformation as "encryption". Unauthorized parties may exist that should not be able to obtain any information protected by the encryption method, despite the fact that they can/will try to do so, if given the opportunity. This applies even if the work that would be involved is a large, nontrivial amount. We can refer to unauthorized parties as adversaries.
+
+Ideally, we would like the mutual information required by the authorized parties to be minimal, and for it to be obtainable with some level of convenience. If it were not for these two extremely practical aspects, the One Time Pad (https://en.wikipedia.org/wiki/One-time_pad) would be literally unbeatable, with information-theoretic security (https://en.wikipedia.org/wiki/Information_theoretic_security), implementation simplicity, and maximum efficiency (just a single addition per character!). A OTP is not a block cipher, but it makes for a good reference point to measure against.
+
+Unfortunately, one time pads require the key material be as long as the information to be enciphered, and prepared ahead of time by the authorized parties. This violates our two practical desires listed above, so we must design other algorithms that can re-use a much smaller key.
+
+One temptation is to keep the encryption algorithm itself secret. Unfortunately, keeping an algorithm secret implies that all users of the algorithm know the secret to encrypting/decrypting. As the number of users that know the secret increases, so does the likelihood that the secret will become compromised by adversaries. This would fail the original design goal, and only does marginally better then the OTP in terms of practicality and the size of the secret to be protected. 
+
+This leads to the third, most successful option: Using a publicly known algorithm that concentrates the required secrecy into a key that is used by the algorithm.
+
+Whatever method is used to encrypt, the information may be subject to attack by adversaries. The job of encryption is to resist this attack, and keep the information protected. This means a few things:
+
+- Since modern ciphers use a key to authorize parties to perform the transformation, the goal of an adversary is to obtain the key
+    - Obtaining the key implies the ability to encrypt plaintexts and decrypt ciphertexts, violating the original design goal of the cipher
+        - Similar to how a lock on a door uses a key
+        - You just have to protect the key, not prevent anyone from knowing there is a lock
+        - The key is reusable, and has a very long lifespan.           
+        - The key should be relatively small - 128 to 256 bits is common    
+        
+    - The key must remain secure even if the adversary:
+        - Possesses vast amounts of ciphertext
+        - Knows the plaintext contents of a message, and the corresponding ciphertexts for each message
+        - Can trick an authorized party into encrypting/decrypting messages for the adversary
+            - Choose messages to encrypt or decrypt at will.
+            - Can adapt or modify future encryption/decryption queries in response to past queries.
+    
+Most of the complexity of a modern cipher comes from the attempt at protecting the key, and by extension, the plaintext. Designing a cipher with a reusable key will require an understanding of the ways that the cipher and key can be attacked. In order to design a cipher, you must learn to think like the adversary, and study how ciphers are broken. 
+
+Standard attacks
+------------
+There are a handful of generic attack methods that any new cipher must protect against: brute force search, differential cryptanalysis, and linear cryptanalysis.
+- Brute force search means that the adversary simply guesses all possible combinations of key values, until the correct key is found
+    - Has a worst case time complexity of 2 ** N, where N is the width of the key in bits
+        - time complexity is only accurate if the key is uniformly random
+        - 64 bits is considered too low for modern computers
+        - 128 bits is considered secure for now
+        - 256 bits is considered secure forever, even in the face of futuristic quantum computers
+        
+- Differential cryptanalysis exploits the probability that a particular difference between inputs will be propagate to a particular output difference
+    - For example, consider a function that maps a number in the range 0-256 to another number in the range 0-256
+        - For every input1 X, and an input difference 0-256, create input2 via input1 + difference = input2
+            - For example: input1 = 1; difference = 1; input2 = input1 + difference; input2 == 2;
+        - Supply the inputs to the function and note the difference between the outputs
+        - Record the number of times a given input difference propagates to a given output difference        
+    - The more likely that a given difference holds, the more effectively this behaviour can be exploited against the cipher               
+    - A relatively simple tutorial with code can be found here (http://www.theamazingking.com/crypto-diff.php)
+    - The original paper by biham and shamir can be found here (http://www.cs.bilkent.edu.tr/~selcuk/teaching/cs519/Biham-DC.pdf)
+    
+- Linear cryptanalysis exploits the probability of a subsection of bits from a given input is correlated with a subsection of bits in the output of a function
+    - A subsection of bits is selected via bitwise masking (http://stackoverflow.com/questions/10493411/what-is-bit-masking)
+    - The exploitable relationship is if the parity (https://en.wikipedia.org/wiki/Parity_(mathematics)) of the hamming weight (https://en.wikipedia.org/wiki/Hamming_weight) of the subsection of input and output bits is the same
+    - The more regularly this relationship occurs, the more effective linear cryptanalysis will be
+    - A relatively simple tutorial with code can be found here (http://www.theamazingking.com/crypto-linear.php)
+    - The original paper by matsui can be found here (http://www.cs.bilkent.edu.tr/~selcuk/teaching/cs519/Matsui-LC.pdf)
+    
+Linear and differential cryptanalysis can provide hints as to what the internal state of the cipher may be, up to a certain point. This can reduce the number of possible values for a part of the key that an adversary will have to guess. These are considered to be two of the most powerful tools in regards to cryptanalysis of a modern cipher. 
+            
+Block Cipher constructions
+-----------
+There are two main classes of cipher constructions: The Feistel network (https://en.wikipedia.org/wiki/Feistel_cipher), and the substitution-permutation network. (https://en.wikipedia.org/wiki/Substitution-permutation_network)
+
+The basic design of the Feistel network is to split the message block into two halves, a left and a right. A keyed function with good diffusion and confusion is applied to right half, and the output of this is added to the left half. The halves are then swapped, and the process repeated. Decryption is more or less the same operation performed with the reverse keys, and so this construction is relatively lightweight in terms of implementation complexity. DES (https://en.wikipedia.org/wiki/Data_Encryption_Standard) is an example of a Feistel network. There are differential and linear attacks against DES (https://en.wikipedia.org/wiki/Data_Encryption_Standard#Security_and_cryptanalysis) .
+
+The design of a substitution permutation network is typically finer grain then a left and right half of a Feistel network. For example, in The Advanced Encryption Standard (AES), also known as Rijndael (https://en.wikipedia.org/wiki/Advanced_Encryption_Standard), the message is operated upon as 16 x 1 byte state, arranged as 4 rows and 4 columns. It consists of 4 main steps: a byte substitution, a row transposition, a mixColumns step, and the addition of key material via XOR. 
+
+Many, if not all modern block ciphers besides the OTP, are made of repeatedly iterating the same core function(s), often times with multiple different keys between each application. Often times, these keys are derived from the master key that is actually supplied to the cipher by the user. We refer to keys generated this way as the round keys, and the process of generating them the key schedule.
+
+The way round keys are derived can influence both the security and efficiency of the cipher (http://crypto.stackexchange.com/questions/33975/what-are-the-requirements-of-a-key-schedule). Ideally, recovery of any round key information should reveal as little as possible about other rounds keys or the master key. This is one of the strengths of the OTP: recovery of a byte of key material (i.e. via known plaintext attack) provides no assistance in the recovery of any other bytes of the key. It is also generally considered beneficial for the generation of round key material to be quick, as a cipher with a slow key schedule may have greater latency and/or lower throughput.
+
+Designing a round function
+-----------
+In order to know what to operations to use, we need to know what we need to accomplish: 
+    
+- Diffusion (https://en.wikipedia.org/wiki/Confusion_and_diffusion)
+    - Flipping one input bit anywhere should flip (about) half the output bits on average
+    - Bytewise shifts, rotations, and transpositions can help spread the influence of a given subsection of bits
+    - Bitwise transpositions can be used too, but can be relatively slow in software (but potentially fast in hardware)
+            
+- Confusion/Non-linearity (http://crypto.stackexchange.com/questions/2820/why-do-block-ciphers-need-a-non-linear-component-like-an-s-box?rq=1)
+    - The relationship between the key and ciphertext should be complex
+    - A linear cipher can be broken by gaussian elimination https://en.wikipedia.org/wiki/Gaussian_elimination
+    - Mixing arithmetic in different fields can provide non-linearity (i.e. xor and addition modulo 256)
+    - Boolean functions can provide non-linearity
+
+- Invertible only with the correct key
+    - The cipher will only provide confidentiality if secret (key) material is introduced at some point.            
+        - Applying a key on the input before applying any rounds and after applying all rounds is called key whitening and is common (https://en.wikipedia.org/wiki/Key_whitening)
+        - Otherwise a key is added every N rounds, where N is often 1 (i.e. after every round)
+        - Key addition is often times done via xor and addition modulo (2**wordsize_in_bits), or both
+    - There should be no "weak keys" (http://crypto.stackexchange.com/questions/12214/can-you-explain-weak-keys-for-des)
+    
+So our goals are to combine the message with a key, and flip lots of bits in a diffusing and non-linear fashion.
+Ideally, we would like the composition of our operations to produce output similar to that of a random permutation.        
+        
+Some available instructions are:
+    
+- Xor
+    - Useful for combining two inputs (i.e. message and key)
+    - Is its own inverse (an involution)
+        - No subtraction instruction required to invert
+    - Bit sliced        
+    - Needs addition/boolean function/s-box lookup for non-linearity  (http://crypto.stackexchange.com/questions/12634/reason-why-xor-is-a-linear-operation-but-ordinary-addition-isn-t?rq=1)
+    
+- Addition (http://crypto.stackexchange.com/q/2608/29554)
+    - Useful for combining two inputs    
+    - Requires separate subtraction instruction to invert
+    - Tends to flip low order bits more then high order bits
+    
+- Lookup tables
+    - Useful for good differential/linear properties
+    - Effectively equivalent to the cached inputs/outputs of a non-linear function       
+    - Can be vulnerable to timing attacks on machines that utilize a cache (http://crypto.stackexchange.com/q/5526/29554)
+    
+- Boolean functions
+    - Useful for non-linearity
+    - Some examples are the Choice and Majority functions http://crypto.stackexchange.com/q/5358/29554
+        - Choice
+            - Logically, If C then B, else A
+            - c ^ (a & (b ^ c))
+            - Bit sliced operation
+        - Majority
+            - (a & b) | (a & c) | (b & c) 
+            
+- Rotations/Shifts (http://crypto.stackexchange.com/q/8533/29554) 
+    - Useful for diffusion and carrying/spreading differences through a word (http://crypto.stackexchange.com/a/25239/29554)
+    - Generally done by fixed amounts  (http://crypto.stackexchange.com/q/20325/2955)
+        
+- Transposition
+    - Shuffling the order of state words can help provide diffusion
+    - Transposing bytes according to secret data can be vulnerable to timing attacks (secret dependent memory access is the concern) (https://www.di.ens.fr/~fouque/pub/acns11.pdf)
+    - Includes rotations    
+    
+- Composed bitwise and bytewise transposition:
+    - Acts like a shuffle (permutation) of the input bits
+    - Only modifies a given bits position, not its value (Does not modify hamming weight)
+    - Is a linear transformation
+    - Example: The keccak permutation (https://en.wikipedia.org/wiki/SHA-3), specifically the Rho and pi steps
+    - Can provide "weak alignment" (http://crypto.stackexchange.com/a/39253/29554)       
+       
+- Pseudo-Hadamard transform: https://en.wikipedia.org/wiki/Pseudo-Hadamard_transform   
+    - Provides diffusion
+    - Used by SAFER (https://en.wikipedia.org/wiki/SAFER) and Twofish (https://en.wikipedia.org/wiki/Twofish)
+        
+Some example combinations of the above operations:
+
+- AES consists of addRoundKey, mixColumns, shiftRows, subBytes on the message https://en.wikipedia.org/wiki/Advanced_Encryption_Standard :
+    - subBytes is a lookup table (good differential/linear properties)
+    - shiftRows is a bytewise transposition
+    - mixColumns is a linear transformation that, in conjunction with shiftRows, provides diffusion (https://en.wikipedia.org/wiki/Rijndael_mix_columns)
+    - addRoundKey xors the key with the state
+- DES round function consists of an expansion permutation, key mixing, s-box application, and bit permutation http://crypto.stackexchange.com/a/31675/29554
+    - Expansion compensates the S-boxes going from 6 to 4 bits. 
+    - Keys are applied every round via xor
+    - S-boxes provide resistance against differential cryptanalysis
+    - Bit permutation provides diffusion
+- Serpent round function consists of key-mixing XOR, a 4×4 S-box, and a linear transformation https://en.wikipedia.org/wiki/Serpent_(cipher)
+    - Keys are applied every round via xor
+    - S-boxes are applied in parallel (bit sliced design)
+    - Linear mixing provides diffusion
+- Tea uses only addition, shift, and XOR: https://en.wikipedia.org/wiki/Tiny_Encryption_Algorithm                                         
+    - xor/addition create nonlinearity and apply key material
+    - shifts/additions provide diffusion
+                                             
+As we can see from some examples, there appear to be at least two different approaches:
+- S-box based designs
+    - Can offer very good linear/differential properties with good performance
+    - Can be hard to find good large s-boxes because of the huge search space
+    - Tend to be used in conjunction with a linear mixing layer for diffusion
+    - AES strategy: 
+        - Use an s-box with the optimal worst case differential/linear properties
+        - Use a mixing layer that aims at increase the lower bound of the rate of diffusion
+        - Notice how it's designed around the worst case scenario
+    - Can provide clear proofs of resistance to differential/linear attack
+        
+- ARX based designs (addition, rotation, xor) (https://www.cosic.esat.kuleuven.be/ecrypt/courses/albena11/slides/nicky_mouha_arx-slides.pdf)
+    - Are inherently less conducive to timing based side channel attacks then s-box based constructions
+        - Addition, XOR and rotation by fixed amount are often times implemented in constant time
+    - Fast performance on PCs (especially if you can avoid memory accesses/stick to the registers)
+    - Compact/simple implementation (does not require the space that lookup tables need)              
+    - Not as straightforward to analyze security to differential/linear attack compared to s-box based design
+
+Many ciphers use a set of constants. Every round, a new constant is introduced to the state via addition/xor. This can help against slide attacks by making successive rounds different.
+    
+Breaking a round function
+----------
+Before you resort to applying linear and/or differential cryptanalysis to any new design, considering running some statistical tests. Statistical tests can tell you very quickly whether your latest design is totally broken. Note that statistical tests cannot confirm whether a design is cryptographically secure, it can only confirm that a design is insecure.
+
+Some example tests might be:
+    
+- Avalanche test   
+    - Generate blocks of random data with a given key (i.e. encrypt an incrementing counter) and measure the hamming distance between successive outputs (measures diffusion of data)
+    - Encrypt the same series of successive values with a different key, and measure the hamming distance between the previous set of random data and the new set (measures diffusion of key)    
+- Randomness test    
+    - Generate a sizeable (>1MB) amount of psuedorandom data with the cipher (i.e. by encrypting an incrementing counter)
+    - Pass the data to a tool such as ent, dieharder, or the NIST test suite (https://sites.google.com/site/astudyofentropy/background-information/the-tests)
+
+Run the mentioned tests on both your design and on os.urandom: ideally the two results should be indistinguishable.
+
+When devising an attack, try attacking a reduced (single?) round version of the cipher first. Look for the weakest points in the design.
+Try practising against FEAL (http://www.theamazingking.com/crypto-feal.php) , it has a major weak point and is useful for learning differential/linear cryptanalysis, and slide attacks.
+Some of the attacks against DES would probably be helpful ways to learn about linear cryptanalysis and brute force search (http://lasec.epfl.ch/memo/memo_des.shtml) (https://en.wikipedia.org/wiki/Brute-force_search)
+
+Once you've got a handle on those, there are actually many different attacks besides generic linear/differential cryptanalysis (http://crypto.stackexchange.com/a/38148/29554)
+You may find some software related to cryptanalysis here http://www.ecrypt.eu.org/tools/overview
+
+Math and visualization
+-----------
+If you find visualizations and diagrams helpful, this page (https://www.iacr.org/authors/tikz/) may be interesting to you. 
+If you do not know math well, try learning some of the notation (https://en.wikibooks.org/wiki/Category:Mathematical_logic). Much of the information you want to understand will be in scientific research papers and written in the language of math. 
+
+Some of the subjects that will prove useful when reading papers and in cryptanalysis/cipher design are:
+- Basic Set theory (http://www.mathgoodies.com/lessons/sets/)
+- Basic Probability theory (http://www.mathgoodies.com/lessons/toc_vol6.html)
+- Basic linear algebra (https://en.wikipedia.org/wiki/Linear_algebra)
+- Boolean logic (https://en.wikipedia.org/wiki/Boolean_algebra)
+- Finite fields (https://en.wikipedia.org/wiki/Finite_field)
