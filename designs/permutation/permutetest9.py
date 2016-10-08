@@ -67,10 +67,10 @@ def test_integer_to_bytes():
     _data = _integer_to_bytes(left) + _integer_to_bytes(right)
     assert _data == data, _data
     
-import pride.crypto
-from pride.crypto.utilities import replacement_subroutine
+import crypto
+from crypto.utilities import replacement_subroutine
 
-class Test_Cipher(pride.crypto.Cipher):
+class Test_Cipher(crypto.Cipher):
         
     def __init__(self, *args):
         super(Test_Cipher, self).__init__(*args)

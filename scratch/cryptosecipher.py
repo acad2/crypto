@@ -1,4 +1,4 @@
-from pride.crypto.utilities import bytes_to_words, words_to_bytes
+from crypto.utilities import bytes_to_words, words_to_bytes
 
 def _cic_blockcipher32_encrypt(key, m, rounds, 
                                cround = 0x9e3779b9, cmul = 0x6a09e667,

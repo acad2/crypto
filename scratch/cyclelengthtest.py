@@ -1,6 +1,6 @@
 import operator
 
-from pride.crypto.utilities import find_cycle_length
+from crypto.utilities import find_cycle_length
 
 def find_max_cycle_length_modexp_sbox():
     max_cycles = []

@@ -1,4 +1,4 @@
-from pride.crypto.utilities import xor_sum, rotate_left, xor_subroutine, modular_subtraction, rotate_right, words_to_bytes
+from crypto.utilities import xor_sum, rotate_left, xor_subroutine, modular_subtraction, rotate_right, words_to_bytes
 
 def shuffle_bytes(_state, section, temp=list(range(16))):          
     temp[7] = _state[0] 

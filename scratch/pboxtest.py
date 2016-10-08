@@ -1,4 +1,4 @@
-from pride.crypto.utilities import rotate_right, print_state_4x4, hamming_weight, modular_subtraction, xor_sum, integer_to_bytes, bytes_to_integer, rotate_left
+from crypto.utilities import rotate_right, print_state_4x4, hamming_weight, modular_subtraction, xor_sum, integer_to_bytes, bytes_to_integer, rotate_left
 
 def bit_transposition_involution(state, state_offset):
     output = bytearray(8)    
@@ -245,8 +245,8 @@ def test_prf_words():
     
       
 def test_prf_sponge():
-    import pride.crypto.designs.hash.sponge
-    from pride.crypto.analysis.metrics import test_hash_function
+    import crypto.designs.hash.sponge
+    from crypto.analysis.metrics import test_hash_function
     hasher = sponge.sponge_factory(prf, rate=8, capacity=8, output_size=8)
     test_hash_function(hasher)
     

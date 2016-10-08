@@ -1,6 +1,6 @@
-from pride.crypto.utilities import rotate_left, slide, integer_to_bytes, bytes_to_integer, xor_subroutine, longs_to_bytes, bytes_to_longs
-from pride.crypto.designs.ciphercomponents import choice_rotate_mixRow as nonlinear_mixing       
-from pride.crypto.designs.ciphercomponents import invert_choice_rotate_mixRow as invert_nonlinear_mixing
+from crypto.utilities import rotate_left, slide, integer_to_bytes, bytes_to_integer, xor_subroutine, longs_to_bytes, bytes_to_longs
+from crypto.designs.ciphercomponents import choice_rotate_mixRow as nonlinear_mixing       
+from crypto.designs.ciphercomponents import invert_choice_rotate_mixRow as invert_nonlinear_mixing
 
 def encrypt(data, key, rounds=2):    
     k1, k2, k3, k4 = bytes_to_longs(key)

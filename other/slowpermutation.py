@@ -1,6 +1,6 @@
 import hashlib
 from timeit import default_timer as timestamp
-from pride.crypto.utilities import slide, brute_force
+from crypto.utilities import slide, brute_force
         
 def tunable_hash(data, key, work_factor, algorithm="sha224"):
     return hashlib.pbkdf2_hmac(algorithm, data, key, work_factor)

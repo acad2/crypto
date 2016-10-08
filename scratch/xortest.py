@@ -1,5 +1,5 @@
 import itertools
-from pride.crypto.utilities import xor_sum, xor_subroutine
+from crypto.utilities import xor_sum, xor_subroutine
 
 #M = M1, M2
 #K = K1, K2

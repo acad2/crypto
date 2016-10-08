@@ -64,10 +64,10 @@ def decrypt_bytes(data, key, tag, rounds=1):
         tag[index] = data[index] >> 8           
         data[index] = data[index] & 255
         
-import pride.crypto
-from pride.crypto.utilities import replacement_subroutine
+import crypto
+from crypto.utilities import replacement_subroutine
 
-class Test_Cipher(pride.crypto.Cipher):
+class Test_Cipher(crypto.Cipher):
     
     def _get_key(self):
         return list(self._key)
@@ -148,7 +148,7 @@ def test_cipher_hash():
     cipher.blocksize = 16
     print cipher.hash("\x00", [0xff] * 16)
    
-    from pride.crypto.analysis.metrics import test_hash_function
+    from crypto.analysis.metrics import test_hash_function
     test_hash_function(cipher.hash)
     
 if __name__ == "__main__":

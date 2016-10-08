@@ -1,9 +1,9 @@
-from pride.crypto.designs.ciphercomponents import choice
+from crypto.designs.ciphercomponents import choice
 
 __all__ = ["choice_diffusion", ]
 
 
-#@pride.unittest.test(pride.crypto.pride.crypto.analysis.visualization.test_4x64_function) ?
+#@pride.unittest.test(crypto.crypto.analysis.visualization.test_4x64_function) ?
 # auto generate unit test    ?
 
 def hamming_weight(*inputs):
@@ -29,7 +29,7 @@ def choice_diffusion(in0, in1, in2, in3, k0, k1, k2, k3):
     return out0, out1, out2, out3, k0, k1, k2, k3
     
 def test_choice_diffusion():
-    from pride.crypto.analysis.visualization import test_4x64_function
+    from crypto.analysis.visualization import test_4x64_function
     test_4x64_function(choice_diffusion, (1, 2, 4, 8, 1, 2, 4, 8))
     
 if __name__ == "__main__":

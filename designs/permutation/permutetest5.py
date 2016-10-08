@@ -1,4 +1,4 @@
-from pride.crypto.utilities import pad_input, slide
+from crypto.utilities import pad_input, slide
 
 def permute(left_byte, right_byte, key_byte, modifier):        
     right_byte = (right_byte + key_byte + modifier) & 65535
@@ -28,7 +28,7 @@ def permute_hash(data, rounds=1, blocksize=16):
 def test_permute_hash():
     data = "\x01"
     print permute_hash(data, blocksize=8)
-    from pride.crypto.analysis.metrics import test_hash_function
+    from crypto.analysis.metrics import test_hash_function
     test_hash_function(permute_hash)
     
 if __name__ == "__main__":

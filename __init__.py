@@ -1,10 +1,12 @@
 # NOTE: the crypto package is included for convenience of development and should not 
-# be taken to imply that the modules located in pride.crypto are suitable for
+# be taken to imply that the modules located in it are suitable for
 # use to protect data in the real world.
 
-from pride.crypto.utilities import slide, xor_subroutine, replacement_subroutine, cast
-from pride.crypto.analysis.metrics import test_block_cipher, test_cipher_performance
-from pride.errors import InvalidTag
+from crypto.utilities import slide, xor_subroutine, replacement_subroutine, cast
+from crypto.analysis.metrics import test_block_cipher, test_cipher_performance
+
+class InvalidTag(BaseException): 
+    pass
                 
 def cbc_encrypt(block, iv, key, cipher, tag=None, tweak=None):     
     xor_subroutine(block, iv)        
@@ -18,7 +20,7 @@ def cbc_decrypt(block, iv, key, cipher, tag=None, tweak=None):
     replacement_subroutine(iv, next_iv)    
     
 def ofb_mode(block, iv, key, cipher, tag=None, tweak=None):
-    cipher(iv, key, tag, twak)        
+    cipher(iv, key, tag, tweak)        
     xor_subroutine(block, iv)
         
 def ctr_mode(block, iv, key, cipher, tag=None, tweak=None):    
@@ -189,7 +191,7 @@ def test_encrypt_decrypt():
     _data = data[:]
     key = bytearray("\x00" * 16)
     iv = bytearray("\x00" * 16)
-    from pride.crypto.designs.blockcipher.blockcipher import Test_Cipher
+    from crypto.designs.blockcipher.blockcipher import Test_Cipher
     #print data
     for mode in ("ctr", "ofb", "cbc", "ecb"):    
         print "Testing: ", mode

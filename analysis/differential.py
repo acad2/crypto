@@ -1,7 +1,7 @@
 import operator
 import pprint
 
-from pride.crypto.utilities import rotate, cast, rotate_left 
+from crypto.utilities import rotate, cast, rotate_left 
 
 function_names = ['and_', 
                   'floordiv',    
@@ -143,7 +143,7 @@ def find_impossible_differentials(xor_ddt):
     return impossible_differentials
     
 def test_find_impossible_differentials():
-    #from pride.crypto.designs.blockcipher.blockcipher import S_BOX as s_box
+    #from crypto.designs.blockcipher.blockcipher import S_BOX as s_box
     from scratch import aes_s_box as s_box
     xor_ddt, table2 = build_difference_distribution_table(s_box)
     impossible_differentials = find_impossible_differentials(xor_ddt)
@@ -151,8 +151,8 @@ def test_find_impossible_differentials():
     
 def test_build_difference_distribution_table():
     import pprint
-    #from pride.crypto.designs.blockcipher.blockcipher import S_BOX  
-    from pride.crypto.designs.blockcipher.aes_procedures import S_BOX       
+    #from crypto.designs.blockcipher.blockcipher import S_BOX  
+    from crypto.designs.blockcipher.aes_procedures import S_BOX       
     table1, table2 = build_difference_distribution_table(S_BOX, ((xor, None), (rotate_left, rotational_difference)))    
    # print max(table1[1].values())
     print find_best_differential_in_table(table1)
@@ -163,12 +163,12 @@ def test_build_difference_distribution_table():
     #pprint.pprint(table1)
     
 def test_calculate_differential_chain():
-    from pride.crypto.designs.blockcipher.blockcipher import S_BOX    
+    from crypto.designs.blockcipher.blockcipher import S_BOX    
     chain = calculate_differential_chain(build_difference_distribution_table(S_BOX)[0], 128)
     print len(chain), chain
     
 def test_differential_attack():
-    from pride.crypto.designs.blockcipher.blockcipher import S_BOX, encrypt_block
+    from crypto.designs.blockcipher.blockcipher import S_BOX, encrypt_block
     key = bytearray("\x00\x00")
     def encryption_function(data):
         encrypt_block(data, key)

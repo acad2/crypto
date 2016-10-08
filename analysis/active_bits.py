@@ -1,11 +1,12 @@
 from math import log
 
-from pride.crypto.utilities import integer_to_bytes, bytes_to_integer, slide
+from crypto.utilities import integer_to_bytes, bytes_to_integer, slide, rotate_left
 
 def hamming_weight(word):
     return format(word, 'b').count('1')
     
-def search_minimum_active_bits(permutation, argument_function, output_function, test_length=256, display_progress=True):  
+def search_minimum_active_bits(permutation, argument_function, output_function, test_length=256, display_progress=True,
+                               test_inputs=set([1 << shift for shift in range(32)] + [rotate_left(3, amount, 32) for amount in range(32)])):  
     """ Searches for the minimum number of active bits for permutation.
         
         - permutation is the function to be tested. 
@@ -38,11 +39,14 @@ def search_minimum_active_bits(permutation, argument_function, output_function, 
     last_output = output_function(permutation(argument_function(0, 0, 0, 1)))
     minimum_weight = 0
     minimum_weight2 = 0
-        
-    for x in xrange(1, test_length + 1): # itertools.product isn't as useful because of the print statements every 65536 iterations
-        for y in xrange(256):
-            for z in xrange(256):
-                output = output_function(permutation(argument_function(0, x, y, z)))               
+               
+    for x in test_inputs:
+        for y in test_inputs:
+            for z in test_inputs:
+    #for x in xrange(1, test_length + 1): # itertools.product isn't as useful because of the print statements every 65536 iterations
+    #    for y in xrange(256):
+    #        for z in xrange(256):
+                output = output_function(permutation(argument_function(0, x, y, z)))                  
                 output_hamming_weight = sum(hamming_weight(word) for word in output)                
                 weights.append(output_hamming_weight)
                 
@@ -67,11 +71,11 @@ def search_minimum_active_bits(permutation, argument_function, output_function, 
     
     
 def test_search_minimum_active_bits():
-    from pride.crypto.designs.permutation import permutation3
+    from crypto.designs.permutation import permutation3
     search_minimum_active_bits(lambda args: permutation3.permutation(*args), lambda *args: args, lambda args: args)
     
 def demo_aes_active_bits():    
-    from pride.crypto.designs.blockcipher.aes_procedures import aes_round_no_key
+    from crypto.designs.blockcipher.aes_procedures import aes_round_no_key
     
     def test_function(state):
         aes_round_no_key(state)

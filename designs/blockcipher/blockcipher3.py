@@ -183,11 +183,11 @@ def test_encrypt_decrypt():
         
 
 try:
-    import pride.crypto
+    import crypto
 except ImportError:
     pass
 else:
-    class Test_Cipher(pride.crypto.Cipher):
+    class Test_Cipher(crypto.Cipher):
                 
                 
         def __init__(self, *args):

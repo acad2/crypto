@@ -1,6 +1,6 @@
-import pride.crypto.designs.hash.sponge as sponge
-from pride.crypto.utilities import xor_sum, rotate_left
-from pride.crypto.analysis.metrics import test_hash_function    
+import crypto.designs.hash.sponge as sponge
+from crypto.utilities import xor_sum, rotate_left
+from crypto.analysis.metrics import test_hash_function    
 
 def round_function(left, right, key, index, 
                    mask=255, rotation_amount=5, bit_width=8):        
@@ -67,7 +67,7 @@ def permute(state, rate_section=slice(0, 16), capacity_section=slice(16, 32), ma
 permute3_sponge = sponge.sponge_factory(permute, output_size=32, rate=slice(0, 16), capacity=slice(16, 32))
     
 def shuffle_bytes_optimized(_state):
-    temp = _state[0] # copied from pride.crypto.designs.blockcipher.blockcipher3optimized.cpp
+    temp = _state[0] # copied from crypto.designs.blockcipher.blockcipher3optimized.cpp
     
     _state[0] = _state[11];
     _state[11] = _state[8];

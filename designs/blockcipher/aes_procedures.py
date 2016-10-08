@@ -135,7 +135,7 @@ def test_mixcolumn():
         if (z == y): txt = "pass"
         print ("f(0x%08X) = 0x%08X (expect 0x%08X) [%s]" % (x, z, y, txt))
     
-from pride.crypto.utilities import bytes_to_integer, integer_to_bytes
+from crypto.utilities import bytes_to_integer, integer_to_bytes
     
 def _mixColumn2(a):
     b = a & 0x80808080;
@@ -151,7 +151,7 @@ def _mixColumn2(a):
     return b ^ (a >> 16) ^ ((a << 16) & 0xFFFFFFFF);
     
 def test_mixColumn2():
-    from pride.crypto.utilities import bytes_to_integer, integer_to_bytes
+    from crypto.utilities import bytes_to_integer, integer_to_bytes
     column = range(4)
     column2 = range(4)
     

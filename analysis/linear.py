@@ -1,5 +1,5 @@
 import pprint
-from pride.crypto.utilities import hamming_weight
+from crypto.utilities import hamming_weight
 
 #def build_test(sbox):
 #    approximations = {}
@@ -63,17 +63,17 @@ def dump_linear_approximation_table(sbox, filename, exhaustive=True):
         _file.write(pprint.pformat(table))
         
 def test_dump_linear_approximation_table():
-    from pride.crypto.designs.blockcipher.aes_procedures import S_BOX
+    from crypto.designs.blockcipher.aes_procedures import S_BOX
     dump_linear_approximation_table(S_BOX, "aes_sbox_lat", False)
     
 def test_build_linear_approximation_table():
-    from pride.crypto.designs.blockcipher.blockcipher import S_BOX as sbox
+    from crypto.designs.blockcipher.blockcipher import S_BOX as sbox
     approximations = build_linear_approximation_table(sbox)
     import pprint
     pprint.pprint(approximations)
     
 def test_find_best_linear_approximation():
-    from pride.crypto.designs.blockcipher.aes_procedures import S_BOX
+    from crypto.designs.blockcipher.aes_procedures import S_BOX
     best_approximation = find_best_linear_approximation(S_BOX)
     print "Best approximation: ", best_approximation
     

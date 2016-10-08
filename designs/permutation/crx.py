@@ -83,11 +83,11 @@ def round_function_unrolled(a, b, c, d,  _mask=0xFFFFFFFFFFFFFFFF):
     return a, b, c, d   
    
 def test_round_function():
-    from pride.crypto.analysis.visualization import test_4x64_function
+    from crypto.analysis.visualization import test_4x64_function
     test_4x64_function(round_function, (1, 0, 0, 0))
     
 def test_round_function2():
-    from pride.crypto.analysis.visualization import test_4x64_function
+    from crypto.analysis.visualization import test_4x64_function
     test_4x64_function(round_function2, (1, 0, 0, 0, 1))
     
 if __name__ == "__main__":

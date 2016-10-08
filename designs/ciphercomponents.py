@@ -1,6 +1,6 @@
 # imported by a few modules. Mostly contains ideas that weren't very efficient
-from pride.crypto.utilities import rotate_left, rotate_right, shift_left, shift_right, xor_subroutine
-from pride.crypto.utilities import slide, integer_to_bytes, bytes_to_integer, longs_to_bytes, bytes_to_longs
+from crypto.utilities import rotate_left, rotate_right, shift_left, shift_right, xor_subroutine
+from crypto.utilities import slide, integer_to_bytes, bytes_to_integer, longs_to_bytes, bytes_to_longs
 
 def mixRow(a):
     b = a & 0x80808080;
@@ -134,7 +134,7 @@ def test_bit_byte_transposition_words():
     assert output1 == output2, (output1, output2)    
 
 def visualize_choice_rotate_mixrow():
-    from pride.crypto.analysis.visualization import test_4x32_function
+    from crypto.analysis.visualization import test_4x32_function
     test_4x32_function(choice_rotate_mixRow, (0, 0, 0, 1))
         
         

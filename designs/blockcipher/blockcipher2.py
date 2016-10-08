@@ -1,4 +1,4 @@
-from pride.crypto.utilities import xor_sum, rotate_left, rotate_right, slide, xor_subroutine, integer_to_bytes, bytes_to_words, words_to_bytes
+from crypto.utilities import xor_sum, rotate_left, rotate_right, slide, xor_subroutine, integer_to_bytes, bytes_to_words, words_to_bytes
     
 def shuffle_bytes(_state):
 
@@ -179,11 +179,11 @@ def test_invert_prp():
     assert data == "Testing!" * 2, data
     
 def test_prp_cycle_length():
-    from pride.crypto.utilities import find_cycle_length_subroutine
+    from crypto.utilities import find_cycle_length_subroutine
     print len(find_cycle_length_subroutine(prp, bytearray("\x00\x01\x00"), 3))
     
 def test_prp_metrics():
-    from pride.crypto.utilities import slide, xor_subroutine
+    from crypto.utilities import slide, xor_subroutine
     def test_hash(data):   
         size = len(data)
         data = data + ("\x00" * (16 - size))
@@ -198,7 +198,7 @@ def test_prp_metrics():
                 xor_subroutine(output, block)        
         return bytes(output)
         
-    from pride.crypto.analysis.metrics import test_hash_function
+    from crypto.analysis.metrics import test_hash_function
     test_hash_function(test_hash)
         
 def test_prp_s_box():  
@@ -230,7 +230,7 @@ def test_prf():
             xor_subroutine(output, block)        
         return bytes(output)
         
-    from pride.crypto.analysis.metrics import test_hash_function
+    from crypto.analysis.metrics import test_hash_function
     test_hash_function(test_hash)
         
 def test_prp():       

@@ -11,7 +11,7 @@ def permutation(x, y, z):
     return x, y, z
     
 def visualize_chi_step():
-    from pride.crypto.analysis.visualization import test_4x32_function
+    from crypto.analysis.visualization import test_4x32_function
     test_4x32_function(permutation, (0, 0, 1))
     
 if __name__ == "__main__":

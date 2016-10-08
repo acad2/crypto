@@ -25,7 +25,7 @@ if algo.lower() == "aes":
     algo = AES
     BS = 16
 elif algo.lower() == "test":
-    from pride.crypto.blockcipher import Test_Cipher
+    from crypto.blockcipher import Test_Cipher
     algo = Test_Cipher     
     BS = 16        
     encryption_key = "\x00" * 16
@@ -134,7 +134,7 @@ with open("idek.py", 'w') as _file:
     _file.write("""try:
     from Crypto.Cipher import %(algo)s
 except ImportError:
-    from pride.crypto.blockcipher import Test_Cipher
+    from crypto.blockcipher import Test_Cipher
     algo = Test_Cipher
 
 algo = %(algo)s.new(%(key)s, %(algo)s.MODE_CBC, %(IV)s)

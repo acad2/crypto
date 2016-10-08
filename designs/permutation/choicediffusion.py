@@ -1,4 +1,4 @@
-from pride.crypto.utilities import rotate_left
+from crypto.utilities import rotate_left
 
 def choice(a, b, c):
     return c ^ (a & (b ^ c))
@@ -109,13 +109,13 @@ def keyed_permutation(a, b, c, d, k0=1, k1=0, k2=0, k3=0, mask=0xFFFFFFFF):
     return a, b, c, d
     
 def visualize_keyed_permutation():
-    from pride.crypto.analysis.visualization import test_4x32_function
+    from crypto.analysis.visualization import test_4x32_function
     from os import urandom
-    from pride.crypto.utilities import bytes_to_integer
+    from crypto.utilities import bytes_to_integer
     test_4x32_function(keyed_permutation, (0, 0, 0, 1) + tuple(bytes_to_integer(bytearray(urandom(4))) for count in range(4)))
     
 def test_active_bits():
-    from pride.crypto.analysis.active_bits import search_minimum_active_bits
+    from crypto.analysis.active_bits import search_minimum_active_bits
     search_minimum_active_bits(lambda args: keyed_permutation(*args), lambda *args: args, lambda args: args)
     
     

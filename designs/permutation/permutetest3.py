@@ -1,4 +1,4 @@
-from pride.crypto.utilities import xor_sum
+from crypto.utilities import xor_sum
 def permute(left_byte, right_byte, key_byte, modifier):        
     """ Psuedorandom function. left_byte, right_byte, and key_byte are all
         16-bit unsigned integers. 
@@ -138,9 +138,9 @@ def crypt_data(data, key, tag, tweak, constant_selector, direction, rounds=3, co
     for index in range(half_size):
         data[index], data[half_size + index] = data[half_size + index], data[index]                 
     
-import pride.crypto
+import crypto
 
-class Feistel_Cipher(pride.crypto.Cipher):
+class Feistel_Cipher(crypto.Cipher):
         
     def __init__(self, *args):
         super(Feistel_Cipher, self).__init__(*args)

@@ -1,7 +1,7 @@
 import os
 
 from ctypes import c_uint8 as eight_bit_integer, c_uint16 as word
-from pride.crypto.utilities import cast, hamming_weight, rotate_left, rotate_right, find_cycle_length, replacement_subroutine, xor_subroutine
+from crypto.utilities import cast, hamming_weight, rotate_left, rotate_right, find_cycle_length, replacement_subroutine, xor_subroutine
 from differential import find_best_differential
 from linear import calculate_linearity
  

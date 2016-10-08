@@ -1,4 +1,4 @@
-from pride.crypto.utilities import rotate_left, bytes_to_integer, integer_to_bytes
+from crypto.utilities import rotate_left, bytes_to_integer, integer_to_bytes
 
 def micksRow(a):
     b = a & 0x80808080;
@@ -179,7 +179,7 @@ def print_active_sbox_info():
         print "Active bits: {}/{}".format(output_difference.count('1'), len(output_difference))                   
             
 def test_round_function():
-    from pride.crypto.utilities import print_state_4x4, integer_to_bytes
+    from crypto.utilities import print_state_4x4, integer_to_bytes
     state, state2 = 1, 0
     
     state = polarize(state)

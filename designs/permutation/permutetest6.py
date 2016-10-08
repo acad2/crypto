@@ -1,4 +1,4 @@
-from pride.crypto.utilities import xor_sum, rotate_right, rotate_left
+from crypto.utilities import xor_sum, rotate_right, rotate_left
 
 def permute(left_byte, right_byte, key_byte, modifier):                             
     right_byte = (right_byte + key_byte + modifier) & 65535
@@ -92,9 +92,9 @@ def test_encrypt_decrypt():
     plaintext = decrypt_block(ciphertext, key)
     assert plaintext == data, (plaintext, data)
     
-#import pride.crypto
+#import crypto
 #
-#class Test_Cipher(pride.crypt.Cipher):
+#class Test_Cipher(crypto.Cipher):
 #        
 #    def encrypt_block(self, data, key, 
     

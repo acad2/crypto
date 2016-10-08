@@ -1,6 +1,6 @@
 import pride.gui
 import pride.gui.gui
-from pride.crypto.utilities import cast
+from crypto.utilities import cast
 
 class Bit(pride.gui.gui.Button): 
 

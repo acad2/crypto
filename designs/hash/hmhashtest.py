@@ -1,4 +1,4 @@
-from pride.crypto.utilities import slide, pad_input, rotate_left
+from crypto.utilities import slide, pad_input, rotate_left
 
 def hamming_weight(byte):
     # from http://stackoverflow.com/a/109025/3103584
@@ -54,7 +54,7 @@ def test_hamming_weight_hash():
         input[-1] = byte
         print hamming_weight_hash(input)
         
-    #from pride.crypto.analysis.metrics import test_hash_function
+    #from crypto.analysis.metrics import test_hash_function
     #test_hash_function(hamming_weight_hash)
     
 if __name__ == "__main__":

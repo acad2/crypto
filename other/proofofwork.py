@@ -2,7 +2,7 @@ import itertools
 import hashlib
 from os import urandom
 
-from pride.crypto.utilities import slide, save_data, load_data
+from crypto.utilities import slide, save_data, load_data
         
 def _tunable_hash(data, key, work_factor, algorithm="sha224"):
     return hashlib.pbkdf2_hmac(algorithm, data, key, work_factor)

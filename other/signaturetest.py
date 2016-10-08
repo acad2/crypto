@@ -1,7 +1,7 @@
 from os import urandom
 import hashlib
 
-from pride.crypto.utilities import integer_to_bytes, bytes_to_integer
+from crypto.utilities import integer_to_bytes, bytes_to_integer
 
 def hash(data, algorithm="sha256"):
     hasher = getattr(hashlib, algorithm.lower())()

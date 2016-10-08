@@ -38,8 +38,8 @@ def hamming_weight(data, word_size=8):
 def find_duplicate_via_prng():    
     import random
     import itertools
-    from pride.crypto.utilities import slide, bytes_to_longs
-    from pride.crypto.designs.ciphercomponents import optimized_bit_byte_transposition_words as prng_of_hamming_weight
+    from crypto.utilities import slide, bytes_to_longs
+    from crypto.designs.ciphercomponents import optimized_bit_byte_transposition_words as prng_of_hamming_weight
     sample_size = 16
     weight = 64
     test_sample = list(('1' * weight).zfill(128))
@@ -71,7 +71,7 @@ def find_duplicate_via_prng():
         print "Regenerated identical samples after: {} (2 ** {})".format(counter, log(counter, 2))
     
 def find_duplicate2():
-    from pride.crypto.utilities import bytes_to_integer
+    from crypto.utilities import bytes_to_integer
     target_weight = 19
     target_sample = bytearray(8)
     samples = []

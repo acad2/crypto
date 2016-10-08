@@ -1,4 +1,4 @@
-from pride.crypto.utilities import bytes_to_integer, integer_to_bytes
+from crypto.utilities import bytes_to_integer, integer_to_bytes
 
 # 0 1 2 3  4 5  6  7   8  9 10 11 12 13 14 15 
 # 8 6 5 15 1 13 10 9   14 12 2 4  7  0  14 3

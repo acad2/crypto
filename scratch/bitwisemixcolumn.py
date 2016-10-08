@@ -1,6 +1,6 @@
-from pride.crypto.utilities import slide, integer_to_bytes
-from pride.crypto.designs.ciphercomponents import choice, rotate_left
-from pride.crypto.analysis.visualization import test_4x64_function
+from crypto.utilities import slide, integer_to_bytes
+from crypto.designs.ciphercomponents import choice, rotate_left
+from crypto.analysis.visualization import test_4x64_function
 
 def rotl16(word, amount):
     return rotate_left(word, amount, bit_width=16)

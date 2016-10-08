@@ -1,6 +1,6 @@
-import pride.crypto.designs.hash.sponge
-from pride.crypto.designs.hash.sponge import symmetric_primitive_factory
-from pride.crypto.utilities import slide, xor_sum, generate_s_box
+import crypto.designs.hash.sponge
+from crypto.designs.hash.sponge import symmetric_primitive_factory
+from crypto.utilities import slide, xor_sum, generate_s_box
 
 ASCII_CONSTANT = ''.join(chr(x) for x in xrange(256))
                                 
@@ -84,7 +84,7 @@ def test_one_way_function():
     print len(set(outputs)), len(outputs), set([len(output) for output in outputs])
     
 if __name__ == "__main__":
-    from pride.crypto.analysis.metrics import test_hash_function, test_block_cipher
+    from crypto.analysis.metrics import test_hash_function, test_block_cipher
     #test_hash_function(sbox_hash)
     #test_hash_function(base_conversion_hash)
     #test_hash_function(permute_hash)

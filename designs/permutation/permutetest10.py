@@ -29,10 +29,10 @@ def test_encrypt():
     print encrypt(ciphertext, key, _start=4, _direction=-1)
     
     
-import pride.crypto
-from pride.crypto.utilities import replacement_subroutine
+import crypto
+from crypto.utilities import replacement_subroutine
 
-class Test_Cipher(pride.crypto.Cipher):
+class Test_Cipher(crypto.Cipher):
         
     def __init__(self, *args):
         super(Test_Cipher, self).__init__(*args)

@@ -1,4 +1,4 @@
-from pride.crypto.utilities import xor_subroutine, rotate_left, rotate_right, find_long_cycle_length, find_long_cycle_length_subroutine
+from crypto.utilities import xor_subroutine, rotate_left, rotate_right, find_long_cycle_length, find_long_cycle_length_subroutine
 
 def n_byte_addition(amount, _bytes):
     last_byte = _bytes[-1] + amount
@@ -86,7 +86,7 @@ def shuffle(data, key):
         #    else:
         #        data[i], data[i] = data[i], data[i]
         
-from pride.crypto.designs.hash.sponge import pride.crypto.designs.hash.sponge_factory
+from crypto.designs.hash.sponge import crypto.designs.hash.sponge_factory
 tweak = list(set((x | 1 for x in range(256)))) # some odd numbers
 permute_hash = sponge_factory(lambda data: keyed_permute_diffusion(data, tweak),
                               output_size=2, rate=2, capacity=1)      
@@ -95,7 +95,7 @@ permute_hash = sponge_factory(lambda data: keyed_permute_diffusion(data, tweak),
 #    if not data:
 #        return data
 #    
-#   # from pride.crypto.utilities import xor_sum
+#   # from crypto.utilities import xor_sum
 #   # state = xor_sum(data) | 1
 #    tweak = list(set((x | 1 for x in range(256))))[-len(data):] # some odd numbers
 #    for round in range(1):                
@@ -136,7 +136,7 @@ def test_prp():
 if __name__ == "__main__":
     test_permute()
     #test_prp()
-    #from pride.crypto.analysis.metrics import test_hash_function, test_collisions
+    #from crypto.analysis.metrics import test_hash_function, test_collisions
     #test_collisions(lambda data: bytes(permute_hash(bytearray(data))))
     #test_hash_function(lambda data: bytes(permute_hash(bytearray(data))))#permute_hash, collision_test=False)
     

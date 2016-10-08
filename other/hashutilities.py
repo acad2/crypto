@@ -6,7 +6,7 @@ import random
 import hashlib
 import functools
 
-from pride.crypto.utilities import save_data, load_data, slide
+from crypto.utilities import save_data, load_data, slide
 
 RANGE_256 = tuple([chr(x) for x in range(256)])
 PRINTABLE_ASCII = tuple(chr(x) for x in xrange(32, 127))

@@ -1,4 +1,4 @@
-from pride.crypto.utilities import bytes_to_integer, integer_to_bytes, rotate_left, xor_subroutine, slide
+from crypto.utilities import bytes_to_integer, integer_to_bytes, rotate_left, xor_subroutine, slide
 
 def decorrelation_layer(state, state2):
     # top half   
@@ -160,7 +160,7 @@ def test_prp_active_sboxes():
     bottom = 1
     key = top ^ bottom
     
-    from pride.crypto.designs.blockcipher.aes_procedures import mixColumns
+    from crypto.designs.blockcipher.aes_procedures import mixColumns
     
     def prp_8_bit(top, bottom, key, index):
         return prp(top, bottom, key, index, mask=0xFF, rotations=5, bit_width=8)

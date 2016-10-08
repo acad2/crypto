@@ -1,6 +1,6 @@
-from pride.crypto.utilities import  longs_to_bytes, bytes_to_longs
-from pride.crypto.designs.ciphercomponents import optimized_bit_byte_transposition_words as branching_step
-from pride.crypto.designs.ciphercomponents import choice_rotate_mixRow as nonlinear_mixing_step
+from crypto.utilities import  longs_to_bytes, bytes_to_longs
+from crypto.designs.ciphercomponents import optimized_bit_byte_transposition_words as branching_step
+from crypto.designs.ciphercomponents import choice_rotate_mixRow as nonlinear_mixing_step
    
 def permutation_256_32(state, rounds=1):
     (a, b, c, d,
@@ -18,7 +18,7 @@ def permutation_256_32(state, rounds=1):
     state[:] = longs_to_bytes(a, b, c, d, e, f, g, h)
     
 def test_permutation():
-    from pride.crypto.analysis.metrics import test_permutation
+    from crypto.analysis.metrics import test_permutation
     def _permutation(_input):
         state = bytearray(_input)
         permutation_256_32(state)

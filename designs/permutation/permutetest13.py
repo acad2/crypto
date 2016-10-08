@@ -1,4 +1,4 @@
-from pride.crypto.utilities import xor_subroutine, xor_sum, rotate_left, rotate_right
+from crypto.utilities import xor_subroutine, xor_sum, rotate_left, rotate_right
 
 def bit_transposition(self):
     output = bytearray(16)
@@ -366,9 +366,9 @@ def test_encrypt_decrypt():
     #encrypt_unrolled(data, key)
     #assert data == ciphertext, (data, ciphertext)    
     
-import pride.crypto
+import crypto
 
-class Test_Cipher(pride.crypto.Cipher):
+class Test_Cipher(crypto.Cipher):
             
     def __init__(self, *args):
         super(Test_Cipher, self).__init__(*args)

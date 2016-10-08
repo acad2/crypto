@@ -1,8 +1,7 @@
-import pride.functions.utilities
-import pride.crypto
+import crypto
 
 import itertools
-from pride.crypto.utilities import cast, slide, xor_sum, xor_subroutine, generate_s_box
+from crypto.utilities import cast, slide, xor_sum, xor_subroutine, generate_s_box
 
 import random
 
@@ -190,7 +189,7 @@ def online_keyschedule_embedded_decryption_key(data, key, constants, rounds, cou
 def generate_embedded_decryption_key(key, rounds, tweak):
     return generate_round_keys(key[:], rounds, tweak)[-1]    
     
-class Test_Cipher(pride.crypto.Cipher):
+class Test_Cipher(crypto.Cipher):
     
     def __init__(self, key, mode, rounds=1, tweak=None):        
         self.key = key#; from os import urandom; self.key = urandom(len(key));        
@@ -244,15 +243,6 @@ def test_Cipher():
     for count in range(5):
         plaintext = data + chr(count)
         real_ciphertext = cipher.encrypt(plaintext, iv)  
-        
-    #    for location in range(size):
-    #        correct_bytes = real_ciphertext[location:location +size]
-    #        
-    #        for modification in (''.join(chr(byte) for byte in bytes) for bytes in itertools.product(*(range(256)for count in range(size)))):#, range(256)):
-    #            attacked_ciphertext = pride.functions.utilities.splice(modification, into=real_ciphertext, at=location)            
-    #            invalid_plaintext = cipher.decrypt(attacked_ciphertext, iv) 
-    #            if invalid_plaintext[:8] == "Mac Code" and modification != correct_bytes:
-    #                print "Mac code collision", correct_bytes, modification, invalid_plaintext, plaintext
       
         real_plaintext = cipher.decrypt(real_ciphertext, iv)
         #print real_ciphertext
@@ -267,7 +257,8 @@ def test_cipher_metrics():
     Test_Cipher.test_metrics("\x00" * 16, "\x00" * 16, performance_test_sizes=(1500, 4096))    
 
 def test_linear_cryptanalysis():       
-    from pride.crypto.utilities import xor_parity
+    from crypto.utilities import xor_parity
+    import pride.functions.utilities
     
     def _test_random_data():
         import os
@@ -308,7 +299,7 @@ def test_linear_cryptanalysis():
     
 def test_generate_round_key():
     constants = range(16)
-    class Test_Cipher(pride.crypto.Cipher):
+    class Test_Cipher(crypto.Cipher):
         
         def __init__(self, *args):
             super(Test_Cipher, self).__init__(*args)
@@ -328,7 +319,7 @@ def test_generate_round_key():
     #    generate_round_key(key, constants)
     #    key_material.extend(key[:])
     #   # print key
-    #from pride.crypto.analysis.metrics import test_randomness, test_avalanche
+    #from crypto.analysis.metrics import test_randomness, test_avalanche
     #test_randomness(bytes(key_material))
     #    
     #constants = generate_default_constants(16)
@@ -340,7 +331,7 @@ def test_generate_round_key():
     #test_avalanche(_test_interface)
     
 def test_extract_round_key():        
-    class Test_Cipher(pride.crypto.Cipher):
+    class Test_Cipher(crypto.Cipher):
         
         def __init__(self, *args):
             super(Test_Cipher, self).__init__(*args)
@@ -358,7 +349,7 @@ def test_extract_round_key():
     #   # print key
     #    key_material.extend(key[:])
     #            
-    #from pride.crypto.analysis.metrics import test_randomness, test_avalanche
+    #from crypto.analysis.metrics import test_randomness, test_avalanche
     #test_randomness(bytes(key_material))       
     #
     #def _test_interface(data):

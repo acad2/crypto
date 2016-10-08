@@ -1,4 +1,4 @@
-from pride.crypto.utilities import hamming_weight, xor_sum, rotate_right
+from crypto.utilities import hamming_weight, xor_sum, rotate_right
 
 def calculate_branch_number(substitution_diffusion_substitution_layer, datasize):
     raise NotImplementedError()
@@ -51,7 +51,7 @@ def diffusion_layer(data):
     polarize(data)
     shuffle_bytes(data)
     
-from pride.crypto.designs.blockcipher.aes_procedures import S_BOX, subBytes, shiftRows, mixColumns
+from crypto.designs.blockcipher.aes_procedures import S_BOX, subBytes, shiftRows, mixColumns
     
 def substitution_layer(data):    
     for index, byte in enumerate(data):

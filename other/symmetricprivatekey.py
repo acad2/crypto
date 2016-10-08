@@ -1,6 +1,6 @@
-from pride.crypto.designs.permutation.permutation3 import permutation_subroutine, invert_permutation_subroutine
+from crypto.designs.permutation.permutation3 import permutation_subroutine, invert_permutation_subroutine
 
-from pride.crypto.utilities import xor_subroutine
+from crypto.utilities import xor_subroutine
 
 def cipher(data, encryption_key, permutation=permutation_subroutine, rounds=2):  
     """ Cipher construction with 2 inputs and 2 outputs.

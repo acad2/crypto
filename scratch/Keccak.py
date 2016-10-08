@@ -375,7 +375,7 @@ def keccak_hash(data):
         return keccak_1600(Keccak((len(data) * 8, hex(data))))
 
 def test_keccak_metrics():    
-    from pride.crypto.analysis.metrics import test_hash_function
+    from crypto.analysis.metrics import test_hash_function
     test_hash_function(keccak_hash)        
 
 if __name__ == "__main__":

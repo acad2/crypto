@@ -1,7 +1,7 @@
 import os    
 
-import pride.crypto
-from pride.crypto.utilities import xor_sum, xor_subroutine, replacement_subroutine
+import crypto
+from crypto.utilities import xor_sum, xor_subroutine, replacement_subroutine
 
 def convert(old_value, old_base, new_base):
     old_base_size = len(old_base)    
@@ -147,7 +147,7 @@ def decrypt(data, key, conversion_key, conversion_key2):
     xor_subroutine(data, key)
     return bytes(data)
     
-class Test_Cipher(pride.crypto.Cipher):
+class Test_Cipher(crypto.Cipher):
      
     def __init__(self, *args):
         super(Test_Cipher, self).__init__(*args)

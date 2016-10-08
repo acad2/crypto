@@ -1,4 +1,4 @@
-from pride.crypto.utilities import slide
+from crypto.utilities import slide
 from cryptanalysis import summarize_sbox
   
 kalyna_sbox = [int(_bytes, 16) for _bytes in """A8 43 5F 06 6B 75 6C 59 71 DF 87 95 17 F0 D8 09

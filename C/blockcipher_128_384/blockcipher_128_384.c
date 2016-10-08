@@ -67,10 +67,11 @@
     nonlinear_mixing(b, c, d, a, 2, 7);\
     nonlinear_mixing(c, d, a, b, 3, 15);\
     nonlinear_mixing(d, a, b, c, 5, 17);})                                                                                                
-            
+                
 #define choice_swap(key, a, b)({\
+    t = a;\
     a = choice(key, a, b);\
-    b = choice(~key, a, b);})
+    b = choice(key, b, t);})
     
 #define shuffle_words(a, b, c, d, key, key_number)({\
     choice_swap(key[(4 * key_number) + 0], a, b);\

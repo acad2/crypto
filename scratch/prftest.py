@@ -1,4 +1,4 @@
-from pride.crypto.utilities import rotate_left
+from crypto.utilities import rotate_left
 from differential import find_best_differential
 from linear import calculate_linearity
 

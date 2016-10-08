@@ -1,5 +1,5 @@
 from rng import random_bytes as stream_cipher
-from pride.crypto.utilities import xor_subroutine, xor_sum, rotate_left, rotate_right
+from crypto.utilities import xor_subroutine, xor_sum, rotate_left, rotate_right
 
 def shuffle_bytes(_state, temp=list(range(16))):          
     temp[7] = _state[0] 

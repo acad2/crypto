@@ -1,4 +1,4 @@
-from pride.crypto.utilities import (rotate_left, rotate_right, bytes_to_words, 
+from crypto.utilities import (rotate_left, rotate_right, bytes_to_words, 
                        words_to_bytes, high_order_byte, low_order_byte,
                        bytes_to_integer, integer_to_bytes)             
 
@@ -146,10 +146,10 @@ def encrypt(data, key):
     left, right = _encrypt(left, right, key)
     return integer_to_bytes(left, 8) + integer_to_bytes(right, 8)
     
-import pride.crypto
-from pride.crypto.utilities import replacement_subroutine
+import crypto
+from crypto.utilities import replacement_subroutine
 
-class Test_Cipher(pride.crypto.Cipher):
+class Test_Cipher(crypto.Cipher):
         
     def __init__(self, *args):
         super(Test_Cipher, self).__init__(*args)
@@ -274,7 +274,7 @@ def test_mix_rows():
 def test_shift_and_mix():
     left = right =  (1 << 8) | 1
     lefts, rights = [], []
-    from pride.crypto.utilities import integer_to_bytes
+    from crypto.utilities import integer_to_bytes
     _print_state(left, right, "Before: ")
     for round in range(65536):
         left, right = shift_rows(left, right)             

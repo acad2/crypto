@@ -271,7 +271,7 @@ def test_block_cipher(encrypt_method, key, iv, avalanche_test=True, randomness_t
                       period_test=True, performance_test=True, randomize_key=False, 
                       blocksize=None, performance_test_sizes=(32, 256, 1500, 4096, 65536, 1024 * 1024)):
     """ Test statistical metrics of the supplied cipher. cipher should be a 
-        pride.crypto.Cipher object or an object that supports an encrypt method
+        crypto.Cipher object or an object that supports an encrypt method
         that accepts plaintext bytes and key bytes and returns ciphertext bytes""" 
     keysize = len(key)
     blocksize = blocksize if blocksize is not None else keysize    
@@ -327,12 +327,12 @@ def test_stream_cipher(encrypt_method, key, seed, avalanche_test=True, randomnes
         test_cipher_performance(performance_test_sizes, encrypt_method, key, seed)
     
 def test_aes_metrics(test_options):     
-    import pride.crypto
+    import crypto
     from pride.functions.security import encrypt as aes_encrypt
     from pride.functions.security import random_bytes
-    from pride.crypto.utilities import replacement_subroutine
+    from crypto.utilities import replacement_subroutine
         
-    class Aes_Cipher(pride.crypto.Cipher):
+    class Aes_Cipher(crypto.Cipher):
         
         key = random_bytes(16)
         
@@ -352,7 +352,7 @@ def test_sha_metrics():
     test_hash_function(lambda data: sha256(data).digest())
     
 def test_random_metrics():
-    from pride.crypto.utilities import random_oracle_hash_function
+    from crypto.utilities import random_oracle_hash_function
     print "Testing metrics of a random oracle hash function... "
     test_hash_function(random_oracle_hash_function)
     

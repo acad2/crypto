@@ -93,6 +93,6 @@ def test_bit_byte_transposition_diffusion():
                     block[index] = (block[index] + block[(index + 2) % 16] + index) % 256
             xor_subroutine(output, block)        
         return bytes(output)
-    from pride.crypto.analysis.metrics import test_hash_function
+    from crypto.analysis.metrics import test_hash_function
     test_hash_function(test_hash)
     

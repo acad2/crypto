@@ -1,5 +1,5 @@
-from pride.crypto.utilities import bytes_to_integer, integer_to_bytes, replacement_subroutine, slide
-from pride.crypto.analysis.metrics import test_hash_function
+from crypto.utilities import bytes_to_integer, integer_to_bytes, replacement_subroutine, slide
+from crypto.analysis.metrics import test_hash_function
 
 def mick_sponge_64_subroutine(state, mask=0xFFFFFFFFFFFFFFFF):    
     spunj = bytes_to_integer(state)
@@ -44,7 +44,7 @@ def mick_hash(data, sponge_function=mick_sponge_64):
     return integer_to_bytes(out)
     
 def test_mick_sponge_64():
-    from pride.crypto.designs.hash.sponge import pride.crypto.designs.hash.sponge_factory    
+    from crypto.designs.hash.sponge import crypto.designs.hash.sponge_factory    
     hash_function = sponge_factory(mick_sponge_64_subroutine, rate=1, capacity=7)
     test_hash_function(hash_function, avalanche_test=False, randomness_test=True)
     

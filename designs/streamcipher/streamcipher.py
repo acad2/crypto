@@ -1,4 +1,4 @@
-from pride.crypto.utilities import xor_sum, rotate_left, rotate_right, slide, xor_subroutine, integer_to_bytes, bytes_to_words, words_to_bytes
+from crypto.utilities import xor_sum, rotate_left, rotate_right, slide, xor_subroutine, integer_to_bytes, bytes_to_words, words_to_bytes
 
 def shuffle_bytes(_state, temp=list(range(16))):          
     temp[7] = _state[0] 
@@ -84,9 +84,9 @@ def encrypt(data, key, seed, size=(8, 255, 5)):
 def decrypt(data, key, seed, size=(8, 255, 5)):
     encrypt(data, key, seed, size)
     
-import pride.crypto
+import crypto
 
-class Stream_Cipher(pride.crypto.Cipher):
+class Stream_Cipher(crypto.Cipher):
     
     def encrypt(self, data, key, iv, size=(8, 255, 5)): 
         key += "\x00" * (16 - len(key))                        
@@ -114,13 +114,13 @@ class Stream_Cipher(pride.crypto.Cipher):
         
     @classmethod
     def test_performance(cls, *args, **kwargs):  
-        from pride.crypto.analysis.metrics import test_cipher_performance
+        from crypto.analysis.metrics import test_cipher_performance
         cipher = cls("\x00" * 16, None)
         test_cipher_performance((32, 1500, 4096, 1024 * 1024), cipher.encrypt, "\x00" * 16, "\x00" * 16)
     
     @classmethod
     def test_metrics(cls, *args, **kwargs):
-        from pride.crypto.analysis.metrics import test_stream_cipher
+        from crypto.analysis.metrics import test_stream_cipher
         cipher = cls(*args)
         test_stream_cipher(cipher.encrypt, "\x00" * 16, "\x00" * 16, **kwargs)
         

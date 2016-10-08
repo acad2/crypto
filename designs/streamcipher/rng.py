@@ -105,11 +105,11 @@ def _random_bytes(count, output, seed="\x00" * 256, key="\x00" * 256, tweak=tupl
         output.extend(output[:output_size])   
 
 try:
-    import pride.crypto    
+    import crypto    
 except ImportError:
     pass
 else:
-    from pride.crypto.utilities import xor_subroutine, xor_sum
+    from crypto.utilities import xor_subroutine, xor_sum
     
     class Stream_Cipher(object):
         
@@ -137,7 +137,7 @@ else:
             
         @classmethod
         def test_metrics(cls, *args, **kwargs):        
-            pride.crypto.analysis.metrics.test_stream_cipher(lambda data, key, seed: cls(key).encrypt(data, seed),
+            crypto.analysis.metrics.test_stream_cipher(lambda data, key, seed: cls(key).encrypt(data, seed),
                                                     *args, **kwargs)    
     
             
@@ -183,7 +183,7 @@ def test_random_number_generator():
     key = bytearray(os.urandom(256))#"\x00" * 256)
     tweak = range(256)    
     import pride.components.datastructures
-    from pride.crypto.analysis.metrics import hamming_distance, cast, test_randomness, test_prng_performance, test_bias_of_data
+    from crypto.analysis.metrics import hamming_distance, cast, test_randomness, test_prng_performance, test_bias_of_data
     random_megabyte = bytes(random_bytes(1024 * 1024, "\x00" * 256, key=key))
     test_randomness(random_megabyte)
     random_megabyte2 = bytes(random_bytes(1024 * 1024, "\x00" * 255 + "\x01", key=key))
@@ -203,7 +203,7 @@ def test_random_number_generator():
     test_prng_performance(lambda data, output_size: bytes(random_bytes(output_size, key=key)))               
     
 def test_shuffle_extract():
-    from pride.crypto.analysis.metrics import test_randomness, test_avalanche
+    from crypto.analysis.metrics import test_randomness, test_avalanche
     random_megabyte = bytearray()
     data = range(256)
     key = bytearray("\x00" * 256)

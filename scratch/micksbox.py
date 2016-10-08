@@ -1,4 +1,4 @@
-from pride.crypto.utilities import rotate_right
+from crypto.utilities import rotate_right
 import itertools
 
 def mick_prp(x, magic1=3, magic2=5, magic3=11, mask=0xFF):

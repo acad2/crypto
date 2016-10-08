@@ -66,13 +66,13 @@ def test_prp():
     print test_xor_difference(lambda data: prp(data, xor_sum(data)), 16)
         
 def test_prp_sponge():
-    import pride.crypto.designs.hash.sponge
+    import crypto.designs.hash.sponge
     import streamcipher2
-    from pride.crypto.utilities import xor_sum
+    from crypto.utilities import xor_sum
     
     #prp_hash = sponge.sponge_factory(lambda data: streamcipher2.prp(data, xor_sum(data)), capacity=8, rate=8)
     #print prp_hash("Testing")
-    #import pride.crypto.analysis.metrics
+    #import crypto.analysis.metrics
     
     prp = sponge.sponge_factory(lambda data: streamcipher2.prp(data, xor_sum(data)), capacity=8, rate=8, output_size=8)
     print test_xor_difference(prp, 8)

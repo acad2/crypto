@@ -1,7 +1,7 @@
 import os
 import itertools
 
-from pride.crypto.utilities import bytes_to_words, words_to_bytes
+from crypto.utilities import bytes_to_words, words_to_bytes
     
 def iv_generator(key, seed, wordsize=8, mask=(2 ** 64) - 1):
     state = bytes_to_words(seed, wordsize)    

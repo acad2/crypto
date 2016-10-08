@@ -1,6 +1,6 @@
-from pride.crypto.utilities import cast, replacement_subroutine, xor_subroutine
-from pride.crypto.utilities import rotate_left, rotate_right
-import pride.crypto
+from crypto.utilities import cast, replacement_subroutine, xor_subroutine
+from crypto.utilities import rotate_left, rotate_right
+import crypto
 
 NUMBER_OF_ROUNDS = {(64, 2) : 32, (64, 3) : 33, (64, 4) : 34,
                     (48, 2) : 28, (48, 3) : 29, 
@@ -27,7 +27,7 @@ def invert_speck_round(left, right, key, modulus):
 def word_to_integer(word):
     return cast(cast(bytes(word), "binary"), "integer")
     
-class Speck(pride.crypto.Cipher):
+class Speck(crypto.Cipher):
        
     def _crypt_block(self, data, key):    
         size = len(data) / 2
@@ -92,7 +92,7 @@ def visualize_speck():
     right = 1
     key = 2
     modulus = 0xFFFFFFFFFFFFFFFF
-    from pride.crypto.analysis.visualization import test_4x64_function, print_state_4x64_256
+    from crypto.analysis.visualization import test_4x64_function, print_state_4x64_256
     test_4x64_function(speck_round, (left, right, key, modulus), print_function=lambda data: print_state_4x64_256(data))
     
 if __name__ == "__main__":

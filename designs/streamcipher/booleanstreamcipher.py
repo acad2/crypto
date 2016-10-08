@@ -1,4 +1,4 @@
-from pride.crypto.utilities import xor_subroutine, rotate_left, bytes_to_words, integer_to_bytes
+from crypto.utilities import xor_subroutine, rotate_left, bytes_to_words, integer_to_bytes
 
 def choice(a, b, c):
     return c ^ (a & (b ^ c))
@@ -66,7 +66,7 @@ def test_crypt_stream():
     assert message == _message, (message, _message)
     
 def test_crypt_stream_metrics():
-    from pride.crypto.analysis.metrics import test_stream_cipher
+    from crypto.analysis.metrics import test_stream_cipher
     test_stream_cipher(crypt_stream, bytearray(32), bytearray(32))
         
 if __name__ == "__main__":

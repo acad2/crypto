@@ -1,6 +1,6 @@
 import collections
 
-from pride.crypto.utilities import rotate_left
+from crypto.utilities import rotate_left
 
 def mixRow(a):
     b = a & 0x80808080;
@@ -111,7 +111,7 @@ class Average(object):
             self._meta_average.add(self.average)
             
 def test_nonlinear_mixing():
-    from pride.crypto.utilities import print_state_4x4, integer_to_bytes
+    from crypto.utilities import print_state_4x4, integer_to_bytes
     def to_bytes(t, y, t2, y2):
         return integer_to_bytes(t, 4) + integer_to_bytes(y, 4) + integer_to_bytes(t2, 4) + integer_to_bytes(y2, 4)
     t, y, t2, y2 = (0, 0, 0, 1)

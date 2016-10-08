@@ -1,4 +1,4 @@
-from pride.crypto.utilities import slide
+from crypto.utilities import slide
 
 def hamming_weight(word):
     return format(word, 'b').count('1')
@@ -15,7 +15,9 @@ def print_state_4x64_256_as_4x64(inputs):
         print("{} ({}/64)".format(''.join(bit for bit in format(word, 'b').zfill(64)), weight))
     print("{} ({}/256)".format(' ' * 64, weight_total))
     
-def print_state_4x32_128_as_4x32(inputs):
+def print_state_4x32_128_as_4x32(inputs, message=''):
+    if message:
+        print message
     for word in inputs:
         print format(word, 'b').zfill(32)  
     
@@ -41,3 +43,4 @@ def test_function(function, inputs, print_function):
         inputs = function(*inputs)
         print("\n")
         print_function(inputs) 
+        

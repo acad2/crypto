@@ -1,8 +1,8 @@
-from pride.crypto.designs.blockcipher.aes_procedures import S_BOX
+from crypto.designs.blockcipher.aes_procedures import S_BOX
 from differential import build_difference_distribution_table
 from cryptanalysis import cryptanalyze_sbox_worst_case
-from pride.crypto.designs.blockcipher.blockcipher2 import shuffle_bytes
-from pride.crypto.utilities import slide
+from crypto.designs.blockcipher.blockcipher2 import shuffle_bytes
+from crypto.utilities import slide
 
 S_BOX2 = []
 for block in slide(S_BOX, 16):

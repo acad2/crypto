@@ -84,9 +84,9 @@ def unpack_words_to_bytes(data, output):
         output[(2 * index)] = byte >> 8
         output[(2 * index) + 1] = byte & 255        
             
-import pride.crypto
+import crypto
 
-class Test_Cipher(pride.crypto.Cipher):
+class Test_Cipher(crypto.Cipher):
         
     def __init__(self, *args):
         super(Test_Cipher, self).__init__(*args)

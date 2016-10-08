@@ -13,8 +13,8 @@ def srand(x):
 	state = 0xdeadbeef
     
 def test_metrics():
-    from pride.crypto.analysis.metrics import test_randomness
-    from pride.crypto.utilities import integer_to_bytes
+    from crypto.analysis.metrics import test_randomness
+    from crypto.utilities import integer_to_bytes
     output = ''
     srand(1)
     while len(output) < (1024 * 1024 / 4):        

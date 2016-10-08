@@ -1,6 +1,6 @@
 import functools
 
-from pride.crypto.utilities import cast, slide, xor_subroutine, replacement_subroutine, pad_input
+from crypto.utilities import cast, slide, xor_subroutine, replacement_subroutine, pad_input
             
 def example_mixing_subroutine(_bytes):    
     byte_length = len(_bytes)
@@ -197,7 +197,7 @@ def test_psuedorandom_data():
     
 def test_example_mixer_stats():
     hash_function = sponge_factory(example_mixing_subroutine)
-    from pride.crypto.analysis.metrics import test_hash_function
+    from crypto.analysis.metrics import test_hash_function
     test_hash_function(hash_function, avalanche_test=False, randomness_test=False)
     
     #import sys

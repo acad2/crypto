@@ -1,4 +1,4 @@
-from pride.crypto.utilities import slide
+from crypto.utilities import slide
 
 
 def swap_places(state, round, next_index=[7, 12, 14, 9, 2, 1, 5, 15, 11, 6, 13, 0, 4, 8, 10, 3]):
