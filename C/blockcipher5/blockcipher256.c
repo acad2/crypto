@@ -37,22 +37,22 @@
     _permutation(f, g, h, e, 11);\
     _permutation(g, h, e, f, 13);\
     _permutation(h, e, f, g, 17);\
-    bit_permutation(a, b, e, f, c, d, g, h);\
-    bit_permutation(c, d, g, h, a, b, e, f);})
+    bit_permutation(e, f, g, h, a, b, c, d);\
+    bit_permutation(a, b, c, d, e, f, g, h);})
     
-void encrypt(WORDSIZE* data){
+void permutation(WORDSIZE* data){
     WORDSIZE a, b, c, d, e, f, g, h, t;
     a = data[0]; b = data[1]; c = data[2]; d = data[3]; e = data[4]; f = data[5]; g = data[6]; h = data[7];
     
     int round;
-    for (round = 0; round < 1; round++){
+    for (round = 0; round < 10; round++){
         permutation(a, b, c, d, e, f, g, h);}
     data[0] = a; data[1] = b; data[2] = c; data[3] = d; data[4] = e; data[5] = f; data[6] = g; data[7] = h;}
     
 #include "../performancetesting.c"
     
 int main(){
-    test_permutation_performance_8x32(encrypt, 5000000);    
+    test_permutation_performance_8x32(permutation, 5000000);    
     return 0;}
     
         

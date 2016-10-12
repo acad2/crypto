@@ -1,12 +1,26 @@
+import itertools
 from math import log
 
 from crypto.utilities import integer_to_bytes, bytes_to_integer, slide, rotate_left
 
+def next_bit_permutation(v, mask=0xFFFFFFFF):
+    t = (v | (v - 1)) + 1
+    return (t | ((((t & -t) / (v & -v)) >> 1) - 1)) & mask
+    
+def bit_generator(seed_weight):    
+    while True:    
+        yield seed_weight
+        if not seed_weight:
+            break        
+        seed_weight = next_bit_permutation(seed_weight)    
+            
 def hamming_weight(word):
     return format(word, 'b').count('1')
     
-def search_minimum_active_bits(permutation, argument_function, output_function, test_length=256, display_progress=True,
-                               test_inputs=set([1 << shift for shift in range(32)] + [rotate_left(3, amount, 32) for amount in range(32)])):  
+QUICK_TEST = lambda: bit_generator(1)
+THOROUGH_TEST = lambda: itertools.chain(bit_generator(1), bit_generator(3))
+
+def search_minimum_active_bits(permutation, argument_function, output_function, display_progress=True, test_inputs=QUICK_TEST):
     """ Searches for the minimum number of active bits for permutation.
         
         - permutation is the function to be tested. 
@@ -34,42 +48,39 @@ def search_minimum_active_bits(permutation, argument_function, output_function, 
             def output_function(a, b, c, d):
                 # no change needed because permutation outputs 4 items already
                 return a, b, c, d"""                                  
-    active_bits = set()
-    weights = list()
-    last_output = output_function(permutation(argument_function(0, 0, 0, 1)))
-    minimum_weight = 0
-    minimum_weight2 = 0
-               
-    for x in test_inputs:
-        for y in test_inputs:
-            for z in test_inputs:
-    #for x in xrange(1, test_length + 1): # itertools.product isn't as useful because of the print statements every 65536 iterations
-    #    for y in xrange(256):
-    #        for z in xrange(256):
-                output = output_function(permutation(argument_function(0, x, y, z)))                  
-                output_hamming_weight = sum(hamming_weight(word) for word in output)                
-                weights.append(output_hamming_weight)
-                
-                number_different_bits = sum(hamming_weight(word) for word in (last_output[index] ^ _output for index, _output in enumerate(output)))
-                active_bits.add(number_different_bits)
-        if display_progress:
-            minimum_weight = min(active_bits)
+    active_bits = list()
+    weights = list()    
+                              
+    last_x = 0
+    last_output = output_function(permutation(argument_function(1, 0, 0, 0)))
+    for x, y in itertools.product(test_inputs(), test_inputs()):        
+        for count, z in enumerate(test_inputs()):                
+            output = output_function(permutation(argument_function(0, x, y, z)))                  
+            output_hamming_weight = sum(hamming_weight(word) for word in output)                
+            weights.append(output_hamming_weight)
+            
+            number_different_bits = sum(hamming_weight(word) for word in (last_output[index] ^ _output for index, _output in enumerate(output)))
+            active_bits.append(number_different_bits)
+        
+        if display_progress and x != last_x:
+            last_x = x            
             print("\n" + ('-' * 79))
             print("Minimum # active bits: {}".format(min(active_bits)))
             print("Median  # active bits: {}".format(sorted(active_bits)[len(active_bits) / 2]))
             print("Average # active bits: {}".format(sum(active_bits) / len(active_bits)))
             print("Maximum # active bits: {}".format(max(active_bits)))        
-            print("Minimum state weight : {}".format(min(weights)))        
-                
+            print("Minimum state weight : {}".format(min(weights)))
+            
+    weights.pop(-1) # remove the 0, 0, 0 entries
+    active_bits.pop(-1)
     print("\nSearch complete" + ('-' * (80 - len("\nSearch complete"))))
-    print("Search space: 2 ** {}".format(log((256 * 256) * test_length, 2)))
+    print("Search space: 2 ** {}".format(log(count ** 3, 2)))
     print("Minimum # active bits: {}".format(min(active_bits)))
     print("Median  # active bits: {}".format(sorted(active_bits)[len(active_bits) / 2]))
     print("Average # active bits: {}".format(sum(active_bits) / len(active_bits)))
     print("Maximum # active bits: {}".format(max(active_bits)))        
-    print("Minimum state weight : {}".format(min(weights)))       
-    
-    
+    print("Minimum state weight : {}".format(min(weights)))
+        
 def test_search_minimum_active_bits():
     from crypto.designs.permutation import permutation3
     search_minimum_active_bits(lambda args: permutation3.permutation(*args), lambda *args: args, lambda args: args)
