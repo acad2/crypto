@@ -69,6 +69,17 @@
     printf("Time required: %.2fs\n", time_spent);\
 })
 
+#define test_permutation_performance_16x32(permutation, measurements)\
+({	WORDSIZE32 message[16];\
+    unsigned long index;\
+    clock_t begin = clock();\
+    for (index = 0; index < measurements; index++){\
+        permutation(message);}\
+    clock_t end = clock();\
+    double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;\
+    printf("Time required: %.2fs\n", time_spent);\
+})
+
 #define test_permutation_performance_4x32_abcd(permutation, measurements)\
 ({	WORDSIZE32 a = 0, b = 0, c = 0, d = 0;\
     unsigned long index;\
@@ -79,6 +90,7 @@
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;\
     printf("Time required: %.2fs\n", time_spent);\
 })
+
 
 #define test_permutation_performance_4x64(permutation, measurements)\
 ({	WORDSIZE64 message[4];\

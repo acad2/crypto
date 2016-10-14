@@ -146,3 +146,5 @@ Session.vim
 auto-save-list
 tramp
 .\#*
+
+*.asm

@@ -69,18 +69,30 @@ def _pipeline_friendly_permutation2(a, b, c, d, mask=0xFFFFFFFF):
     d = rotate_left(d, 16)     
     return a, b, c, d
     
+def add_choice(a, b, c):
+    return c + (a & (b ^ c))
+    
+def _pipeline_friendly_permutation3(a, b, c, d, mask=0xFFFFFFFF):    
+    a = (a + (d ^ rotate_left(add_choice(b, c, d), 1)     )) & mask
+    b = (a + (a ^ rotate_left(add_choice(c, d, a), 2 + 8) )) & mask
+    c = (a + (b ^ rotate_left(add_choice(d, a, b), 3 + 16))) & mask
+    d = (a + (c ^ rotate_left(add_choice(a, b, c), 4 + 24))) & mask
+    return a, b, c, d
+    
+    
+    
 def permutation(a, b, c, d):    
     #a = _pipeline_friendly_permutation(a, b, c, d, 2)  
     #b = _pipeline_friendly_permutation(b, c, d, a, 4)
     #c = _pipeline_friendly_permutation(c, d, a, b, 8)                  
     #d = _pipeline_friendly_permutation(d, a, b, c, 16)
     #a, b, c, d = bit_permutation(a, b, c, d)       
-    a, b, c, d = _pipeline_friendly_permutation2(a, b, c, d)
-    a, b, c, d = _pipeline_friendly_permutation2(a, b, c, d)
-    a, b, c, d = _pipeline_friendly_permutation2(a, b, c, d)
-    a, b, c, d = _pipeline_friendly_permutation2(a, b, c, d)
     
-    return a, b, c, d
+    a, b, c, d = _pipeline_friendly_permutation3(a, b, c, d)
+    #a, b, c, d = _pipeline_friendly_permutation3(d, b, c, a)
+    #a, b, c, d = _pipeline_friendly_permutation2(a, c, d, b)
+    #a, b, c, d = _pipeline_friendly_permutation2(b, a, d, c)    
+    return a, b, c, d    
     
 def test_permutation2_sbox():
     sbox = bytearray()

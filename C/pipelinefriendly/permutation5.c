@@ -1,7 +1,6 @@
 #include "performancetesting.c"
 
 #define rotate_left(a, amount)((a << amount) | (a >> (32 - amount)))
-#define choice(a, b, c)((c ^ (a & (b ^ c))))
 
 #define _permutation(a, b, c, d)({\
     a += b;\
