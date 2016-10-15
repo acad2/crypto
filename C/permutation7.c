@@ -1,6 +1,7 @@
 #include "performancetesting.c"
 #define ROUNDS 10
 
+#define rotate_left(a, amount)(((a << amount) | (a >> (32 - amount))))
 #define add_choice(a, b, c)({\
     b ^= c;\
     b &= a;\
@@ -13,10 +14,10 @@
     a += d;})
     
 #define _permutation(a, b, c, d)({\
-    __permutation(a, b, c, d, 1);\
-    __permutation(b, c, d, a, 2 + 8);\
-    __permutation(c, d, a, b, 3 + 16);\
-    __permutation(d, a, b, c, 4 + 24);})    
+    __permutation(a, b, c, d, 1 );\
+    __permutation(b, c, d, a, 10);\
+    __permutation(c, d, a, b, 19);\
+    __permutation(d, a, b, c, 28);})    
        
 #define store_data(data, a, b, c, d)({\
     data[0] = a; data[1] = b; data[2] = c; data[3] = d;})   
@@ -35,7 +36,7 @@ void permutation(WORDSIZE32* data){
     iterate(_permutation, a, b, c, d, ROUNDS);
     store_data(data, a, b, c, d);}
     
-void main(){
+int main(){
     test_permutation_performance_4x32(permutation, (1024 * 1024 * 1024) / 16);
     return 0;}
     
