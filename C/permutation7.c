@@ -36,7 +36,26 @@ void permutation(WORDSIZE32* data){
     iterate(_permutation, a, b, c, d, ROUNDS);
     store_data(data, a, b, c, d);}
     
+#define add_key(a, b, c, d, keys, key_number)({\
+    a ^= keys[(4 * key_number) + 0];\
+    b ^= keys[(4 * key_number) + 1];\
+    c ^= keys[(4 * key_number) + 2];\
+    d ^= keys[(4 * key_number) + 3];}) 
+    
+void encrypt(WORDSIZE32* data, WORDSIZE32* key){
+    WORDSIZE32 a, b, c, d, _t;
+    load_data(data, a, b, c, d);
+    
+    add_key(a, b, c, d, key, 0);
+    iterate(_permutation, a, b, c, d, ROUNDS);
+    add_key(a, b, c, d, key, 1);
+    iterate(_permutation, a, b, c, d, ROUNDS);
+    add_key(a, b, c, d, key, 2);
+    
+    store_data(data, a, b, c, d);}
+    
 int main(){
     test_permutation_performance_4x32(permutation, (1024 * 1024 * 1024) / 16);
+    test_encrypt_performance_4x32_384(encrypt, (1024 * 1024 * 1024) / 16);
     return 0;}
     
