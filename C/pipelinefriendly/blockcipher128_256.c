@@ -1,5 +1,5 @@
 #define WORDSIZE32 unsigned long
-#define ROUNDS 20
+#define ROUNDS 10
 
 #define rotate_left(a, amount)(((a << amount) | (a >> (32 - amount))))
 
@@ -37,28 +37,21 @@
 ({  unsigned int iteration;\
     for (iteration = 0; iteration < iterations; iteration++){\
         permutation(a, b, c, d);}})
-        
-void permutation(WORDSIZE32* data){
-    WORDSIZE32 a, b, c, d;
-    load_data(data, a, b, c, d);
-    iterate(_permutation, a, b, c, d, ROUNDS);
-    store_data(data, a, b, c, d);}
-        
-void encrypt(WORDSIZE32* data, WORDSIZE32* key){
+
+void blockcipher128_256_encrypt(WORDSIZE32* data, WORDSIZE32* key){
     WORDSIZE32 a, b, c, d;
     load_data(data, a, b, c, d);
     
     add_key(a, b, c, d, key, 0);
     iterate(_permutation, a, b, c, d, ROUNDS);
     add_key(a, b, c, d, key, 1);  
-    //iterate(_permutation, a, b, c, d, ROUNDS);
-    //add_key(a, b, c, d, key, 2);
+    iterate(_permutation, a, b, c, d, ROUNDS);
+    add_key(a, b, c, d, key, 2);
     
     store_data(data, a, b, c, d);}
 
-#include "performancetesting.c"    
-int main(){
-    test_permutation_performance_4x32(permutation, (1024 * 1024 * 1024) / 16);
+/*#include "../performancetesting.c"    
+int main(){    
     test_encrypt_performance_4x32_384(encrypt, (1024 * 1024 * 1024) / 16);
-    return 0;}
+    return 0;}*/
         
