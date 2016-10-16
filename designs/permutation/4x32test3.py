@@ -86,22 +86,44 @@ def _pipeline_friendly_permutation4(a, b, c, d, amount, mask=0xFFFFFFFF):
     a = (a + d) & mask
     return a
     
+def choice_swap(a, b, c):
+    #t = b
+    #b = choice(a, b, c)
+    #c = choice(a, c, t)
+    t = b ^ c
+    t &= a
+    _c = c
+    c = t ^ b
+    b = t ^ _c    
+    return b, c
+    
+def bit_permutation2(a, b, c, d):
+    a, b = choice_swap(c, a, b)
+    b, c = choice_swap(d, b, c)
+    c, d = choice_swap(a, c, d)   
+    a = rotate_left(a, 1)
+    b = rotate_left(b, 2)          
+    c = rotate_left(c, 3)
+    d = rotate_left(d, 4)
+    return a, b, c, d
+    
 def permutation(a, b, c, d):    
     #a = _pipeline_friendly_permutation(a, b, c, d, 2)  
     #b = _pipeline_friendly_permutation(b, c, d, a, 4)
     #c = _pipeline_friendly_permutation(c, d, a, b, 8)                  
     #d = _pipeline_friendly_permutation(d, a, b, c, 16)
     #a, b, c, d = bit_permutation(a, b, c, d)       
-    for round in range(2):        
-        a = _pipeline_friendly_permutation4(a, b, c, d, 1) 
-        b = _pipeline_friendly_permutation4(b, c, d, a, 2) 
-        c = _pipeline_friendly_permutation4(c, d, a, b, 3)
-        d = _pipeline_friendly_permutation4(d, a, b, c, 4)
-            
-        b = rotate_left(b, 8)
-        c = rotate_left(c, 16)
-        d = rotate_left(d, 24)
+    #for round in range(2):        
+    #    a = _pipeline_friendly_permutation4(a, b, c, d, 1) 
+    #    b = _pipeline_friendly_permutation4(b, c, d, a, 2) 
+    #    c = _pipeline_friendly_permutation4(c, d, a, b, 3)
+    #    d = _pipeline_friendly_permutation4(d, a, b, c, 4)
+    #        
+    #    b = rotate_left(b, 8)
+    #    c = rotate_left(c, 16)
+    #    d = rotate_left(d, 24)
 
+    a, b, c, d = bit_permutation2(a, b, c, d)
     return a, b, c, d    
     
 def test_permutation2_sbox():
@@ -119,7 +141,7 @@ def test_permutation2_sbox():
     
 def visualize_permutation():
     from crypto.analysis.visualization import test_4x32_function
-    test_4x32_function(permutation, (0, 0, 0, 1))
+    test_4x32_function(permutation, (0, 0, 3, 3))
     
 def test_permutation_active_bits(): 
     from crypto.analysis.active_bits import search_minimum_active_bits, THOROUGH_TEST
