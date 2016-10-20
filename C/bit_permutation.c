@@ -4,18 +4,21 @@
 #define choice_swap(a, b, c)({\
     t = b ^ c;\
     t &= a;\
-    _c = c;\
-    c = t ^ b;\
-    b = t ^ _c;})      
+    b = t ^ b;\
+    c = t ^ c;})      
     
 #define bit_permutation(a, b, c, d)({\
-    a, b = choice_swap(c, a, b);\
-    b, c = choice_swap(d, b, c);\
-    c, d = choice_swap(a, c, d);\
+    b, a = choice_swap(d, b, a);\
+    d, c = choice_swap(b, d, c);\
     a = rotate_left(a, 1);\
     b = rotate_left(b, 2);\
     c = rotate_left(c, 3);\
-    d = rotate_left(d, 4);})
+    d = rotate_left(d, 4);\
+    a, d = choice_swap(c, a, d);\
+    c, b = choice_swap(a, c, b);\
+    b = rotate_left(b, 8);\
+    c = rotate_left(c, 16);\
+    d = rotate_left(d, 24);})
         
 #include <stdio.h>    
 void test_bit_permutation(){

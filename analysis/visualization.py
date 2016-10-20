@@ -29,6 +29,20 @@ def print_state_16x16(inputs_16x16):
     for word in inputs_16x16:
         print format(word, 'b').zfill(16)
         
+def print_state_8x8(inputs):
+    for word in inputs:
+        print '{}'.format(format(word, 'b').zfill(8))
+                     
+def print_state_32x32(inputs):
+    for word in inputs:
+        print "{}".format(format(word, 'b').zfill(32))
+        
+def test_8x8_function(function, inputs, print_function=print_state_8x8):
+    test_function(function, inputs, print_function)
+    
+def test_32x32_function(function, inputs, print_function=print_state_32x32):
+    test_function(function, inputs, print_function)
+    
 def test_4x32_function(function, inputs, print_function=print_state_4x32_128_as_4x32):
     test_function(function, inputs, print_function)
             

@@ -272,7 +272,13 @@ class AES(object):
         state = self.mixColumns(state, False)
         state = self.addRoundKey(state, roundKey)
         return state
-
+    
+    def aes_round_no_key(self, state):
+        state = self.subBytes(state, False)
+        state = self.shiftRows(state, False)
+        state = self.mixColumns(state, False)        
+        return state
+        
     # applies the 4 operations of the inverse round in sequence
     def aes_invRound(self, state, roundKey):
         state = self.shiftRows(state, True)

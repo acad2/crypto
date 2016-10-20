@@ -86,15 +86,30 @@ def _pipeline_friendly_permutation4(a, b, c, d, amount, mask=0xFFFFFFFF):
     a = (a + d) & mask
     return a
     
+def _pipeline_friendly_permutation5(a, b, c, d, mask=0xFFFFFFFF):
+    a = (a + b) & mask
+    c = (c + d) & mask
+    a = rotate_left(a, 1)
+    c = rotate_left(c, 3)
+    b ^= c
+    d ^= a
+    b = rotate_left(b, 2)
+    d = rotate_left(d, 4)    
+    return a, b, c, d
+    
+def _pipeline_friendly_permutation6(a, b, c, d, amount1, amount2, mask=0xFFFFFFFF):
+    a = (a + b) & mask
+    c ^= d    
+    return b, d, a, c
+    
 def choice_swap(a, b, c):
     #t = b
     #b = choice(a, b, c)
     #c = choice(a, c, t)
     t = b ^ c
-    t &= a
-    _c = c
-    c = t ^ b
-    b = t ^ _c    
+    t &= a    
+    b = t ^ b
+    c = t ^ c
     return b, c
     
 def bit_permutation2(a, b, c, d):
@@ -112,18 +127,39 @@ def permutation(a, b, c, d):
     #b = _pipeline_friendly_permutation(b, c, d, a, 4)
     #c = _pipeline_friendly_permutation(c, d, a, b, 8)                  
     #d = _pipeline_friendly_permutation(d, a, b, c, 16)
-    #a, b, c, d = bit_permutation(a, b, c, d)       
-    #for round in range(2):        
-    #    a = _pipeline_friendly_permutation4(a, b, c, d, 1) 
-    #    b = _pipeline_friendly_permutation4(b, c, d, a, 2) 
-    #    c = _pipeline_friendly_permutation4(c, d, a, b, 3)
-    #    d = _pipeline_friendly_permutation4(d, a, b, c, 4)
-    #        
-    #    b = rotate_left(b, 8)
-    #    c = rotate_left(c, 16)
-    #    d = rotate_left(d, 24)
-
-    a, b, c, d = bit_permutation2(a, b, c, d)
+    #a, b, c, d = bit_permutation(a, b, c, d)    
+    #a = _pipeline_friendly_permutation4(a, b, c, d, 1) 
+    #b = _pipeline_friendly_permutation4(b, c, d, a, 2) 
+    #c = _pipeline_friendly_permutation4(c, d, a, b, 3)
+    #d = _pipeline_friendly_permutation4(d, a, b, c, 4)     
+   # b = rotate_left(b, 2 + 8)
+   # c = rotate_left(c, 3 + 16)
+   # d = rotate_left(d, 4 + 24)    
+       
+    for round in range(1):                           
+        a, b, c, d = _pipeline_friendly_permutation6(a, b, c, d, 4, 2) 
+        b, c, d, a = _pipeline_friendly_permutation6(b, c, d, a, 2, 4) 
+        c, d, a, b = _pipeline_friendly_permutation6(c, d, a, b, 1, 3)
+        d, a, b, c = _pipeline_friendly_permutation6(d, a, b, c, 3, 1)   
+        b = rotate_left(b, 8)
+        c = rotate_left(c, 16)
+        d = rotate_left(d, 24)
+    #b, a = choice_swap(d, b, a)
+    #d, c = choice_swap(b, d, c)
+    #a, d = choice_swap(c, a, d)
+    #c, b = choice_swap(a, c, b)         
+    #b, a = choice_swap(d, b, a)
+    #d, c = choice_swap(b, d, c) 
+    #a = rotate_left(a, 1)
+    #b = rotate_left(b, 2)        
+    #c = rotate_left(c, 3)
+    #d = rotate_left(d, 4)     
+    #a, d = choice_swap(c, a, d)
+    #c, b = choice_swap(a, c, b)   
+    #a = rotate_left(a, 2)
+    #b = rotate_left(b, 8)
+    #c = rotate_left(c, 16)
+    #d = rotate_left(d, 24)         
     return a, b, c, d    
     
 def test_permutation2_sbox():
@@ -141,7 +177,7 @@ def test_permutation2_sbox():
     
 def visualize_permutation():
     from crypto.analysis.visualization import test_4x32_function
-    test_4x32_function(permutation, (0, 0, 3, 3))
+    test_4x32_function(permutation, (0, 0, 0, 1))
     
 def test_permutation_active_bits(): 
     from crypto.analysis.active_bits import search_minimum_active_bits, THOROUGH_TEST
