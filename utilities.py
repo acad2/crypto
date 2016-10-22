@@ -308,3 +308,6 @@ def shuffle(data, key):
         j = key[i] & (i - 1)                
         data[i], data[j] = data[j], data[i]           
             
+def choice(a, b, c):
+    return c ^ (a & (b ^ c))
+    

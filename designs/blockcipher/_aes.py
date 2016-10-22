@@ -667,6 +667,8 @@ def testStr(cleartext, keysize=16, modeName = "CBC"):
     decr = decryptData(key, cipher, mode)
     print 'Decrypted:', decr
     
+__aes = AES()
+aes_round = __aes.aes_round_no_key
     
 if __name__ == "__main__":
     moo = AESModeOfOperation()
