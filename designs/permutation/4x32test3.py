@@ -3,6 +3,9 @@ def rotate_left(a, amount, bit_width=32, mask=0xFFFFFFFF):
     
 def choice(a, b, c):
     return c ^ (a & (b ^ c))
+
+def invert(a, mask=0xFFFFFFFF):
+    return (~a) & mask
     
 def _permutation(a, b, c, d, rotations, mask=0xFFFFFFFF):  
     a = (a + b) & mask
@@ -122,6 +125,15 @@ def bit_permutation2(a, b, c, d):
     d = rotate_left(d, 4)
     return a, b, c, d
     
+def _invxor_permutation(a, b, c, d, amount, mask=0xFFFFFFFF):
+    a ^= b    
+    c ^= invert(a)
+    a = rotate_left(a, amount)
+    a ^= c    
+    a ^= d
+    a ^= (invert(a) << 1) & mask
+    return a, b, c, d    
+        
 def permutation(a, b, c, d):    
     #a = _pipeline_friendly_permutation(a, b, c, d, 2)  
     #b = _pipeline_friendly_permutation(b, c, d, a, 4)
@@ -137,10 +149,10 @@ def permutation(a, b, c, d):
    # d = rotate_left(d, 4 + 24)    
        
     for round in range(1):                           
-        a, b, c, d = _pipeline_friendly_permutation6(a, b, c, d, 4, 2) 
-        b, c, d, a = _pipeline_friendly_permutation6(b, c, d, a, 2, 4) 
-        c, d, a, b = _pipeline_friendly_permutation6(c, d, a, b, 1, 3)
-        d, a, b, c = _pipeline_friendly_permutation6(d, a, b, c, 3, 1)   
+        a, b, c, d = _invxor_permutation(a, b, c, d, 1) 
+        b, c, d, a = _invxor_permutation(b, c, d, a, 2) 
+        c, d, a, b = _invxor_permutation(c, d, a, b, 3)
+        d, a, b, c = _invxor_permutation(d, a, b, c, 4)   
         b = rotate_left(b, 8)
         c = rotate_left(c, 16)
         d = rotate_left(d, 24)
@@ -182,7 +194,7 @@ def visualize_permutation():
 def test_permutation_active_bits(): 
     from crypto.analysis.active_bits import search_minimum_active_bits, THOROUGH_TEST
     pass_function = lambda *args: args
-    search_minimum_active_bits(lambda args: permutation(*args), pass_function, lambda *args: args[0], test_inputs=THOROUGH_TEST)
+    search_minimum_active_bits(lambda args: permutation(*args), pass_function, lambda *args: args[0])#, test_inputs=THOROUGH_TEST)
     
 if __name__ == "__main__":
     visualize_permutation()

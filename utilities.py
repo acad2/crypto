@@ -160,14 +160,15 @@ def find_long_cycle_length(max_size, chunk_size, function, _input, *args, **kwar
     
 def find_long_cycle_length_subroutine(max_size, chunk_size, function, _input, *args, **kwargs):
     data_size = kwargs.pop("data_slice", slice(0, 3))
-    outputs = set([bytes(_input)][data_size])
- 
+    outputs = set()
+    outputs.add(tuple(_input[data_size]))
+    
     blocks, extra = divmod(max_size, chunk_size)
     exit_flag = False
     for block in xrange(blocks if not extra else blocks + 1):        
         for counter in xrange(chunk_size):                           
             function(_input, *args, **kwargs)
-            output = bytes(_input)[data_size]
+            output = tuple(_input[data_size])
             if output in outputs:  
                 exit_flag = True
                 break

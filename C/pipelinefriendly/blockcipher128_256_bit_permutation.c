@@ -30,11 +30,11 @@
     b = t ^ b;\
     c = t ^ c;})
     
-#define shuffleBits(a, b, c, d, keys, key_number)({\
-   b, a = choice_swap(keys[(4 * key_number) + 0], b, a);\
-   d, c = choice_swap(keys[(4 * key_number) + 0], d, c);\
-   a, d = choice_swap(keys[(4 * key_number) + 0], a, d);\
-   c, b = choice_swap(keys[(4 * key_number) + 0], c, b);})
+#define shuffleBits(a, b, c, d)({\
+   b, a = choice_swap(c, b, a);\
+   d, c = choice_swap(a, d, c);\
+   a, d = choice_swap(b, a, d);\
+   c, b = choice_swap(d, c, b);})
    
 #define add_key(a, b, c, d, keys, key_number)({\
     a ^= keys[(4 * key_number) + 0];\
@@ -44,15 +44,15 @@
        
 #define round_function256(a, b, c, d, round_keys, round_number)({\
     add_key(a, b, c, d, round_keys, round_number);\
+    shuffleBits(a, b, c, d);\
     permutation(a, b, c, d);\
-    permutation(a, b, c, d);\
-    shuffleBits(a, b, c, d, round_keys, (round_number + (ROUNDS * 4)));})
+    permutation(a, b, c, d);})
     
 #define round_function128(a, b, c, d, round_keys, round_number)({\
     add_key(a, b, c, d, round_keys, round_number);\
+    shuffleBits(a, b, c, d);\
     permutation(a, b, c, d);\
-    permutation(a, b, c, d);\
-    shuffleBits(a, b, c, d, round_keys, round_number);})
+    permutation(a, b, c, d);})
     
 #define store_data(data, a, b, c, d)({\
     data[0] = a; data[1] = b; data[2] = c; data[3] = d;})   

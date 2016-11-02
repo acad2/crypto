@@ -1,0 +1,43 @@
+a one-way function:
+    - is difficult to invert
+        - given y, it is difficult to obtain x
+    - is first preimage resistant
+        - it is hard to find the specific input x which produced a given output y
+    - is second preimage resistant
+        - There exist multiple possible x that could produce y 
+        - it is hard to find any input other then x that produces identical output to input x
+    - is collision resistant
+        - it is hard to find any two distinct inputs x and y which produce an identical output z
+    
+unpredictable means:
+    - output cannot be guessed without calculating the function for a given input
+    - differential and linear probabilities and round count can influence this
+    
+uniformly random means:
+    - output is computationally indstinguishable from random data
+    - differential and linear probabilities and round count can influence this
+    
+a function prp(x) ^ x:
+    - assuming prp(x) produces unpredictable, uniformly random output, then prp(x) ^ x:
+        - produces uniformly random output
+            - proof: the combination of random data + data is at least as random as the random data
+        
+            - assuming x is large enough   
+            
+                - proof: prp(x) ^ x produces unpredictable, uniformly random output and is not a bijection
+                    - would have to guess random search space or input space x
+        - is first preimage resistant:        
+            - proof: difficult to invert (given y, it is difficult to obtain x)  
+        - is second preimage resistant:    
+            - y = prp(x) ^ x is not a bijection (not a permutation/not invertible)                      
+            - proof: y = prp(x) ^ x is both difficult to invert and output is random            
+        - is collision resistant:        
+            - proof: the output of prp(x) ^ x is unpredictable and uniformly random             
+        
+        - acts like a one-way function
+    
+a trapdoor one-way function:
+    - is difficult to invert without a particular piece of information
+    - becomes a bijection (invertible) with the piece of information
+    
+    

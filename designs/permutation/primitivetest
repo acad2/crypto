@@ -1,0 +1,11 @@
+def primitive_permutation(words, key):
+    for index in reversed(range(1, len(words))):
+        left, right = words[index - 1], words[index]
+        keyl, keyr = key[index - 1], words[index]
+        right = (right + keyr) & mask
+        left = (left + (right >> shift_amount)) & mask
+        left = (left + keyl) & mask
+        
+        words[index - 1], words[index] = left, right
+        
+                

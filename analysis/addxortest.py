@@ -20,6 +20,9 @@ import crypto.utilities
 def random_word(word_size=4):
     return crypto.utilities.bytes_to_integer(bytearray(urandom(4)))
 
+def is_equivalent_pair(word1, word2):
+    return word1 ^ word2 == word1 + word2 
+    
 def create_equivalent_pair(word_size=4):
     random = random_word(word_size)
     mask = (2 ** (8 * word_size)) - 1
@@ -27,12 +30,22 @@ def create_equivalent_pair(word_size=4):
     out2 = crypto.utilities.choice(random, mask, 0)
     return out1, out2
         
-def is_equivalent(word1, word2):
-    return word1 ^ word2 == word1 + word2 
-     
+def create_equivalent_half(word1, word_size=4):
+    random = random_word(word_size)
+    mask = (2 ** (8 * word_size)) - 1
+    out1 = crypto.utilities.choice(word1, 0, mask)    
+    return out1
+    
+def test_create_equivalent_half():
+    word1 = random_word()
+    word2 = create_equivalent_half(word1)
+    assert word1 != word2
+    assert is_equivalent_pair(word1, word2)
+         
 def test_create_equivalent_pair():
     word1, word2 = create_equivalent_pair()
-    assert is_equivalent(word1, word2)     
+    assert word1 != word2
+    assert is_equivalent_pair(word1, word2)     
      
 def test_addition_xor_equivalence():
     for counter in itertools.count():        
@@ -46,4 +59,5 @@ def test_addition_xor_equivalence():
 if __name__ == "__main__":
     test_addition_xor_equivalence()
     test_create_equivalent_pair()
+    test_create_equivalent_half()
     

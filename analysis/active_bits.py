@@ -7,18 +7,19 @@ def next_bit_permutation(v, mask=0xFFFFFFFF):
     t = (v | (v - 1)) + 1
     return (t | ((((t & -t) / (v & -v)) >> 1) - 1)) & mask
     
-def bit_generator(seed_weight):    
+def bit_generator(seed_weight, mask=0xFFFFFFFF):    
     while True:    
+        print format(seed_weight, 'b').zfill(32)
         yield seed_weight
         if not seed_weight:
             break        
-        seed_weight = next_bit_permutation(seed_weight)    
+        seed_weight = next_bit_permutation(seed_weight, mask)    
             
 def hamming_weight(word):
     return format(word, 'b').count('1')
     
-QUICK_TEST = lambda: bit_generator(1)
-THOROUGH_TEST = lambda: itertools.chain(bit_generator(1), bit_generator(3))
+QUICK_TEST = lambda:  bit_generator(int(('1' * 31) + '0', 2)) #itertools.chain(bit_generator(1), bit_generator(int('0' + ('1' * 31), 2)))
+THOROUGH_TEST = lambda: itertools.chain(bit_generator(1), bit_generator(int('0' + ('1' * 31), 2)), bit_generator(3))
 
 def search_minimum_active_bits(permutation, argument_function, output_function, display_progress=True, test_inputs=QUICK_TEST):
     """ Searches for the minimum number of active bits for permutation.
