@@ -7,19 +7,30 @@ def next_bit_permutation(v, mask=0xFFFFFFFF):
     t = (v | (v - 1)) + 1
     return (t | ((((t & -t) / (v & -v)) >> 1) - 1)) & mask
     
+def invert(word, mask=0xFFFFFFFF):
+    return word ^ mask
+    
 def bit_generator(seed_weight, mask=0xFFFFFFFF):    
-    while True:    
-        print format(seed_weight, 'b').zfill(32)
-        yield seed_weight
-        if not seed_weight:
+    _seed_weight = seed_weight    
+    while True:                
+        yield seed_weight    
+        if not seed_weight:            
             break        
         seed_weight = next_bit_permutation(seed_weight, mask)    
-            
+    
+   # seed_weight = _seed_weight
+   # while True:                
+   #     _seed_weight = invert(seed_weight, mask)     
+   #     #yield _seed_weight
+   #     if not seed_weight:
+   #         break            
+   #     seed_weight = next_bit_permutation(seed_weight, mask)
+        
 def hamming_weight(word):
     return format(word, 'b').count('1')
     
-QUICK_TEST = lambda:  bit_generator(int(('1' * 31) + '0', 2)) #itertools.chain(bit_generator(1), bit_generator(int('0' + ('1' * 31), 2)))
-THOROUGH_TEST = lambda: itertools.chain(bit_generator(1), bit_generator(int('0' + ('1' * 31), 2)), bit_generator(3))
+QUICK_TEST = lambda: bit_generator(1)
+THOROUGH_TEST = lambda: itertools.chain(bit_generator(1), bit_generator(3))
 
 def search_minimum_active_bits(permutation, argument_function, output_function, display_progress=True, test_inputs=QUICK_TEST):
     """ Searches for the minimum number of active bits for permutation.
@@ -52,17 +63,28 @@ def search_minimum_active_bits(permutation, argument_function, output_function, 
     active_bits = list()
     weights = list()    
                               
-    last_x = 0
+    last_x = 0    
+    last_input = (1, 0, 0, 0)
     last_output = output_function(permutation(argument_function(1, 0, 0, 0)))
+    _inputs = set()
     for x, y in itertools.product(test_inputs(), test_inputs()):        
         for count, z in enumerate(test_inputs()):                
-            output = output_function(permutation(argument_function(0, x, y, z)))                  
-            output_hamming_weight = sum(hamming_weight(word) for word in output)                
+            #print x, y, z            
+            output = output_function(permutation(argument_function(1, x, y, z)))   
+            #assert output != last_output, (output, x, y, z, last_z)
+            output_hamming_weight = sum(hamming_weight(word) for word in output)
+           # assert output_hamming_weight, (output, x, y, z, last_z)
             weights.append(output_hamming_weight)
             
-            number_different_bits = sum(hamming_weight(word) for word in (last_output[index] ^ _output for index, _output in enumerate(output)))
-            active_bits.append(number_different_bits)
-        
+            number_different_bits = sum(hamming_weight(word) for word in (last_output[index] ^ _output for index, _output in enumerate(output)))            
+            #assert number_different_bits
+            if number_different_bits: # hack; get rid of duplicate inputs   
+                input_difference = sum(hamming_weight(word) for word in (last_input[index] ^ _input for index, _input in enumerate((1, x, y, z))))
+                active_bits.append(number_different_bits + input_difference)
+            
+            last_input = (1, x, y, z)
+                        
+            
         if display_progress and x != last_x:
             last_x = x            
             print("\n" + ('-' * 79))

@@ -12,7 +12,23 @@
 # certain inputs to a function of interleaved addition and xor instructions will cause the function to behave equivalent to the same function with add replaced by xor.
 # so for appropriate choices of a, b, c, and d: a + b ^ c + d is equivalent to a ^ b ^ c ^d
 
+
+#let's say a hash is prp(x) ^ x (non compressing owf)
+#let's say a cipher is k ^ prp(x ^ k)
+#
+#if prp is:
+#    a += b
+#    c ^= d
+#    b += c
+#    d ^= a
+#    
+#Then we can select an initial a and b that, when added (+) are equivalent to being operated on by XOR (^)
+#In the cipher version, a, b, c, d have key values combined with them via XOR. 
+#This seems to eliminate or reduce the ability to choose a pair a, b that will be add/xor equivalent, because the addition of the key may cause carrys to happen in the addition.
+#Addition of random keys with a, b will, with some probabilistic measure, result in a pair that will be add/xor equivalent (every X (a, b) pairs will be add/xor equivalent)
+
 from os import urandom
+from math import log
 import itertools
 
 import crypto.utilities
@@ -48,13 +64,15 @@ def test_create_equivalent_pair():
     assert is_equivalent_pair(word1, word2)     
      
 def test_addition_xor_equivalence():
-    for counter in itertools.count():        
-         word1, word2 = random_word(), random_word()
-         if word1 + word2 == word1 ^ word2:
-             print("Found equivalent pair after: {}".format(counter))
-             print("{}\n{}".format(format(word1, 'b').zfill(32), format(word2, 'b').zfill(32)))
-             break
-                     
+    counter = 0
+    for _ in itertools.count():        
+        counter += 1
+        word1, word2 = random_word(), random_word()
+        if word1 + word2 == word1 ^ word2:
+            print("Found equivalent pair after: {}".format(log(counter, 2)))
+            #print("{}\n{}".format(format(word1, 'b').zfill(32), format(word2, 'b').zfill(32)))
+            counter = 0
+          #  break                   
              
 if __name__ == "__main__":
     test_addition_xor_equivalence()

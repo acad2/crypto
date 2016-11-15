@@ -1,8 +1,23 @@
+from crypto.utilities import bytes_to_integer, integer_to_bytes
+
 def add(data, keystream, mask=0xFFFFFFFF):
+    #size = len(data)
+    #word1 = bytes_to_integer(data)
+    #word2 = bytes_to_integer(keystream)
+    #word1 = (word1 + word2) & ((2 ** (8 * size)) - 1)
+    #return integer_to_bytes(word1, size)
+
     for index, key_word in enumerate(keystream):
         data[index] = (data[index] + key_word) & mask
         
 def subtract(data, keystream, mask=0xFFFFFF):
+    #size = len(data)
+    #mask = ((2 ** (8 * size)) - 1)
+    #word1 = bytes_to_integer(data)
+    #word2 = bytes_to_integer(keystream)
+    #word1 = ((mask + 1) + (word1 - word2)) & mask
+    #return integer_to_bytes(word1, size)
+    
     for index, key_word in enumerate(keystream):                       
         data[index] = ((mask + 1) + (data[index] - key_word)) & mask
         

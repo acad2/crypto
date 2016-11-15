@@ -115,7 +115,12 @@ def optimized_bit_byte_transposition_words(a, b, c, d):
     
     return t, y, t2, y2
     
-
+def choice_shuffle(a, b, k):
+    t = a
+    a = choice(k, a, b)
+    b = choice(k, b, t)
+    return a, b
+    
 def test_bit_byte_transposition_words():
     a, b, c, d = 255, 127, 16, 1
     def test_function(a, b, c, d):                                      

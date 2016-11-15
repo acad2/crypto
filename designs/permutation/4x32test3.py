@@ -127,13 +127,49 @@ def bit_permutation2(a, b, c, d):
     
 def _invxor_permutation(a, b, c, d, amount, mask=0xFFFFFFFF):
     a ^= b    
-    c ^= invert(a)
+    a = invert(a)
+    c ^= a
     a = rotate_left(a, amount)
     a ^= c    
     a ^= d
     a ^= (invert(a) << 1) & mask
     return a, b, c, d    
         
+def adder_permutation(a, b, c, d, amount, mask=0xFFFFFFFF):
+    a &= b
+    b ^= c    
+    d = rotate_left(d, amount)
+    a ^= mask # invert
+    c ^= d    
+    
+    return a, b, c, d
+    
+def inverter_permutation(a, b, c, d, amount, mask=0xFFFFFFFF):
+  #  a = a ^ mask
+    a, b = choice_shuffle(a, b, c)
+    a = rotate_left(a, 1)    
+    c, d = choice_shuffle(c, d, b)
+    b = rotate_left(b, 2)
+    a, c = choice_shuffle(a, c, d)
+    c = rotate_left(c, 3)
+    b, d = choice_shuffle(b, d, a)
+    d = rotate_left(d, 4)
+    return a, b, c, d
+       
+def strange_addition(a, b, c):
+    c ^= (a & b) ^ 0xFFFFFFFF
+    a ^= b
+    return a, b, c
+    
+def strange_addition_permutation(a, b, c, d, amount):
+    a, b, c = strange_addition(a, b, c)
+    a ^= c
+    a, d, b = strange_addition(a, d, b)
+    a = rotate_left(a, amount)
+    return a, b, c, d        
+        
+from choicebitwisepermutation import bit_permutation
+            
 def permutation(a, b, c, d):    
     #a = _pipeline_friendly_permutation(a, b, c, d, 2)  
     #b = _pipeline_friendly_permutation(b, c, d, a, 4)
@@ -146,20 +182,30 @@ def permutation(a, b, c, d):
     #d = _pipeline_friendly_permutation4(d, a, b, c, 4)     
    # b = rotate_left(b, 2 + 8)
    # c = rotate_left(c, 3 + 16)
-   # d = rotate_left(d, 4 + 24)    
-       
-    for round in range(1):                           
-        a, b, c, d = _invxor_permutation(a, b, c, d, 1) 
-        b, c, d, a = _invxor_permutation(b, c, d, a, 2) 
-        c, d, a, b = _invxor_permutation(c, d, a, b, 3)
-        d, a, b, c = _invxor_permutation(d, a, b, c, 4)   
+   # d = rotate_left(d, 4 + 24)  
+   # a ^= 0xFFFFFFFF
+    for round in range(1):       
+        
+        #a = (a + (b ^ c ^ d)) & 0xFFFFFFFF
+        #b = (b + (a ^ c ^ d)) & 0xFFFFFFFF
+        #c = (c + (a ^ b ^ d)) & 0xFFFFFFFF
+        #d = (d + (a ^ b ^ c)) & 0xFFFFFFFF
+        #b, a = choice_swap(d, b, a)                        
+        #d, c = choice_swap(b, d, c)
+        #a, d = choice_swap(c, a, d)
+        #c, b = choice_swap(a, c, b)        
+        a = _pipeline_friendly_permutation4(a, b, c, d, 1)
+        b = _pipeline_friendly_permutation4(b, c, d, a, 2)
+        c = _pipeline_friendly_permutation4(c, d, a, b, 3)
+        d = _pipeline_friendly_permutation4(d, a, b, c, 4)
         b = rotate_left(b, 8)
-        c = rotate_left(c, 16)
+        c = rotate_left(c, 16) 
         d = rotate_left(d, 24)
-    #b, a = choice_swap(d, b, a)
-    #d, c = choice_swap(b, d, c)
-    #a, d = choice_swap(c, a, d)
-    #c, b = choice_swap(a, c, b)         
+        
+        #a ^= 0xFFFFFFFF
+        #a, b, c, d, _, _, _, _ = bit_permutation(a, b, c, d, d, c, b, d)
+        
+        
     #b, a = choice_swap(d, b, a)
     #d, c = choice_swap(b, d, c) 
     #a = rotate_left(a, 1)
