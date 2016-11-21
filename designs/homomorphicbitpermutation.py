@@ -107,6 +107,13 @@ def test_encrypt64_decrypt64():
     plaintextxor2 = decrypt64(ciphertextxor2, key)
     assert plaintextxor2 == "SoCool!!"
     
+    data4 = bytearray(urandom(8))
+    ciphertext4 = encrypt64(data4, key)
+    
+    ciphertextand = bytearray((ciphertextxor2[index] & ciphertext4[index] for index in range(len(ciphertextxor2))))
+    plaintextand = decrypt64(ciphertextand, key)
+    _plaintextand = bytearray(ord("SoCool!!"[index]) & data4[index] for index in range(len("SoCool!!")))
+    assert plaintextand == _plaintextand, (plaintextand, _plaintextand)
     print "Encrypt64/Decrypt64 unit test pass"
         
 def test_invert_shuffle_columns():
