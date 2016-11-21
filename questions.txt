@@ -1,0 +1,5 @@
+
+what strategies exist for key addition layers?
+----
+Besides XOR and ADD, in what ways can the key be used to influence the data?
+

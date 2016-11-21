@@ -29,21 +29,21 @@ def _permutation2(a, b, c, d):
     d = rotate_left(d, 4) 
     return a, b, c, d
     
-def choice_shuffle(a, b, c):
+def choice_swap(a, b, c):
     _t = b
     b = choice(a, b, c)
     c = choice(a, c, _t)
     return b, c
     
 def bit_permutation(a, b, c, d):
-    b, c = choice_shuffle(a, b, c)
+    b, c = choice_swap(a, b, c)
     b = rotate_left(b, 1)
     c = rotate_left(c, 2)
-    c, d = choice_shuffle(b, c, d)    
+    c, d = choice_swap(b, c, d)    
     d = rotate_left(d, 4)
-    d, a = choice_shuffle(c, d, a)
+    d, a = choice_swap(c, d, a)
     a = rotate_left(a, 8)
-   # a, b = choice_shuffle(d, a, b)
+   # a, b = choice_swap(d, a, b)
     return a, b, c, d
     
 def _pipeline_friendly_permutation(a, b, c, d, rotations, mask=0xFFFFFFFF):
@@ -146,13 +146,13 @@ def adder_permutation(a, b, c, d, amount, mask=0xFFFFFFFF):
     
 def inverter_permutation(a, b, c, d, amount, mask=0xFFFFFFFF):
   #  a = a ^ mask
-    a, b = choice_shuffle(a, b, c)
+    a, b = choice_swap(a, b, c)
     a = rotate_left(a, 1)    
-    c, d = choice_shuffle(c, d, b)
+    c, d = choice_swap(c, d, b)
     b = rotate_left(b, 2)
-    a, c = choice_shuffle(a, c, d)
+    a, c = choice_swap(a, c, d)
     c = rotate_left(c, 3)
-    b, d = choice_shuffle(b, d, a)
+    b, d = choice_swap(b, d, a)
     d = rotate_left(d, 4)
     return a, b, c, d
        

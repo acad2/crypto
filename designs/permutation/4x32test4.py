@@ -25,23 +25,25 @@ def mix_columns(a, b, c, d, mask=0xFFFFFFFF):
     return a, b, c, d
     
 def permutation(a, b, c, d, size=32):       
-    for round in range(1):        
+    for round in range(1):             
+        a ^= 0xFFFFFFFF
+        d ^= 0xFFFFFFFF
         a, b, c, d = mix_columns(a, b, c, d) # each 4 bit column is now active
         b = rotate_left(b, 1, size)
         c = rotate_left(c, 2, size)
         d = rotate_left(d, 3, size)
-            
+                
         a, b, c, d = mix_columns(a, b, c, d) # each 4x4 bit subsection is now active
         b = rotate_left(b, 4, size)
         c = rotate_left(c, 8, size)
         d = rotate_left(d, 12, size)
-            
+                
         a, b, c, d = mix_columns(a, b, c, d) # each 16x4 bit subsection is now active
         b = rotate_left(b, 8, size)
         c = rotate_left(c, 12, size)
         d = rotate_left(d, 16, size)
         
-        a, b, c, d = mix_columns(a, b, c, d) # each 32x4 bit subsection is now active     
+    a, b, c, d = mix_columns(a, b, c, d) # each 32x4 bit subsection is now active     
     return a, b, c, d
     
 def test_permutation():

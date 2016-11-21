@@ -1,0 +1,22 @@
+# asymmetric crypto built on exploiting rules/relationships like commutativity and distribution?
+# - The goal for how to break the cipher is usually well defined (i.e factor the modulus)
+# - security based on size of numbers involved 
+#    - Key size is selected by placing it outisde of the capabilities of the best known algorithms for solving the problem in question (i.e. factoring)
+
+# symmetric crypto obscures and removes any usable relationship of the data
+# - Key size usually set to 128 to 256 bits
+#   - Key size determined by how long it would take to brute force the key (exponential problem)
+# - The question of how to break the algorithm is usually not well defined
+#   - There are generic attack frameworks such as linear and differential cryptanalysis
+#       - Security against these based on number of rounds * resistance of each round to attack
+#       - Establish resistance of one round against attacks:
+#           - low differential probabilities are desirable (DDT)
+#               - beware impossible differentials
+#           - low linearity/high non-linearity is desirable (high minimum distance from linear function)(LAT)
+#           - Higher active bits (or bytes) is better (truncated differential cryptanalysis)
+#       - Multiply rounds until attack becomes infeasible
+#   - Slide attacks
+#       - Exploits similarity between rounds
+#       - Defeat by using round constants or a large enough block size
+
+# certain features are more appropriate for ciphers that use small/large register sets

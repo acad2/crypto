@@ -5,6 +5,8 @@
 #define shiftRows(b, c, d, shift1, shift2, shift3)({b = rotate_left(b, shift1); c = rotate_left(c, shift2); d = rotate_left(d, shift3);})
 
 #define permutation(a, b, c, d)({\
+    a ^= 0xFFFFFFFF;\
+    d ^= 0xFFFFFFFF;\
     mixColumns(a, b, c, d);\
     shiftRows(b, c, d, 1, 2, 3);\
     mixColumns(a, b, c, d);\

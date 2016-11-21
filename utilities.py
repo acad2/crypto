@@ -216,7 +216,7 @@ def bytes_to_words(seed, wordsize):
     
 def words_to_bytes(state, wordsize):        
     output = bytearray()
-    storage = state[:]
+    storage = list(state)
     while storage:
         byte = storage.pop(0)
         for amount in range(wordsize):
