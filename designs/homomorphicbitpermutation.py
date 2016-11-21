@@ -1,6 +1,6 @@
 from os import urandom
 
-from crypto.utilities import bytes_to_words, words_to_bytes
+from crypto.utilities import bytes_to_words, words_to_bytes, xor_subroutine
 from crypto.designs.ciphercomponents import choice, rotate_left, rotate_right
 
 def new_key(wordcount=4, wordsize=4):
@@ -86,6 +86,31 @@ def decrypt64(data, key):
     output = invert_bit_permutation128(bytes_to_words(data, 4), key)
     return words_to_bytes(output, 4)[:8]
     
+def homomorphic_adder(data1, data2, data3):
+    print data1, data2
+    for index, byte in enumerate(data1):
+        data3[index] ^= byte & data2[index]    
+    xor_subroutine(data1, data2)
+    print data1, data2
+    
+def test_homomorphic_adder():
+    input1 = [1 for count in range(8)]
+    input2 = input1[:]
+    carry = [0 for count in range(8)]
+    key = (123, 456, 789, 101112)
+    
+    ciphertext1 = encrypt64(input1, key)
+    ciphertext2 = encrypt64(input2, key)    
+    ciphertext3 = encrypt64(carry, key)
+    homomorphic_adder(ciphertext1, ciphertext2, ciphertext3)
+    
+    _input1 = decrypt64(ciphertext1, key)
+    _input2 = decrypt64(ciphertext2, key)
+    _carry = decrypt64(ciphertext3, key)
+    print list(_input1)
+    print list(_input2)
+    print list(_carry)
+    
 def test_encrypt64_decrypt64():
     data = "TestData"
     key = new_key(4, 4) # 4 32-bit words
@@ -114,6 +139,7 @@ def test_encrypt64_decrypt64():
     plaintextand = decrypt64(ciphertextand, key)
     _plaintextand = bytearray(ord("SoCool!!"[index]) & data4[index] for index in range(len("SoCool!!")))
     assert plaintextand == _plaintextand, (plaintextand, _plaintextand)
+    #_print_bits(ciphertext, ciphertext2, ciphertext3, ciphertext4, ciphertextxor, ciphertextxor2, ciphertextand)
     print "Encrypt64/Decrypt64 unit test pass"
         
 def test_invert_shuffle_columns():
@@ -166,4 +192,5 @@ if __name__ == "__main__":
     test_invert_bit_permutation()
     test_homomorphic_property()
     test_encrypt64_decrypt64()
+    test_homomorphic_adder()
     
