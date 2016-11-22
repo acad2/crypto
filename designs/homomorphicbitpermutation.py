@@ -85,6 +85,27 @@ def encrypt64(data, key):
 def decrypt64(data, key):
     output = invert_bit_permutation128(bytes_to_words(data, 4), key)
     return words_to_bytes(output, 4)[:8]
+   
+def encrypt64v2(data, key):
+    padding = new_key(2, 4)
+    inputs = bytes_to_words(bytearray(data), 4)
+    inputs[0] ^= padding[0]
+    inputs[1] ^= padding[1]
+    inputs = tuple(inputs) + padding
+    return words_to_bytes(bit_permutation128(inputs, key), 4)
+    
+def decrypt64v2(data, key):
+    output = list(invert_bit_permutation128(bytes_to_words(data, 4), key))
+    output[0] ^= output[2]
+    output[1] ^= output[3]
+    return words_to_bytes(output, 4)[:8]
+    
+def test_encrypt64v2_decrypt64v2():
+    data = "Awesome!"
+    key = (123, 456, 789, 101112)
+    ciphertext = encrypt64v2(data, key)    
+    plaintext = decrypt64v2(ciphertext, key)
+    assert plaintext == data
     
 def homomorphic_adder(data1, data2, data3):
     print data1, data2
@@ -127,7 +148,7 @@ def test_encrypt64_decrypt64():
 
     data3 = bytearray((4, 7, 44, 14, 56, 4, 64, 85))
     ciphertext3 = encrypt64(data3, key)
-    
+   
     ciphertextxor2 = bytearray((ciphertextxor[index] ^ ciphertext3[index] for index in range(len(ciphertextxor))))
     plaintextxor2 = decrypt64(ciphertextxor2, key)
     assert plaintextxor2 == "SoCool!!"
@@ -193,4 +214,5 @@ if __name__ == "__main__":
     test_homomorphic_property()
     test_encrypt64_decrypt64()
     test_homomorphic_adder()
+    test_encrypt64v2_decrypt64v2()
     
