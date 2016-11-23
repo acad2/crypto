@@ -196,6 +196,10 @@ def _print_bits(*inputs):
         print '-' * 80
         print '\n'.join(format(word, 'b').zfill(8) for word in _input)
             
+def _print_bits32(*inputs):
+    for _input in inputs:
+        print '-' * 80
+        print '\n'.join(format(word, 'b').zfill(32) for word in _input)                
 def test_homomorphic_property():
     input1 = (1, 2, 4, 8)
     input2 = (2, 4, 8, 16)
@@ -231,16 +235,28 @@ def generate_keypair():
         public_key.append(ciphertext)
     return public_key, private_key
     
-def public_key_encryption(message, public_key):
+def public_key_encryption(message, public_key, ciphertext_count=16):
     output = []
     for symbol in bytearray(message):
-        key_byte = ord(urandom(1))
-        key_byte2 = key_byte ^ symbol
-        
-        ciphertext_key_byte = public_key[key_byte]
-        ciphertext_key_byte2 = public_key[key_byte2]
-        ciphertext_byte = [ciphertext_key_byte[index] ^ ciphertext_key_byte2[index] for index in range(len(ciphertext_key_byte))]
+        ciphertext_byte = [0, 0, 0, 0]
+        _key_byte = 0
+        for count in range(ciphertext_count - 1):        
+            key_byte = ord(urandom(1))
+            _key_byte ^= key_byte
+            ciphertext_key_byte = public_key[key_byte]
+            ciphertext_byte[0] ^= ciphertext_key_byte[0]
+            ciphertext_byte[1] ^= ciphertext_key_byte[1]
+            ciphertext_byte[2] ^= ciphertext_key_byte[2]
+            ciphertext_byte[3] ^= ciphertext_key_byte[3]
+            
+        final_key_byte = _key_byte ^ symbol
+        final_ciphertext = public_key[final_key_byte]
+        ciphertext_byte[0] ^= final_ciphertext[0]
+        ciphertext_byte[1] ^= final_ciphertext[1]
+        ciphertext_byte[2] ^= final_ciphertext[2]
+        ciphertext_byte[3] ^= final_ciphertext[3]
         output.append(ciphertext_byte)
+        _print_bits32(ciphertext_byte)
     return output
     
 def private_key_decryption(ciphertexts, private_key):
@@ -257,7 +273,11 @@ def test_public_key_encryption_private_key_decryption():
     plaintext = private_key_decryption(ciphertext, private_key)
     assert plaintext == message, (plaintext, message)
     
-        
+    ciphertext2 = public_key_encryption(message, public_key)
+    assert ciphertext2 != ciphertext
+    plaintext2 = private_key_decryption(ciphertext2, private_key)
+    assert plaintext2 == message
+    
 
 
 if __name__ == "__main__":
