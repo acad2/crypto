@@ -9,12 +9,14 @@ def new_key(wordcount=4, wordsize=4):
     return tuple(bytes_to_words(bytearray(urandom(wordcount * wordsize)), wordsize)) 
 
 def choice_swap(a, b, k):
+    """ Conditionally swaps a and b, based on the value of k. """
     t = a
     a = choice(k, a, b)
     b = choice(k, b, t)
     return a, b
     
 def shuffle_columns(a, b, c, d, k0, k1, k2, k3):
+    """ Transposes each 1 bit wide/4 bit tall column such that each bit has 1/4 probability of being in any word """
     a, b = choice_swap(a, b, k0)      
     c, d = choice_swap(c, d, k1)
 
@@ -23,32 +25,34 @@ def shuffle_columns(a, b, c, d, k0, k1, k2, k3):
     return a, b, c, d
     
 def bit_permutation128(inputs, key, wordsize=32): 
+    """ Transpose the bits of the supplied inputs according to key.
+        Selects one of 128! permutations of bits. """
     a, b, c, d = inputs
     k0, k1, k2, k3 = key
     for round in range(1):              
-        a, b, c, d = shuffle_columns(a, b, c, d, k0, k1, k2, k3)                
+        a, b, c, d = shuffle_columns(a, b, c, d, k0, k1, k2, k3) # each 4 bit tall column is now active
         b = rotate_left(b, 1, wordsize)
         c = rotate_left(c, 2, wordsize)
         d = rotate_left(d, 3, wordsize)               
         
         
-        a, b, c, d = shuffle_columns(a, b, c, d, k0, k1, k2, k3)                
+        a, b, c, d = shuffle_columns(a, b, c, d, k0, k1, k2, k3) # each 4x4 bit subsection is now active
         b = rotate_left(b, 4, wordsize)
         c = rotate_left(c, 8, wordsize)
         d = rotate_left(d, 12, wordsize)                              
         
         
-        a, b, c, d = shuffle_columns(a, b, c, d, k0, k1, k2, k3)                    
+        a, b, c, d = shuffle_columns(a, b, c, d, k0, k1, k2, k3) # each 16x4 bit subsection is now active                  
         b = rotate_left(b, 8, wordsize)
         c = rotate_left(c, 12, wordsize)
         d = rotate_left(d, 16, wordsize)        
         
         
-        a, b, c, d = shuffle_columns(a, b, c, d, k0, k1, k2, k3)
-  #      a, b, c, d = b, c, d, a     
+        a, b, c, d = shuffle_columns(a, b, c, d, k0, k1, k2, k3) # each 32x4 bit subsection is now active  
     return a, b, c, d
     
 def invert_shuffle_columns(a, b, c, d, k0, k1, k2, k3):
+    """ Inverts the transposition performed by shuffle_columns. """
     a, d = choice_swap(a, d, k3)
     c, b = choice_swap(c, b, k2)
     c, d = choice_swap(c, d, k1)
@@ -56,10 +60,10 @@ def invert_shuffle_columns(a, b, c, d, k0, k1, k2, k3):
     return a, b, c, d       
         
 def invert_bit_permutation128(inputs, key, wordsize=32):
+    """ Inverts the transposition performed by bit_permutation. """
     a, b, c, d = inputs
     k0, k1, k2, k3 = key
-    for round in range(1):
- #       a, b, c, d = d, a, b, c
+    for round in range(1): 
         a, b, c, d = invert_shuffle_columns(a, b, c, d, k0, k1, k2, k3)
         
         d = rotate_right(d, 16, wordsize)
@@ -80,6 +84,20 @@ def invert_bit_permutation128(inputs, key, wordsize=32):
     return a, b, c, d
       
 def encrypt64(data, key, output_type="bytes"):
+    """ Encrypt 64 bits of data using key.
+        Encryption is:
+            - Randomized
+                - The randomizing value is kept secret/not sent in the clear
+            - Homomorphic
+                - Supports unlimited fully homomorphic operationss
+                
+        Encryption is performed by generating a 64-bit random padding value and
+        then concatenating the padding to the 64-bit message, and finally applying a keyed bit permutation on the result. 
+        
+        To compute the XOR/AND of 2 ciphertexts, simply XOR/AND the ciphertexts together. 
+            - An encryption of 0 should be added to the target of any AND afterwards
+                - This is due to the tendency of AND to set bits to 0.
+                - The noise from the ciphertext will ensure hamming weight on the target ciphertext stays balanced"""                
     padding = new_key(2, 4) # generate 2 32-bit words
     inputs = tuple(bytes_to_words(bytearray(data), 4)) + padding
     if output_type == "bytes":
@@ -90,6 +108,9 @@ def encrypt64(data, key, output_type="bytes"):
         return bit_permutation128(inputs, key)
         
 def decrypt64(data, key, output_type="bytes"):
+    """ Decrypts ciphertext produced by encrypt64.
+        First, the bit permutation is reversed. 
+        Then the padding is xor'd with the message and discarded. """        
     output = invert_bit_permutation128(bytes_to_words(data, 4), key)
     if output_type == "bytes":
         return words_to_bytes(output, 4)[:8]
@@ -99,6 +120,17 @@ def decrypt64(data, key, output_type="bytes"):
         return invert_bit_permutation128(bytes_to_words(data, 4), key)
         
 def encrypt64v2(data, key, output_type="bytes"):
+    """ Encrypt 64 bits of data using key. Returns the resulting ciphertext
+        Encryption is:
+            - Randomized
+                - The randomizing value is kept secret/not sent in the clear
+            - Homomorphic
+                - Supports unlimited partially homomorphic operationss
+                
+        Encryption is performed by generating a 64-bit random padding value and masking the data with it,
+        then concatenating the padding to the masked 64-bit message, and finally applying a keyed bit permutation on the result. 
+        
+        To compute the XOR of 2 ciphertexts, simply XOR the ciphertexts together.""" 
     padding = new_key(2, 4)
     inputs = bytes_to_words(bytearray(data), 4)
     inputs[0] ^= padding[0]
@@ -112,6 +144,8 @@ def encrypt64v2(data, key, output_type="bytes"):
         return bit_permutation128(inputs, key)
                 
 def decrypt64v2(data, key, output_type="bytes"):
+    """ Decrypts data encrypted by encrypt64v2. Returns resulting plaintext message. 
+        Inverts the bit transposition, unmasks the data, and discards the padding. """
     output = list(invert_bit_permutation128(bytes_to_words(data, 4), key))
     output[0] ^= output[2]
     output[1] ^= output[3]
@@ -131,11 +165,10 @@ def test_encrypt64v2_decrypt64v2():
     assert plaintext == data
     
 def homomorphic_adder(data1, data2, data3):
-    print data1, data2
+    """ Homomorphic half-adder to test homomorphic properties of ciphertexts. """    
     for index, byte in enumerate(data1):
         data3[index] ^= byte & data2[index]    
-    xor_subroutine(data1, data2)
-    print data1, data2
+    xor_subroutine(data1, data2)    
     
 def test_homomorphic_adder():
     input1 = [1 for count in range(8)]
@@ -211,7 +244,8 @@ def _print_bits(*inputs):
 def _print_bits32(*inputs):
     for _input in inputs:
         print '-' * 80
-        print '\n'.join(format(word, 'b').zfill(32) for word in _input)                
+        print '\n'.join(format(word, 'b').zfill(32) for word in _input) 
+        
 def test_homomorphic_property():
     input1 = (1, 2, 4, 8)
     input2 = (2, 4, 8, 16)
@@ -237,7 +271,10 @@ def test_homomorphic_property():
     
     
 #-------- public key test    
-def generate_public_key(private_key):    
+def generate_public_key(private_key):  
+    """ Generate a public key, given the private key of a symmetric homomorphic cryptosystem. 
+        
+        A public key consists of encryptions of the range of numbers 0-255, in order. """
     public_key = []
     for integer in range(256):
         data = bytearray(8)
@@ -247,14 +284,27 @@ def generate_public_key(private_key):
     return public_key
     
 def generate_private_key():
+    """ Generates a random 128-bit value. """
     return bytes_to_words(bytearray(urandom(16)), 4)
     
 def generate_keypair():
+    """ Generates a 128-bit private key and (128-bit * 256) = 32768 bit (4096 byte) public key. """
     private_key = generate_private_key()
     public_key = generate_public_key(private_key)
     return public_key, private_key
     
 def public_key_encryption(message, public_key, ciphertext_count=16):
+    """ Public key encryption scheme, based on symmetric homomorphic encryption.
+        A public key consists of encryptions of the numbers 0-255, in order.
+        
+        To encrypt, add together (using XOR) a random subset of the integers (which are 
+        represented as ciphertexts) such that the sum equals the message. 
+        
+        This can be done simply in practice, by adding together enough random 
+        integers from the public key, then calculating the difference between the resulting integer
+        and desired integer, and adding that last integer to the sum. 
+        
+        Encryption can send one 8-bit value per 128-bit ciphertext. """        
     output = []
     for symbol in bytearray(message):
         ciphertext_byte = [0, 0, 0, 0]
@@ -278,6 +328,7 @@ def public_key_encryption(message, public_key, ciphertext_count=16):
     return output
     
 def private_key_decryption(ciphertexts, private_key):
+    """ Private key decryption function based on symmetric homomorphic encryption and subset sum. """
     message = bytearray()
     for ciphertext_byte in ciphertexts:        
         plaintext_byte = decrypt64v2(words_to_bytes(ciphertext_byte, 4), private_key)[-1]
