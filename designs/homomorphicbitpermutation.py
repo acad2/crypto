@@ -111,12 +111,12 @@ def decrypt64(data, key, output_type="bytes"):
     """ Decrypts ciphertext produced by encrypt64.
         First, the bit permutation is reversed. 
         Then the padding is xor'd with the message and discarded. """        
-    output = invert_bit_permutation128(bytes_to_words(data, 4), key)
-    if output_type == "bytes":
+    output = invert_bit_permutation128(bytes_to_words(data, 4), key)    
+    if output_type == "bytes":                
         return words_to_bytes(output, 4)[:8]
     else:
         if output_type != "words":
-            raise ValueError("Invalid output_type '{}'".format(output_type)) 
+            raise ValueError("Invalid output_type '{}'".format(output_type))         
         return invert_bit_permutation128(bytes_to_words(data, 4), key)
         
 def encrypt64v2(data, key, output_type="bytes"):
@@ -161,8 +161,20 @@ def test_encrypt64v2_decrypt64v2():
     key = (123, 456, 789, 101112)
     ciphertext = encrypt64v2(data, key)    
     plaintext = decrypt64v2(ciphertext, key)
-    _print_bits(bytearray(data), ciphertext)
+    
+    print("\nData bits: ")
+    _print_bits(bytearray(data))
+    print("\nCiphertext bits: ")
+    _print_bits(ciphertext)
     assert plaintext == data
+    
+    ciphertext2 = encrypt64v2(data, key)
+    assert ciphertext2 != ciphertext
+    plaintext2 = decrypt64v2(ciphertext2, key)
+    assert plaintext2 == data
+    print("\nCiphertext2 bits: ")
+    _print_bits(ciphertext2)
+    print "encrypt64v2 and decrypt64v2 unit test pass"
     
 def homomorphic_adder(data1, data2, data3):
     """ Homomorphic half-adder to test homomorphic properties of ciphertexts. """    
@@ -184,9 +196,11 @@ def test_homomorphic_adder():
     _input1 = decrypt64(ciphertext1, key)
     _input2 = decrypt64(ciphertext2, key)
     _carry = decrypt64(ciphertext3, key)
-    print list(_input1)
-    print list(_input2)
-    print list(_carry)
+    
+    assert list(_input1) == [0 for count in range(8)], _input1
+    assert list(_input2) == [1 for count in range(8)]
+    assert list(_carry) == [1 for count in range(8)]
+    print "Homomorphic adder unit test pass"
     
 def test_encrypt64_decrypt64():
     data = "TestData"
@@ -268,86 +282,6 @@ def test_homomorphic_property():
     assert decryptedxor == plaintextxor, (decryptedxor, plaintextxor, input1, input2)
     assert decryptedand == plaintextand, (decryptedand, plaintextand, input1, input2)
     print "Homomorphic unit test pass"
-    
-    
-#-------- public key test    
-def generate_public_key(private_key):  
-    """ Generate a public key, given the private key of a symmetric homomorphic cryptosystem. 
-        
-        A public key consists of encryptions of the range of numbers 0-255, in order. """
-    public_key = []
-    for integer in range(256):
-        data = bytearray(8)
-        data[-1] = integer
-        ciphertext = encrypt64v2(data, private_key, "words")
-        public_key.append(ciphertext)
-    return public_key
-    
-def generate_private_key():
-    """ Generates a random 128-bit value. """
-    return bytes_to_words(bytearray(urandom(16)), 4)
-    
-def generate_keypair():
-    """ Generates a 128-bit private key and (128-bit * 256) = 32768 bit (4096 byte) public key. """
-    private_key = generate_private_key()
-    public_key = generate_public_key(private_key)
-    return public_key, private_key
-    
-def public_key_encryption(message, public_key, ciphertext_count=16):
-    """ Public key encryption scheme, based on symmetric homomorphic encryption.
-        A public key consists of encryptions of the numbers 0-255, in order.
-        
-        To encrypt, add together (using XOR) a random subset of the integers (which are 
-        represented as ciphertexts) such that the sum equals the message. 
-        
-        This can be done simply in practice, by adding together enough random 
-        integers from the public key, then calculating the difference between the resulting integer
-        and desired integer, and adding that last integer to the sum. 
-        
-        Encryption can send one 8-bit value per 128-bit ciphertext. """        
-    output = []
-    for symbol in bytearray(message):
-        ciphertext_byte = [0, 0, 0, 0]
-        _key_byte = 0
-        for count in range(ciphertext_count - 1):        
-            key_byte = ord(urandom(1))
-            _key_byte ^= key_byte
-            ciphertext_key_byte = public_key[key_byte]
-            ciphertext_byte[0] ^= ciphertext_key_byte[0]
-            ciphertext_byte[1] ^= ciphertext_key_byte[1]
-            ciphertext_byte[2] ^= ciphertext_key_byte[2]
-            ciphertext_byte[3] ^= ciphertext_key_byte[3]
-            
-        final_key_byte = _key_byte ^ symbol
-        final_ciphertext = public_key[final_key_byte]
-        ciphertext_byte[0] ^= final_ciphertext[0]
-        ciphertext_byte[1] ^= final_ciphertext[1]
-        ciphertext_byte[2] ^= final_ciphertext[2]
-        ciphertext_byte[3] ^= final_ciphertext[3]
-        output.append(ciphertext_byte)        
-    return output
-    
-def private_key_decryption(ciphertexts, private_key):
-    """ Private key decryption function based on symmetric homomorphic encryption and subset sum. """
-    message = bytearray()
-    for ciphertext_byte in ciphertexts:        
-        plaintext_byte = decrypt64v2(words_to_bytes(ciphertext_byte, 4), private_key)[-1]
-        message.append(plaintext_byte)
-    return message
-    
-def test_public_key_encryption_private_key_decryption():
-    public_key, private_key = generate_keypair()
-    message = "Testing!"
-    ciphertext = public_key_encryption(message, public_key)
-    plaintext = private_key_decryption(ciphertext, private_key)
-    assert plaintext == message, (plaintext, message)
-    
-    ciphertext2 = public_key_encryption(message, public_key)
-    assert ciphertext2 != ciphertext
-    plaintext2 = private_key_decryption(ciphertext2, private_key)
-    assert plaintext2 == message
-    
-
 
 if __name__ == "__main__":
     test_invert_shuffle_columns()
@@ -355,6 +289,5 @@ if __name__ == "__main__":
     test_homomorphic_property()
     test_encrypt64_decrypt64()
     test_homomorphic_adder()
-    test_encrypt64v2_decrypt64v2()
-    test_public_key_encryption_private_key_decryption()
+    test_encrypt64v2_decrypt64v2()    
     

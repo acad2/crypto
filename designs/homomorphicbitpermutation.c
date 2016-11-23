@@ -50,11 +50,12 @@
     a, b, c, d = invert_shuffle_columns(a, b, c, d, k0, k1, k2, k3);})
     
 WORDSIZE32 generate_padding(){
-    
+    return random_unsigned_long()}
     
 void encrypt(WORDSIZE32* data, WORDSIZE32* key, WORDSIZE32* output){
     WORDSIZE32 padding[2], t;
-    padding = generate_padding();
+    padding[0] = generate_padding();
+    padding[1] = generate_padding();
     output[0] = data[0] ^ padding[0];
     output[1] = data[1] ^ padding[1];
     output[2] = padding[2];
