@@ -77,15 +77,25 @@ def invert_bit_permutation128(inputs, key, wordsize=32):
 
     return a, b, c, d
       
-def encrypt64(data, key):
+def encrypt64(data, key, output_type="bytes"):
     padding = new_key(2, 4) # generate 2 32-bit words
     inputs = tuple(bytes_to_words(bytearray(data), 4)) + padding
-    return words_to_bytes(bit_permutation128(inputs, key), 4)
-    
-def decrypt64(data, key):
+    if output_type == "bytes":
+        return words_to_bytes(bit_permutation128(inputs, key), 4)
+    else:
+        if output_type != "words":
+            raise ValueError("Invalid output_type '{}'".format(output_type))
+        return bit_permutation128(inputs, key)
+        
+def decrypt64(data, key, output_type="bytes"):
     output = invert_bit_permutation128(bytes_to_words(data, 4), key)
-    return words_to_bytes(output, 4)[:8]
-   
+    if output_type == "bytes":
+        return words_to_bytes(output, 4)[:8]
+    else:
+        if output_type != "words":
+            raise ValueError("Invalid output_type '{}'".format(output_type)) 
+        return invert_bit_permutation128(bytes_to_words(data, 4), key)
+        
 def encrypt64v2(data, key):
     padding = new_key(2, 4)
     inputs = bytes_to_words(bytearray(data), 4)
@@ -209,6 +219,47 @@ def test_homomorphic_property():
     assert decryptedand == plaintextand, (decryptedand, plaintextand, input1, input2)
     print "Homomorphic unit test pass"
     
+    
+#-------- public key test    
+def generate_keypair():
+    private_key = bytes_to_words(bytearray(urandom(16)), 4)
+    public_key = []
+    for integer in range(256):
+        data = bytearray(8)
+        data[-1] = integer
+        ciphertext = encrypt64(data, private_key, "words")
+        public_key.append(ciphertext)
+    return public_key, private_key
+    
+def public_key_encryption(message, public_key):
+    output = []
+    for symbol in bytearray(message):
+        key_byte = ord(urandom(1))
+        key_byte2 = key_byte ^ symbol
+        
+        ciphertext_key_byte = public_key[key_byte]
+        ciphertext_key_byte2 = public_key[key_byte2]
+        ciphertext_byte = [ciphertext_key_byte[index] ^ ciphertext_key_byte2[index] for index in range(len(ciphertext_key_byte))]
+        output.append(ciphertext_byte)
+    return output
+    
+def private_key_decryption(ciphertexts, private_key):
+    message = bytearray()
+    for ciphertext_byte in ciphertexts:        
+        plaintext_byte = decrypt64(words_to_bytes(ciphertext_byte, 4), private_key)[-1]
+        message.append(plaintext_byte)
+    return message
+    
+def test_public_key_encryption_private_key_decryption():
+    public_key, private_key = generate_keypair()
+    message = "Testing!"
+    ciphertext = public_key_encryption(message, public_key)
+    plaintext = private_key_decryption(ciphertext, private_key)
+    assert plaintext == message, (plaintext, message)
+    
+        
+
+
 if __name__ == "__main__":
     test_invert_shuffle_columns()
     test_invert_bit_permutation()
@@ -216,4 +267,5 @@ if __name__ == "__main__":
     test_encrypt64_decrypt64()
     test_homomorphic_adder()
     test_encrypt64v2_decrypt64v2()
+    test_public_key_encryption_private_key_decryption()
     
