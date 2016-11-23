@@ -43,7 +43,7 @@ def bit_permutation128(inputs, key, wordsize=32):
         
         
         a, b, c, d = shuffle_columns(a, b, c, d, k0, k1, k2, k3)
-        a, b, c, d = b, c, d, a     
+  #      a, b, c, d = b, c, d, a     
     return a, b, c, d
     
 def invert_shuffle_columns(a, b, c, d, k0, k1, k2, k3):
@@ -57,7 +57,7 @@ def invert_bit_permutation128(inputs, key, wordsize=32):
     a, b, c, d = inputs
     k0, k1, k2, k3 = key
     for round in range(1):
-        a, b, c, d = d, a, b, c
+ #       a, b, c, d = d, a, b, c
         a, b, c, d = invert_shuffle_columns(a, b, c, d, k0, k1, k2, k3)
         
         d = rotate_right(d, 16, wordsize)
@@ -105,6 +105,7 @@ def test_encrypt64v2_decrypt64v2():
     key = (123, 456, 789, 101112)
     ciphertext = encrypt64v2(data, key)    
     plaintext = decrypt64v2(ciphertext, key)
+    _print_bits(bytearray(data), ciphertext)
     assert plaintext == data
     
 def homomorphic_adder(data1, data2, data3):
@@ -183,7 +184,7 @@ def test_invert_bit_permutation():
 def _print_bits(*inputs):
     for _input in inputs:
         print '-' * 80
-        print '\n'.join(format(word, 'b').zfill(32) for word in _input)
+        print '\n'.join(format(word, 'b').zfill(8) for word in _input)
             
 def test_homomorphic_property():
     input1 = (1, 2, 4, 8)
