@@ -96,20 +96,30 @@ def decrypt64(data, key, output_type="bytes"):
             raise ValueError("Invalid output_type '{}'".format(output_type)) 
         return invert_bit_permutation128(bytes_to_words(data, 4), key)
         
-def encrypt64v2(data, key):
+def encrypt64v2(data, key, output_type="bytes"):
     padding = new_key(2, 4)
     inputs = bytes_to_words(bytearray(data), 4)
     inputs[0] ^= padding[0]
     inputs[1] ^= padding[1]
     inputs = tuple(inputs) + padding
-    return words_to_bytes(bit_permutation128(inputs, key), 4)
-    
-def decrypt64v2(data, key):
+    if output_type == "bytes":
+        return words_to_bytes(bit_permutation128(inputs, key), 4)
+    else:
+        if output_type != "words":
+            raise ValueError("Invalid output_type '{}'".format(output_type)) 
+        return bit_permutation128(inputs, key)
+                
+def decrypt64v2(data, key, output_type="bytes"):
     output = list(invert_bit_permutation128(bytes_to_words(data, 4), key))
     output[0] ^= output[2]
     output[1] ^= output[3]
-    return words_to_bytes(output, 4)[:8]
-    
+    if output_type == "bytes":
+        return words_to_bytes(output, 4)[:8]
+    else:
+        if output_type != "words":
+            raise ValueError("Invalid output_type '{}'".format(output_type)) 
+        return output
+        
 def test_encrypt64v2_decrypt64v2():
     data = "Awesome!"
     key = (123, 456, 789, 101112)
@@ -225,14 +235,21 @@ def test_homomorphic_property():
     
     
 #-------- public key test    
-def generate_keypair():
-    private_key = bytes_to_words(bytearray(urandom(16)), 4)
+def generate_public_key(private_key):    
     public_key = []
     for integer in range(256):
         data = bytearray(8)
         data[-1] = integer
-        ciphertext = encrypt64(data, private_key, "words")
+        ciphertext = encrypt64v2(data, private_key, "words")
         public_key.append(ciphertext)
+    return public_key
+    
+def generate_private_key():
+    return bytes_to_words(bytearray(urandom(16)), 4)
+    
+def generate_keypair():
+    private_key = generate_private_key()
+    public_key = generate_public_key(private_key)
     return public_key, private_key
     
 def public_key_encryption(message, public_key, ciphertext_count=16):
@@ -256,13 +273,14 @@ def public_key_encryption(message, public_key, ciphertext_count=16):
         ciphertext_byte[2] ^= final_ciphertext[2]
         ciphertext_byte[3] ^= final_ciphertext[3]
         output.append(ciphertext_byte)
-        _print_bits32(ciphertext_byte)
+        if symbol == ord('!'):
+            _print_bits32(ciphertext_byte)
     return output
     
 def private_key_decryption(ciphertexts, private_key):
     message = bytearray()
     for ciphertext_byte in ciphertexts:        
-        plaintext_byte = decrypt64(words_to_bytes(ciphertext_byte, 4), private_key)[-1]
+        plaintext_byte = decrypt64v2(words_to_bytes(ciphertext_byte, 4), private_key)[-1]
         message.append(plaintext_byte)
     return message
     
@@ -281,11 +299,11 @@ def test_public_key_encryption_private_key_decryption():
 
 
 if __name__ == "__main__":
-    test_invert_shuffle_columns()
-    test_invert_bit_permutation()
-    test_homomorphic_property()
-    test_encrypt64_decrypt64()
-    test_homomorphic_adder()
-    test_encrypt64v2_decrypt64v2()
+    #test_invert_shuffle_columns()
+    #test_invert_bit_permutation()
+    #test_homomorphic_property()
+    #test_encrypt64_decrypt64()
+    #test_homomorphic_adder()
+    #test_encrypt64v2_decrypt64v2()
     test_public_key_encryption_private_key_decryption()
     
