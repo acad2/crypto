@@ -1,4 +1,8 @@
-""" Python implementation of a homomorphic secret key cipher. """
+""" Python implementation of a homomorphic secret key cipher. 
+    Uses keyed transposition to hide message bits in a sea of random bits.
+    Since transposing bits according to a key results in bits at index i relocating to index j,
+    transposing two separate messages means their bits will still "line up" in the resulting ciphertexts.
+    This, combined with padding with random data and possibly masking, facilitates homomorphic cryptography. """
 
 from os import urandom
 
@@ -89,7 +93,9 @@ def encrypt64(data, key, output_type="bytes"):
             - Randomized
                 - The randomizing value is kept secret/not sent in the clear
             - Homomorphic
-                - Supports unlimited fully homomorphic operationss
+                - Supports unlimited fully homomorphic operations
+                    - D(E(x) ^ E(y)) == x ^ y
+                    - D(E(x) & E(y)) == x & y
                 
         Encryption is performed by generating a 64-bit random padding value and
         then concatenating the padding to the 64-bit message, and finally applying a keyed bit permutation on the result. 
@@ -110,7 +116,8 @@ def encrypt64(data, key, output_type="bytes"):
 def decrypt64(data, key, output_type="bytes"):
     """ Decrypts ciphertext produced by encrypt64.
         First, the bit permutation is reversed. 
-        Then the padding is xor'd with the message and discarded. """        
+        Then the padding is xor'd with the message and discarded. 
+        It is crucial for the long term security of the secret key that the random padding is not leaked."""        
     output = invert_bit_permutation128(bytes_to_words(data, 4), key)    
     if output_type == "bytes":                
         return words_to_bytes(output, 4)[:8]
@@ -126,6 +133,7 @@ def encrypt64v2(data, key, output_type="bytes"):
                 - The randomizing value is kept secret/not sent in the clear
             - Homomorphic
                 - Supports unlimited partially homomorphic operationss
+                - D(E(x) ^ E(y)) == x ^ y
                 
         Encryption is performed by generating a 64-bit random padding value and masking the data with it,
         then concatenating the padding to the masked 64-bit message, and finally applying a keyed bit permutation on the result. 
