@@ -1,4 +1,4 @@
-""" Python implementation of a homomorphic secret key cipher and associated public key system based on it. """
+""" Python implementation of a homomorphic secret key cipher. """
 
 from os import urandom
 

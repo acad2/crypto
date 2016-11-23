@@ -1,11 +1,26 @@
+""" Python implementation of a public key cryptosystem based on a partially homomorphic secret key cipher and subset sum. 
+    Private keys are 128-bit uniformly random data for the used cipher. 
+    Public keys are ordered encryptions of integers
+        - For example, 256 128-bit ciphertexts to represent all 8-bit integers (4096 bytes)
+    Public key encryption adds together random integers from the public key, until they sum to the desired value.
+        - This works because the integers are represented as ciphertexts and can be manipulated via XOR
+        - Can be done quickly and efficiently with little more then XOR instructions and indexing some memory
+    Private key decryption decrypts the sum to obtain to the transmitted value.
+        - Can be done as quickly as the underlying secret key homomorphic scheme can decrypt"""
+
 from os import urandom
 
 from homomorphicbitpermutation import encrypt64v2, decrypt64v2
 from crypto.utilities import words_to_bytes, bytes_to_words
 
-#-------- public key test    
+def homomorphic_encrypt(data, secret_key):    
+    return bytes_to_words(encrypt64v2(data, secret_key), 4)
+    
+def homomorphic_decrypt(data, secret_key):
+    return decrypt64v2(words_to_bytes(data, 4), secret_key)
+    
 def generate_public_key(private_key):  
-    """ Generate a public key, given the private key of a symmetric homomorphic cryptosystem. 
+    """ Generate a public key, given the secret key of a symmetric homomorphic cryptosystem. 
         
         A public key consists of encryptions of the range of numbers 0-255, in order. 
         Larger public keys could be made, consisting of all 16-bit unsigned integers for example.
@@ -14,7 +29,7 @@ def generate_public_key(private_key):
     for integer in range(256):
         data = bytearray(8)
         data[-1] = integer
-        ciphertext = encrypt64v2(data, private_key, "words")
+        ciphertext = homomorphic_encrypt(data, private_key)
         public_key.append(ciphertext)
     return public_key
     
@@ -67,7 +82,7 @@ def private_key_decryption(ciphertexts, private_key):
     """ Private key decryption function based on symmetric homomorphic encryption and subset sum. """
     message = bytearray()
     for ciphertext_byte in ciphertexts:        
-        plaintext_byte = decrypt64v2(words_to_bytes(ciphertext_byte, 4), private_key)[-1]
+        plaintext_byte = homomorphic_decrypt(ciphertext_byte, private_key)[-1]
         message.append(plaintext_byte)
     return message
     
