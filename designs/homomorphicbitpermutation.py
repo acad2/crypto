@@ -1,3 +1,5 @@
+""" Python implementation of a homomorphic secret key cipher and associated public key system based on it. """
+
 from os import urandom
 
 from crypto.utilities import bytes_to_words, words_to_bytes, xor_subroutine
@@ -272,9 +274,7 @@ def public_key_encryption(message, public_key, ciphertext_count=16):
         ciphertext_byte[1] ^= final_ciphertext[1]
         ciphertext_byte[2] ^= final_ciphertext[2]
         ciphertext_byte[3] ^= final_ciphertext[3]
-        output.append(ciphertext_byte)
-        if symbol == ord('!'):
-            _print_bits32(ciphertext_byte)
+        output.append(ciphertext_byte)        
     return output
     
 def private_key_decryption(ciphertexts, private_key):
@@ -299,11 +299,11 @@ def test_public_key_encryption_private_key_decryption():
 
 
 if __name__ == "__main__":
-    #test_invert_shuffle_columns()
-    #test_invert_bit_permutation()
-    #test_homomorphic_property()
-    #test_encrypt64_decrypt64()
-    #test_homomorphic_adder()
-    #test_encrypt64v2_decrypt64v2()
+    test_invert_shuffle_columns()
+    test_invert_bit_permutation()
+    test_homomorphic_property()
+    test_encrypt64_decrypt64()
+    test_homomorphic_adder()
+    test_encrypt64v2_decrypt64v2()
     test_public_key_encryption_private_key_decryption()
     
