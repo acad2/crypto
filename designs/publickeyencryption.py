@@ -35,7 +35,8 @@ def generate_public_key(private_key):
     
 def generate_private_key():
     """ Generates a random 128-bit value. """
-    return bytes_to_words(bytearray(urandom(16)), 4)
+    key = bytes_to_words(bytearray(urandom(16)), 4)
+    return key
     
 def generate_keypair():
     """ Generates a 128-bit private key and (128-bit * 256) = 32768 bit (4096 byte) public key. """
@@ -43,7 +44,7 @@ def generate_keypair():
     public_key = generate_public_key(private_key)
     return public_key, private_key
     
-def public_key_encryption(message, public_key, ciphertext_count=16):
+def encrypt(message, public_key, ciphertext_count=16):
     """ Public key encryption scheme, based on symmetric homomorphic encryption.
         A public key consists of encryptions of the numbers 0-255, in order.
         
@@ -78,7 +79,7 @@ def public_key_encryption(message, public_key, ciphertext_count=16):
         output.append(ciphertext_byte)        
     return output
     
-def private_key_decryption(ciphertexts, private_key):
+def decrypt(ciphertexts, private_key):
     """ Private key decryption function based on symmetric homomorphic encryption and subset sum. """
     message = bytearray()
     for ciphertext_byte in ciphertexts:        
@@ -89,16 +90,56 @@ def private_key_decryption(ciphertexts, private_key):
 def test_public_key_encryption_private_key_decryption():
     public_key, private_key = generate_keypair()
     message = "Testing!"
-    ciphertext = public_key_encryption(message, public_key)
-    plaintext = private_key_decryption(ciphertext, private_key)
+    ciphertext = encrypt(message, public_key)
+    plaintext = decrypt(ciphertext, private_key)
     assert plaintext == message, (plaintext, message)
     
-    ciphertext2 = public_key_encryption(message, public_key)
+    ciphertext2 = encrypt(message, public_key)
     assert ciphertext2 != ciphertext
-    plaintext2 = private_key_decryption(ciphertext2, private_key)
+    plaintext2 = decrypt(ciphertext2, private_key)
     assert plaintext2 == message            
     print "Passed public key encryption and private key decryption unit test"
     
+    
+#-----------
+def invert(x):
+    return (~x) & 0xFFFFFFFF
+def hamming_weight(x):
+    return format(x, 'b').count('1')    
+    
+def micks_attack(key, threshold=50):
+    P = 0    
+    count = 0
+    while hamming_weight(P) != 126:        
+        X = bytes_to_words(encrypt64v2("\x00" * 8, key), 16)[0]          
+        count += 1
+        if count >= threshold:
+            return False 
+        if X & 1:
+            X = invert(X);
+        P |= X;
+    return P
+    
+def is_vulnerable_to_micks_attack(key, threshold=50):
+    if micks_attack(key, threshold):
+        return True
+    else:
+        return False
+        
+def test_encrypt_time():
+    from timeit import default_timer as timer
+    before = timer()
+    for round in range(1000):
+        public_key, private_key = generate_keypair()
+    after = timer()
+    print("Time taken to generate keypair: {}".format((after - before) / 1000))
+    before = timer()
+    for message in range(1024):
+        ciphertext = encrypt(message, public_key)
+    after = timer()
+    print("Time taken to encrypt 8KB: {}".format(after - before))
+    
 if __name__ == "__main__":
     test_public_key_encryption_private_key_decryption()        
+    test_encrypt_time()
     

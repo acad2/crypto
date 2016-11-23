@@ -50,7 +50,7 @@
     a, b, c, d = invert_shuffle_columns(a, b, c, d, k0, k1, k2, k3);})
     
 WORDSIZE32 generate_padding(){
-    return random_unsigned_long()}
+    return 0;} // NOT IMPLEMENTED YET
     
 void encrypt(WORDSIZE32* data, WORDSIZE32* key, WORDSIZE32* output){
     WORDSIZE32 padding[2], t;
@@ -67,5 +67,8 @@ void decrypt(WORDSIZE32* data, WORDSIZE32* key, WORDSIZE32* output){
     invert_bit_permutation(data[0], data[1], data[2], data[3], key[0], key[1], key[2], key[3]);
     output[0] = data[0];
     output[1] = data[1];}
+    
+int main(){
+    test_encrypt_performance_4x32_128_output(encrypt, 1024 * 1024);}
     
     

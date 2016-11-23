@@ -143,7 +143,7 @@ def encrypt64v2(data, key, output_type="bytes"):
     inputs = bytes_to_words(bytearray(data), 4)
     inputs[0] ^= padding[0]
     inputs[1] ^= padding[1]
-    inputs = tuple(inputs) + padding
+    inputs = tuple(inputs) + padding   
     if output_type == "bytes":
         return words_to_bytes(bit_permutation128(inputs, key), 4)
     else:
@@ -290,12 +290,13 @@ def test_homomorphic_property():
     assert decryptedxor == plaintextxor, (decryptedxor, plaintextxor, input1, input2)
     assert decryptedand == plaintextand, (decryptedand, plaintextand, input1, input2)
     print "Homomorphic unit test pass"
-
+        
 if __name__ == "__main__":
-    test_invert_shuffle_columns()
-    test_invert_bit_permutation()
-    test_homomorphic_property()
-    test_encrypt64_decrypt64()
-    test_homomorphic_adder()
-    test_encrypt64v2_decrypt64v2()    
+    #test_invert_shuffle_columns()
+    #test_invert_bit_permutation()
+    #test_homomorphic_property()
+    #test_encrypt64_decrypt64()
+    #test_homomorphic_adder()
+    #test_encrypt64v2_decrypt64v2()    
+    micks_attack()
     
