@@ -25,7 +25,7 @@
     printf("Time required: %.2fs\n", time_spent);\
 })
 
-#define test_encrypt_performance_4x32_128_output_subroutine(cipher_encrypt, measurements)\
+#define test_encrypt_performance_4x32_128_output(cipher_encrypt, measurements)\
 ({	WORDSIZE32 message[4], key[4], output[4];\
     unsigned long index;\
     clock_t begin = clock();\
@@ -135,3 +135,27 @@
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;\
     printf("Time required: %.2fs\n", time_spent);\
 })
+
+#define test_encrypt_performance_1x8_128_output(cipher_encrypt, measurements)\
+({	WORDSIZE32 key[4], output[4];\
+    unsigned char message = 0;\
+    unsigned long index;\
+    clock_t begin = clock();\
+    for (index = 0; index < measurements; index++){\
+	    cipher_encrypt(message, key, output);}\
+    clock_t end = clock();\
+    double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;\
+    printf("Time required: %.2fs\n", time_spent);\
+})
+
+#define test_public_key_encrypt_performance(cipher_encrypt, measurements)\
+({	WORDSIZE8 message[16];\
+    WORDSIZE32 output[4 * 16], key[4], public_key[4 * 256];\
+    generate_public_key(key, public_key);\
+    unsigned long index;\
+    clock_t begin = clock();\
+    for (index = 0; index < measurements; index++){\
+	    cipher_encrypt(message, 16, output, public_key);}\
+    clock_t end = clock();\
+    double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;\
+    printf("Time required: %.2fs\n", time_spent);})

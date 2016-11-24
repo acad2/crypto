@@ -11,13 +11,13 @@
 from os import urandom
 
 from homomorphicbitpermutation import encrypt8, decrypt8
-from crypto.utilities import words_to_bytes, bytes_to_words
+from crypto.utilities import words_to_bytes, bytes_to_words, slide
 
-def homomorphic_encrypt8(byte, secret_key): 
+def homomorphic_encrypt(byte, secret_key): 
     """ Encrypt one 8-bit byte homomorphically using secret key. """
     return bytes_to_words(encrypt8(byte, secret_key), 4)
     
-def homomorphic_decrypt8(byte, secret_key):
+def homomorphic_decrypt(byte, secret_key):
     """ Decrypts one 8-bit byte using secret key. """
     return decrypt8(words_to_bytes(byte, 4), secret_key)
     
@@ -56,7 +56,7 @@ def encrypt(message, public_key, ciphertext_count=16):
         and desired integer, and adding that last integer to the sum. 
         
         Encryption can send one 8-bit value per 128-bit ciphertext. This results in a 16x increase in data size. 
-        This inflation could be reduced by using a larger public key. """        
+        Ciphertexts are partially homormophic. """        
     output = []
     for symbol in bytearray(message):
         ciphertext_byte = [0, 0, 0, 0]
@@ -80,10 +80,10 @@ def encrypt(message, public_key, ciphertext_count=16):
     return output
     
 def decrypt(ciphertexts, private_key):
-    """ Private key decryption function based on symmetric homomorphic encryption and subset sum. """
+    """ Private key decryption function based on symmetric homomorphic encryption. """
     message = bytearray()
     for ciphertext_byte in ciphertexts:        
-        plaintext_byte = homomorphic_decrypt8(ciphertext_byte, private_key)
+        plaintext_byte = homomorphic_decrypt(ciphertext_byte, private_key)
         message.append(plaintext_byte)
     return message
     
@@ -101,7 +101,37 @@ def test_public_key_encryption_private_key_decryption():
     print "Passed public key encryption and private key decryption unit test"
     
     
-#-----------
+#-----------serialization
+def save_public_key(public_key):
+    lines = bytearray()
+    for ciphertext_words in public_key:
+        lines.extend(words_to_bytes(ciphertext_words, 4))
+    return lines
+
+def load_public_key(saved_key):
+    public_key = []    
+    for line in slide(saved_key, 16):        
+        public_key.append(bytes_to_words(line, 4))
+    return public_key        
+        
+def save_private_key(private_key):
+    return words_to_bytes(private_key, 4)
+    
+def load_private_key(saved_private_key):    
+    return bytes_to_words(saved_private_key, 4)
+    
+def test_save_load_public_key():
+    public_key, private_key = generate_keypair()
+    saved_public_key = save_public_key(public_key)
+    _public_key = load_public_key(saved_public_key)
+    assert _public_key == public_key, (_public_key, public_key)
+    
+    saved_private_key = save_private_key(private_key)
+    _private_key = load_private_key(saved_private_key)
+    assert _private_key == private_key
+    
+    
+#-----------micks attack
 def invert(x):
     return (~x) & 0xFFFFFFFF
 def hamming_weight(x):
@@ -111,7 +141,7 @@ def micks_attack(key, threshold=50):
     P = 0    
     count = 0
     while hamming_weight(P) != 126:        
-        X = bytes_to_words(encrypt64v2("\x00" * 8, key), 16)[0]          
+        X = bytes_to_words(homomorphic_encrypt(0, key), 16)[0]          
         count += 1
         if count >= threshold:
             return False 
@@ -140,6 +170,7 @@ def test_encrypt_time():
     print("Time taken to encrypt 8KB: {}".format(after - before))
     
 if __name__ == "__main__":
-    test_public_key_encryption_private_key_decryption()        
-    test_encrypt_time()
+    test_public_key_encryption_private_key_decryption()            
+    test_save_load_public_key()
+    #test_encrypt_time()
     
