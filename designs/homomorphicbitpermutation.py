@@ -291,6 +291,29 @@ def test_homomorphic_property():
     assert decryptedand == plaintextand, (decryptedand, plaintextand, input1, input2)
     print "Homomorphic unit test pass"
         
+def encrypt8(byte, key):
+    padding = bytearray(urandom(15))
+    for padding_byte in padding:
+        byte ^= padding_byte
+    
+    inputs = bytearray()
+    inputs.append(byte)
+    inputs.extend(padding)
+    return words_to_bytes(bit_permutation128(bytes_to_words(inputs, 4), key), 4)
+            
+def decrypt8(ciphertext, key):
+    output = words_to_bytes(invert_bit_permutation128(bytes_to_words(ciphertext, 4), key), 4)
+    for padding_byte in output[1:]:
+        output[0] ^= padding_byte
+    return output[0]
+            
+def test_encrypt8_decrypt8():
+    key = (123, 456, 789, 101112)
+    byte = 0
+    ciphertext = encrypt8(byte, key)
+    plaintext = decrypt8(ciphertext, key)
+    assert plaintext == byte
+    
 if __name__ == "__main__":
     #test_invert_shuffle_columns()
     #test_invert_bit_permutation()
@@ -298,5 +321,6 @@ if __name__ == "__main__":
     #test_encrypt64_decrypt64()
     #test_homomorphic_adder()
     #test_encrypt64v2_decrypt64v2()    
-    micks_attack()
+    #micks_attack()
+    test_encrypt8_decrypt8()
     

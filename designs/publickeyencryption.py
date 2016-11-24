@@ -10,14 +10,16 @@
 
 from os import urandom
 
-from homomorphicbitpermutation import encrypt64v2, decrypt64v2
+from homomorphicbitpermutation import encrypt8, decrypt8
 from crypto.utilities import words_to_bytes, bytes_to_words
 
-def homomorphic_encrypt(data, secret_key):    
-    return bytes_to_words(encrypt64v2(data, secret_key), 4)
+def homomorphic_encrypt8(byte, secret_key): 
+    """ Encrypt one 8-bit byte homomorphically using secret key. """
+    return bytes_to_words(encrypt8(byte, secret_key), 4)
     
-def homomorphic_decrypt(data, secret_key):
-    return decrypt64v2(words_to_bytes(data, 4), secret_key)
+def homomorphic_decrypt8(byte, secret_key):
+    """ Decrypts one 8-bit byte using secret key. """
+    return decrypt8(words_to_bytes(byte, 4), secret_key)
     
 def generate_public_key(private_key):  
     """ Generate a public key, given the secret key of a symmetric homomorphic cryptosystem. 
@@ -26,10 +28,8 @@ def generate_public_key(private_key):
         Larger public keys could be made, consisting of all 16-bit unsigned integers for example.
         This will result in a correspondingly larger public key, but reduced message expansion during encryption"""
     public_key = []
-    for integer in range(256):
-        data = bytearray(8)
-        data[-1] = integer
-        ciphertext = homomorphic_encrypt(data, private_key)
+    for byte in range(256):
+        ciphertext = homomorphic_encrypt(byte, private_key)
         public_key.append(ciphertext)
     return public_key
     
@@ -83,7 +83,7 @@ def decrypt(ciphertexts, private_key):
     """ Private key decryption function based on symmetric homomorphic encryption and subset sum. """
     message = bytearray()
     for ciphertext_byte in ciphertexts:        
-        plaintext_byte = homomorphic_decrypt(ciphertext_byte, private_key)[-1]
+        plaintext_byte = homomorphic_decrypt8(ciphertext_byte, private_key)
         message.append(plaintext_byte)
     return message
     
