@@ -2,7 +2,15 @@
     Uses keyed transposition to hide message bits in a sea of random bits.
     Since transposing bits according to a key results in bits at index i relocating to index j,
     transposing two separate messages means their bits will still "line up" in the resulting ciphertexts.
-    This, combined with padding with random data and possibly masking, facilitates homomorphic cryptography. """
+    This, combined with padding with random data and possibly masking, facilitates homomorphic cryptography.
+
+    High level description in notation:
+        
+        padding = random_data()
+        message XOR padding
+        padding = permutation(padding)
+        message = message || padding
+        ciphertext = keyed_bit_transposition(message, key)"""
 
 from os import urandom
 
@@ -291,19 +299,49 @@ def test_homomorphic_property():
     assert decryptedand == plaintextand, (decryptedand, plaintextand, input1, input2)
     print "Homomorphic unit test pass"
         
+def permutation(state):    
+    total = 0
+    for byte in state:
+        total ^= byte
+    for index, byte in enumerate(state):
+        total ^= byte
+        byte ^= rotate_left(total, 1)
+        state[index] = byte
+        total ^= byte
+
+def invert_permutation(state):    
+    total = 0
+    for byte in state:
+        total ^= byte
+    for index, byte in reversed(list(enumerate(state))):
+        total ^= byte
+        byte ^= rotate_left(total, 1)
+        state[index] = byte
+        total ^= byte
+    
+def test_permutation_invert_permutation():
+    state = bytearray(16)
+    _state = state[:]
+    permutation(state)
+    invert_permutation(state)
+    assert state == _state        
+        
 def encrypt8(byte, key):
     padding = bytearray(urandom(15))
     for padding_byte in padding:
         byte ^= padding_byte
-    
+    permutation(padding)
     inputs = bytearray()
     inputs.append(byte)
     inputs.extend(padding)
+    
     return words_to_bytes(bit_permutation128(bytes_to_words(inputs, 4), key), 4)
             
 def decrypt8(ciphertext, key):
     output = words_to_bytes(invert_bit_permutation128(bytes_to_words(ciphertext, 4), key), 4)
-    for padding_byte in output[1:]:
+    padding = output[1:]
+    invert_permutation(padding)
+    for padding_byte in padding:
         output[0] ^= padding_byte
     return output[0]
             
@@ -314,6 +352,21 @@ def test_encrypt8_decrypt8():
     plaintext = decrypt8(ciphertext, key)
     assert plaintext == byte
     
+    byte2 = 1
+    ciphertext2 = encrypt8(byte2, key)
+    plaintext2 = decrypt8(ciphertext2, key)
+    assert plaintext2 == byte2
+    
+    xor_subroutine(ciphertext, ciphertext2)
+    plaintext3 = decrypt8(ciphertext, key)
+    assert plaintext3 == byte2, (plaintext3, byte2)
+    
+def test_permutation():
+    state = bytearray(16)
+    state[0] = 2
+    permutation(state)
+    print [byte for byte in state]
+    
 if __name__ == "__main__":
     #test_invert_shuffle_columns()
     #test_invert_bit_permutation()
@@ -323,4 +376,6 @@ if __name__ == "__main__":
     #test_encrypt64v2_decrypt64v2()    
     #micks_attack()
     test_encrypt8_decrypt8()
+    test_permutation()
+    test_permutation_invert_permutation()
     
