@@ -6,21 +6,25 @@
         - This works because the integers are represented as ciphertexts and can be manipulated via XOR
         - Can be done quickly and efficiently with little more then XOR instructions and indexing some memory
     Private key decryption decrypts the sum to obtain to the transmitted value.
-        - Can be done as quickly as the underlying secret key homomorphic scheme can decrypt"""
+        - Can be done as quickly as the underlying secret key homomorphic scheme can decrypt
+        - Underlying scheme must incorporate padding inside message/ciphertext
+            - Scheme will not work with a stream cipher """
 
 from os import urandom
 
-from homomorphicbitpermutation import encrypt8, decrypt8
+from homomorphicbitpermutation import encrypt64v3, decrypt64v3
 from crypto.utilities import words_to_bytes, bytes_to_words, slide
 
 def homomorphic_encrypt(byte, secret_key): 
     """ Encrypt one 8-bit byte homomorphically using secret key. """
-    return bytes_to_words(encrypt8(byte, secret_key), 4)
+    data = bytearray(8)
+    data[0] = byte
+    return encrypt64v3(data, secret_key)
     
 def homomorphic_decrypt(byte, secret_key):
     """ Decrypts one 8-bit byte using secret key. """
-    return decrypt8(words_to_bytes(byte, 4), secret_key)
-    
+    return decrypt64v3(byte, secret_key)[0]
+            
 def generate_public_key(private_key):  
     """ Generate a public key, given the secret key of a symmetric homomorphic cryptosystem. 
         
@@ -29,13 +33,13 @@ def generate_public_key(private_key):
         This will result in a correspondingly larger public key, but reduced message expansion during encryption"""
     public_key = []
     for byte in range(256):
-        ciphertext = homomorphic_encrypt(byte, private_key)
-        public_key.append(ciphertext)
+        ciphertext = homomorphic_encrypt(byte, private_key)        
+        public_key.append(bytes_to_words(ciphertext, 4))
     return public_key
     
 def generate_private_key():
     """ Generates a random 128-bit value. """
-    key = bytes_to_words(bytearray(urandom(16)), 4)
+    key = bytearray(urandom(16))
     return key
     
 def generate_keypair():
@@ -76,21 +80,21 @@ def encrypt(message, public_key, ciphertext_count=16):
         ciphertext_byte[1] ^= final_ciphertext[1]
         ciphertext_byte[2] ^= final_ciphertext[2]
         ciphertext_byte[3] ^= final_ciphertext[3]
-        output.append(ciphertext_byte)        
+        output.append(words_to_bytes(ciphertext_byte, 4))        
     return output
     
 def decrypt(ciphertexts, private_key):
     """ Private key decryption function based on symmetric homomorphic encryption. """
     message = bytearray()
-    for ciphertext_byte in ciphertexts:        
+    for ciphertext_byte in ciphertexts:                
         plaintext_byte = homomorphic_decrypt(ciphertext_byte, private_key)
         message.append(plaintext_byte)
     return message
     
-def test_public_key_encryption_private_key_decryption():
+def test_encrypt_decrypt():
     public_key, private_key = generate_keypair()
     message = "Testing!"
-    ciphertext = encrypt(message, public_key)
+    ciphertext = encrypt(message, public_key)    
     plaintext = decrypt(ciphertext, private_key)
     assert plaintext == message, (plaintext, message)
     
@@ -100,6 +104,11 @@ def test_public_key_encryption_private_key_decryption():
     assert plaintext2 == message            
     print "Passed public key encryption and private key decryption unit test"
     
+def test_homomorphic_encrypt_decrypt():
+    key = bytearray(16)
+    ciphertext = homomorphic_encrypt(0, key)    
+    plaintext = homomorphic_decrypt(ciphertext, key)
+    assert plaintext == 0, plaintext    
     
 #-----------serialization
 def save_public_key(public_key):
@@ -115,10 +124,10 @@ def load_public_key(saved_key):
     return public_key        
         
 def save_private_key(private_key):
-    return words_to_bytes(private_key, 4)
+    return private_key
     
 def load_private_key(saved_private_key):    
-    return bytes_to_words(saved_private_key, 4)
+    return saved_private_key
     
 def test_save_load_public_key():
     public_key, private_key = generate_keypair()
@@ -170,7 +179,8 @@ def test_encrypt_time():
     print("Time taken to encrypt 8KB: {}".format(after - before))
     
 if __name__ == "__main__":
-    test_public_key_encryption_private_key_decryption()            
+    test_homomorphic_encrypt_decrypt()
+    test_encrypt_decrypt()            
     test_save_load_public_key()
     #test_encrypt_time()
     

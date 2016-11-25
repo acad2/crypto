@@ -39,7 +39,7 @@ def shuffle_columns(a, b, c, d, k0, k1, k2, k3):
 def bit_permutation128(inputs, key, wordsize=32): 
     """ Transpose the bits of the supplied inputs according to key.
         Selects one of 128! permutations of bits. """
-    a, b, c, d = inputs
+    a, b, c, d = inputs    
     k0, k1, k2, k3 = key
     for round in range(1):              
         a, b, c, d = shuffle_columns(a, b, c, d, k0, k1, k2, k3) # each 4 bit tall column is now active
@@ -299,25 +299,134 @@ def test_homomorphic_property():
     assert decryptedand == plaintextand, (decryptedand, plaintextand, input1, input2)
     print "Homomorphic unit test pass"
         
+#--------- countermeasures against micks attack        
 def permutation(state):    
-    total = 0
-    for byte in state:
-        total ^= byte
-    for index, byte in enumerate(state):
-        total ^= byte
-        byte ^= rotate_left(total, 1)
-        state[index] = byte
-        total ^= byte
+    """ A diffusing permutation that preserves homomorphic properties.
+        This is applied to the padding, after it has been combined with
+        the message, but before it is concatenated."""
+    for round in range(2):
+        total = 0
+        for byte in state:
+            total ^= byte
+            
+        state_size = len(state)
+        for index, byte in enumerate(state):
+            total ^= byte
+            byte ^= rotate_left(total, 1) ^ rotate_left(state[(index - 1) % state_size], 2) ^ rotate_left(state[(index + 1) % state_size], 3)
+            state[index] = byte
+            total ^= byte
 
 def invert_permutation(state):    
-    total = 0
+    for round in range(2):
+        total = 0
+        for byte in state:
+            total ^= byte
+            
+        state_size = len(state)
+        for index, byte in reversed(list(enumerate(state))):
+            total ^= byte
+            byte ^= rotate_left(total, 1) ^ rotate_left(state[(index - 1) % state_size], 2) ^ rotate_left(state[(index + 1) % state_size], 3)
+            state[index] = byte
+            total ^= byte
+    
+def mix_columns(a, b, c, d, key):
+    key ^= a
+    a ^= b ^ rotate_left(key, 1)
+    key ^= a ^ c
+    c ^= d ^ rotate_left(key, 2)
+    key ^= c ^ b
+    b ^= c ^ rotate_left(key, 3)
+    key ^= b ^ d
+    d ^= a ^ rotate_left(key, 4)
+    key ^= d
+    return a, b, c, d, key
+    
+def invert_mix_columns(a, b, c, d, key):
+    key ^= d
+    d ^= a ^ rotate_left(key, 4)
+    key ^= b ^ d
+    b ^= c ^ rotate_left(key, 3)
+    key ^= c ^ b
+    c ^= d ^ rotate_left(key, 2)
+    key ^= a ^ c
+    a ^= b ^ rotate_left(key, 1)
+    key ^= a
+    return a, b, c, d, key
+        
+def mix_columns(a, b, c, d):    
+    a ^= b ^ c    
+    c ^= b ^ d    
+    b ^= c ^ d
+    d ^= a ^ c
+    return a, b, c, d
+    
+def invert_mix_columns(a, b, c, d):    
+    d ^= a ^ c    
+    b ^= c ^ d    
+    c ^= b ^ d    
+    a ^= b ^ c    
+    return a, b, c, d
+    
+def permutation2(state):
+    key = 0
     for byte in state:
-        total ^= byte
-    for index, byte in reversed(list(enumerate(state))):
-        total ^= byte
-        byte ^= rotate_left(total, 1)
-        state[index] = byte
-        total ^= byte
+        key ^= byte 
+        
+    a, b, c, d = bytes_to_words(state, 4)
+    a, b, c, d = mix_columns(a, b, c, d)#, key)
+    
+    b = rotate_left(b, 1)
+    c = rotate_left(c, 2)
+    d = rotate_left(d, 3)
+    
+    a, b, c, d = mix_columns(a, b, c, d)#, key)
+    b = rotate_left(b, 4)
+    c = rotate_left(c, 8)
+    d = rotate_left(d, 12)
+    
+    a, b, c, d = mix_columns(a, b, c, d)#, key)
+    b = rotate_left(b, 8)
+    c = rotate_left(c, 12)
+    d = rotate_left(d, 16)
+    
+    a, b, c, d = mix_columns(a, b, c, d)#, key)
+    state[:16] = words_to_bytes((a, b, c, d), 4)    
+    
+def invert_permutation2(state):
+    a, b, c, d = bytes_to_words(state, 4)            
+    #key = 0
+    #for byte in state:
+    #    key ^= byte
+        
+    a, b, c, d = invert_mix_columns(a, b, c, d)#, key)
+    b = rotate_right(b, 8)
+    c = rotate_right(c, 12)
+    d = rotate_right(d, 16)
+    
+    a, b, c, d = invert_mix_columns(a, b, c, d)#, key)
+    b = rotate_right(b, 4)
+    c = rotate_right(c, 8)
+    d = rotate_right(d, 12)
+    
+    a, b, c, d = invert_mix_columns(a, b, c, d)#, key)
+    b = rotate_right(b, 1)
+    c = rotate_right(c, 2)
+    d = rotate_right(d, 3)    
+    
+    a, b, c, d = invert_mix_columns(a, b, c, d)#, key)        
+    state[:16] = words_to_bytes((a, b, c, d), 4)    
+    
+def test_permutation2_invert_permutation2():
+    data = bytearray(16)
+    data[0] = 1
+    _data = data[:]
+    permutation2(data)
+
+    print
+    _print_bits(data)
+    
+    invert_permutation2(data)
+    assert data == _data, (data, _data)
     
 def test_permutation_invert_permutation():
     state = bytearray(16)
@@ -328,9 +437,10 @@ def test_permutation_invert_permutation():
         
 def encrypt8(byte, key):
     padding = bytearray(urandom(15))
+    permutation(padding)
     for padding_byte in padding:
         byte ^= padding_byte
-    permutation(padding)
+    invert_permutation(padding)
     inputs = bytearray()
     inputs.append(byte)
     inputs.extend(padding)
@@ -340,7 +450,7 @@ def encrypt8(byte, key):
 def decrypt8(ciphertext, key):
     output = words_to_bytes(invert_bit_permutation128(bytes_to_words(ciphertext, 4), key), 4)
     padding = output[1:]
-    invert_permutation(padding)
+    permutation(padding)
     for padding_byte in padding:
         output[0] ^= padding_byte
     return output[0]
@@ -365,7 +475,118 @@ def test_permutation():
     state = bytearray(16)
     state[0] = 2
     permutation(state)
-    print [byte for byte in state]
+    _print_bits(state)
+    
+    
+#------------ v3
+
+def keyed_homomorphic_permutation(state, key, rounds=1):     
+    a, b, c, d = bytes_to_words(state, 4)
+    key = key[:]
+    for i in range(rounds):
+        # randomize the position of bits                    
+        permutation(key) # key schedule        
+        
+        a, b, c, d = bit_permutation128((a, b, c, d), bytes_to_words(key, 4))    
+        
+        # stack lots of bits on top of each other
+        a, b, c, d = mix_columns(a, b, c, d)
+        b = rotate_left(b, 1, 32)
+        c = rotate_left(c, 2, 32)
+        d = rotate_left(d, 3, 32)
+        
+        a, b, c, d = mix_columns(a, b, c, d)
+        b = rotate_left(b, 4, 32)
+        c = rotate_left(c, 8, 32)
+        d = rotate_left(d, 12, 32)
+        
+        a, b, c, d = mix_columns(a, b, c, d)
+        b = rotate_left(b, 8, 32)
+        c = rotate_left(c, 12, 32)
+        d = rotate_left(d, 16, 32)
+        
+        a, b, c, d = mix_columns(a, b, c, d)                                                  
+    state[:] = words_to_bytes((a, b, c, d), 4)
+    
+def invert_keyed_homomorphic_permutation(state, key, rounds=1):
+    assert isinstance(state, bytearray), type(state)
+    a, b, c, d = bytes_to_words(state, 4)
+    key = key[:]
+    for round in range(rounds):
+        permutation(key)
+        
+    for round in reversed(range(rounds)):            
+        a, b, c, d = invert_mix_columns(a, b, c, d)
+        b = rotate_right(b, 8, 32)
+        c = rotate_right(c, 12, 32)
+        d = rotate_right(d, 16, 32)
+        
+        a, b, c, d = invert_mix_columns(a, b, c, d)
+        b = rotate_right(b, 4, 32)
+        c = rotate_right(c, 8, 32)
+        d = rotate_right(d, 12, 32)
+        
+        a, b, c, d = invert_mix_columns(a, b, c, d)
+        b = rotate_right(b, 1, 32)
+        c = rotate_right(c, 2, 32)
+        d = rotate_right(d, 3, 32)
+        
+        a, b, c, d = invert_mix_columns(a, b, c, d)
+                
+        a, b, c, d = invert_bit_permutation128((a, b, c, d), bytes_to_words(key, 4))
+        invert_permutation(key)        
+    state[:] = words_to_bytes((a, b, c, d), 4)
+        
+def test_keyed_homomorphic_permutation():
+    state = bytearray(16)
+    state[0] = 1
+    _state = state[:]
+    
+    key = bytearray(16)
+    key[0] = 1
+    
+    keyed_homomorphic_permutation(state, key, 3)        
+    invert_keyed_homomorphic_permutation(state, key, 3)
+    assert state == _state, (state, _state)
+            
+def encrypt64v3(data, key):
+    padding = bytearray(urandom(8))
+    xor_subroutine(data, padding)
+    data.extend(padding)           
+    keyed_homomorphic_permutation(data, key)      
+    return data    
+    
+def decrypt64v3(data, key):    
+    invert_keyed_homomorphic_permutation(data, key)
+    padding = data[8:]
+    xor_subroutine(data, padding)
+    del data[8:]
+    return data[:8]
+    
+def test_encrypt64v3_decrypt64v3():
+    data = bytearray(8)
+    data[0] = 1
+    _data = data[:]
+    key = bytearray(16)
+    encrypt64v3(data, key)
+    ciphertext = data[:]
+    decrypt64v3(data, key)
+    assert data == _data, (data, _data)
+        
+    data2 = bytearray(8)
+    data2[0] = 2
+    _data2 = data2[:]
+        
+    encrypt64v3(data2, key)
+    ciphertext2 = data2[:]
+    decrypt64v3(data2, key)
+    assert data2 == _data2, (data2, _data2)
+    
+    answer = _data[:]
+    xor_subroutine(answer, _data2)
+    xor_subroutine(ciphertext, ciphertext2)
+    decrypt64v3(ciphertext, key)
+    assert ciphertext == answer, (ciphertext, answer)
     
 if __name__ == "__main__":
     #test_invert_shuffle_columns()
@@ -375,7 +596,10 @@ if __name__ == "__main__":
     #test_homomorphic_adder()
     #test_encrypt64v2_decrypt64v2()    
     #micks_attack()
-    test_encrypt8_decrypt8()
-    test_permutation()
-    test_permutation_invert_permutation()
+    #test_encrypt8_decrypt8()
+    #test_permutation()
+    #test_permutation_invert_permutation()
+    #test_permutation2_invert_permutation2()
+    test_keyed_homomorphic_permutation()
+    test_encrypt64v3_decrypt64v3()
     
