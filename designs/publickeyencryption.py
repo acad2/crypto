@@ -12,18 +12,19 @@
 
 from os import urandom
 
-from homomorphicbitpermutation import encrypt64v3, decrypt64v3
+from homomorphicbitpermutation2 import encrypt as _homomorphic_encrypt
+from homomorphicbitpermutation2 import decrypt as _homomorphic_decrypt
 from crypto.utilities import words_to_bytes, bytes_to_words, slide
 
 def homomorphic_encrypt(byte, secret_key): 
     """ Encrypt one 8-bit byte homomorphically using secret key. """
     data = bytearray(8)
     data[0] = byte
-    return encrypt64v3(data, secret_key)
+    return _homomorphic_encrypt(data, secret_key)
     
 def homomorphic_decrypt(byte, secret_key):
     """ Decrypts one 8-bit byte using secret key. """
-    return decrypt64v3(byte, secret_key)[0]
+    return _homomorphic_decrypt(byte, secret_key)[0]
             
 def generate_public_key(private_key):  
     """ Generate a public key, given the secret key of a symmetric homomorphic cryptosystem. 
@@ -52,9 +53,9 @@ def encrypt(message, public_key, ciphertext_count=16):
     """ Public key encryption scheme, based on symmetric homomorphic encryption.
         A public key consists of encryptions of the numbers 0-255, in order.
         
-        To encrypt, add together (using XOR) a random subset of the integers (which are 
-        represented as ciphertexts) such that the sum equals one byte of the message. 
-        
+        To encrypt one byte, add together (using XOR) a random subset of the integers 
+        (which are actually ciphertexts) such that the sum equals the message byte.
+                
         This can be done simply in practice, by adding together enough random 
         integers from the public key, then calculating the difference between the resulting integer
         and desired integer, and adding that last integer to the sum. 
@@ -167,11 +168,12 @@ def is_vulnerable_to_micks_attack(key, threshold=50):
         
 def test_encrypt_time():
     from timeit import default_timer as timer
+    print "Calculating time to generate keypair... "
     before = timer()
-    for round in range(1000):
+    for round in range(10):
         public_key, private_key = generate_keypair()
     after = timer()
-    print("Time taken to generate keypair: {}".format((after - before) / 1000))
+    print("Time taken to generate keypair: {}".format((after - before) / 10))
     before = timer()
     for message in range(1024):
         ciphertext = encrypt(message, public_key)
@@ -182,5 +184,5 @@ if __name__ == "__main__":
     test_homomorphic_encrypt_decrypt()
     test_encrypt_decrypt()            
     test_save_load_public_key()
-    #test_encrypt_time()
+    test_encrypt_time()
     
