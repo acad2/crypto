@@ -45,8 +45,11 @@ def generate_public_key(private_key):
         Then, the pre-public key is used to generate a second set of encryptions of the integers 0-255, using public key encryption.
         This second set is released as the public key.
         
-        The pre-public key functions as a public key, but it provides known plaintext attack on a linear cipher.
-        The public key encryption technique is more secure then the linear cipher, and the private key is shielded from attack. """
+        The pre-public key functions as a public key, but the ciphertexts provide a known plaintext attack on a linear cipher.
+        The public key encryption technique is more secure then the linear cipher, and the resulting ciphertexts also 
+         carry the homomorphic property. So they are suitable for use as a public key.
+         
+        - You can generate a new, random, valid public key from any other public key. """
         
     pre_public_key = []
     for byte in range(256):

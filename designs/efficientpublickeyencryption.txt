@@ -1,0 +1,33 @@
+Efficient Public Key Encryption
+-----------
+
+Efficient public key encryption can be realized using a cipher that produces partially homomorphic cipherts and some form of the subset sum problem.
+
+Define a suitable symmetric homomorphic encryption function below:
+
+    padding = random_bytes()
+    message = (message xor padding) || padding
+    ciphertext = keyed_linear_permutation(message, private_secret_key)
+
+And a corresponding decryption function:
+        
+    padded_message = invert_keyed_linear_permutation(ciphertext, private_secret_key)
+    message = padded_message[:half] xor padded_message[half:]
+    
+Note how padding is included inside the message that is supplied to the keyed linear permutation.
+This, along with the partially homomorphic property, are the key elements that enable the trapdoor for decryption.
+
+Public keys generation requires a cipher that produces partially homomorphic ciphertexts, and is randomized
+without an external iv/seed. 
+
+To create a public key, encrypt the set of integers 0-255 in order, using a homomorphic, appropriately randomized cipher.
+To encrypt using the public key, sum together elements of the public key until the sum equals the desired message.
+To decrypt, decrypt the resulting ciphertext using the creating ciphers decryption function.
+
+Secure public key generation takes place in two stages: First, a public key is generated using the secret key cipher.
+Second, another public key is generated, this time using public key encryption and the first public key that was just generated.
+This is possible because this particular form of public key encryption satisfies the rules required to make public key encryption:
+partially homomorphic ciphertexts and randomization without external parameters.
+
+This is secure because the security of the public key encryption reduces to a hard problem.
+The secret decryption key is never exposed to attack - no plaintext/ciphertext pairs are ever revealed!
