@@ -1,5 +1,6 @@
 from os import urandom
-from crypto.utilities import words_to_bytes, bytes_to_words, rotate_left, rotate_right, xor_subroutine
+
+from utilities import words_to_bytes, bytes_to_words, rotate_left, rotate_right, xor_subroutine
 
 def choice(a, b, c):
     return c ^ (a & (b ^ c))

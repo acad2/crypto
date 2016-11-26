@@ -1,7 +1,7 @@
 Efficient Public Key Encryption
 -----------
 
-Efficient public key encryption can be realized using a cipher that produces partially homomorphic cipherts and some form of the subset sum problem.
+Efficient public key encryption can be realized using a cipher that produces partially homomorphic ciphertexts and a form of the subset sum problem.
 
 Define a suitable symmetric homomorphic encryption function below:
 
@@ -16,18 +16,37 @@ And a corresponding decryption function:
     
 Note how padding is included inside the message that is supplied to the keyed linear permutation.
 This, along with the partially homomorphic property, are the key elements that enable the trapdoor for decryption.
-
 Public keys generation requires a cipher that produces partially homomorphic ciphertexts, and is randomized
 without an external iv/seed. 
 
 To create a public key, encrypt the set of integers 0-255 in order, using a homomorphic, appropriately randomized cipher.
+This ordered set of integers constitutes the public key.
 To encrypt using the public key, sum together elements of the public key until the sum equals the desired message.
+Use enough elements to preclude an adversaries ability to guess what was encrypted
+    
 To decrypt, decrypt the resulting ciphertext using the creating ciphers decryption function.
 
 Secure public key generation takes place in two stages: First, a public key is generated using the secret key cipher.
 Second, another public key is generated, this time using public key encryption and the first public key that was just generated.
-This is possible because this particular form of public key encryption satisfies the rules required to make public key encryption:
+This is possible because this  form of public key encryption satisfies the rules required to make public key encryption:
 partially homomorphic ciphertexts and randomization without external parameters.
 
-This is secure because the security of the public key encryption reduces to a hard problem.
-The secret decryption key is never exposed to attack - no plaintext/ciphertext pairs are ever revealed!
+Overall:
+
+Security of the public key encryption reduces to a hard problem. 
+The secret decryption key is never exposed to attack - no plaintext/ciphertext pairs are ever revealed.
+The public key that is released for use by anyone was created by feeding uniformly random data into a secure encryption function.
+
+Public key encryption is fast, consisting of nothing but modest quantities of table lookups and xors.
+Private key decryption is fast, because it uses the decryption operation of a symmetric primitive.
+
+Public keys are modestly sized: 4096 bytes
+Private keys are small: 256 bits
+
+Public keys can be generated from other public keys
+    - Allows creation of "anonymous" public keys
+        - Alice has Bobs public key
+        - Alice generates a new public key, using public key encryption and Bobs public key
+        - This key has no known association to Bob, but he is the only one that can decrypt messages encrypted under it
+
+        

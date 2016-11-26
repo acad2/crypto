@@ -21,9 +21,9 @@
 
 from os import urandom
 
-from homomorphicbitpermutation2 import encrypt as _homomorphic_encrypt
-from homomorphicbitpermutation2 import decrypt as _homomorphic_decrypt
-from crypto.utilities import words_to_bytes, bytes_to_words, slide
+from secretkey import encrypt as _homomorphic_encrypt
+from secretkey import decrypt as _homomorphic_decrypt
+from utilities import words_to_bytes, bytes_to_words, slide
 
 def homomorphic_encrypt(byte, secret_key): 
     """ Encrypt one 8-bit byte homomorphically using secret key. """
@@ -76,7 +76,9 @@ def generate_keypair():
     return public_key, private_key
     
 def encrypt(message, public_key, ciphertext_count=16):
-    """ Public key encryption scheme, based on symmetric homomorphic encryption.
+    """ usage: encrypt(message : bytearray, public_key : list) => ciphertext : list
+    
+        Public key encryption scheme, based on symmetric homomorphic encryption.
         A public key consists of encryptions of the numbers 0-255, in order.
         
         To encrypt one byte, add together (using XOR) a random subset of the integers 
@@ -87,7 +89,9 @@ def encrypt(message, public_key, ciphertext_count=16):
         and desired integer, and adding that last integer to the sum. 
         
         Encryption can send one 8-bit value per 128-bit ciphertext. This results in a 16x increase in data size. 
-        Ciphertexts are partially homormophic. """        
+        Ciphertexts are partially homormophic and malleable. 
+        
+        Works on arbitrarily long messages, albeit one byte at a time. """        
     output = []
     for symbol in bytearray(message):
         ciphertext_byte = [0, 0, 0, 0]
@@ -165,33 +169,7 @@ def test_save_load_public_key():
     saved_private_key = save_private_key(private_key)
     _private_key = load_private_key(saved_private_key)
     assert _private_key == private_key
-    
-    
-#-----------micks attack
-def invert(x):
-    return (~x) & 0xFFFFFFFF
-def hamming_weight(x):
-    return format(x, 'b').count('1')    
-    
-def micks_attack(key, threshold=50):
-    P = 0    
-    count = 0
-    while hamming_weight(P) != 126:        
-        X = bytes_to_words(homomorphic_encrypt(0, key), 16)[0]          
-        count += 1
-        if count >= threshold:
-            return False 
-        if X & 1:
-            X = invert(X);
-        P |= X;
-    return P
-    
-def is_vulnerable_to_micks_attack(key, threshold=50):
-    if micks_attack(key, threshold):
-        return True
-    else:
-        return False
-        
+            
 def test_encrypt_time():
     from timeit import default_timer as timer
     print "Calculating time to generate keypair... "
