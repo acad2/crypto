@@ -10,7 +10,9 @@
         message XOR padding
         padding = permutation(padding)
         message = message || padding
-        ciphertext = keyed_bit_transposition(message, key)"""
+        ciphertext = keyed_bit_transposition(message, key)
+        
+    outdated 11/25/2016"""
 
 from os import urandom
 

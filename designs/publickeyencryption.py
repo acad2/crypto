@@ -1,14 +1,23 @@
 """ Python implementation of a public key cryptosystem based on a partially homomorphic secret key cipher and subset sum. 
-    Private keys are 128-bit uniformly random data for the used cipher. 
-    Public keys are ordered encryptions of integers
-        - For example, 256 128-bit ciphertexts to represent all 8-bit integers (4096 bytes)
-    Public key encryption adds together random integers from the public key, until they sum to the desired value.
-        - This works because the integers are represented as ciphertexts and can be manipulated via XOR
-        - Can be done quickly and efficiently with little more then XOR instructions and indexing some memory
-    Private key decryption decrypts the sum to obtain to the transmitted value.
+    - Private keys are >= 128-bit uniformly random data, for the used cipher. 
+    - Public keys are ordered encryptions of integers
+        - Encrypt the integers 0-255 using the secret key homomorphic cipher, and distribute them in order
+            - Public keys are 256 * 128 = 32768 bits = 4096 bytes        
+        
+    - To encrypt with the public key:
+        - Select a random integer from the public key
+        - Select the integer that, when added to the random integer just selected, equals the message (in 8-bit integer format)
+        - Add the two together to produce the ciphertext
+        - In practice, for security, >= 16 random 8-bit values are summed to produce the ciphertext
+        - The form of addition used in this scheme must be XOR        
+        - Can be done quickly and efficiently with little more then XOR instructions and indexing some memory                
+        - Ciphertext expansion will consume cipher_blocksize / 8 as much data as the message (16x times in this implementation)
+        
+    - To decrypt with the private key:
+        - Decrypt the ciphertext using the secret key ciphers decryption operation and extract the 8-bit message
         - Can be done as quickly as the underlying secret key homomorphic scheme can decrypt
-        - Underlying scheme must incorporate padding inside message/ciphertext
-            - Scheme will not work with a stream cipher """
+        - Underlying scheme must incorporate padding/randomizer/nonce inside message/ciphertext
+            - example: Scheme will not work with a stream cipher """
 
 from os import urandom
 
@@ -30,12 +39,26 @@ def generate_public_key(private_key):
     """ Generate a public key, given the secret key of a symmetric homomorphic cryptosystem. 
         
         A public key consists of encryptions of the range of numbers 0-255, in order. 
-        Larger public keys could be made, consisting of all 16-bit unsigned integers for example.
-        This will result in a correspondingly larger public key, but reduced message expansion during encryption"""
+        Encryption consists of (randomly) selecting numbers that sum to the value of the message (represented as an 8-bit byte)
+        
+        First, the integers 0-255 are encrypted using a linear secret key cipher to produce the pre-public key. 
+        Then, the pre-public key is used to generate a second set of encryptions of the integers 0-255, using public key encryption.
+        This second set is released as the public key.
+        
+        The pre-public key functions as a public key, but it provides known plaintext attack on a linear cipher.
+        The public key encryption technique is more secure then the linear cipher, and the private key is shielded from attack. """
+        
+    pre_public_key = []
+    for byte in range(256):
+        ciphertext = homomorphic_encrypt(byte, private_key)     
+        pre_public_key.append(bytes_to_words(ciphertext, 4))
+    
     public_key = []
     for byte in range(256):
-        ciphertext = homomorphic_encrypt(byte, private_key)        
-        public_key.append(bytes_to_words(ciphertext, 4))
+        message = bytearray()
+        message.append(byte)
+        ciphertext = encrypt(message, pre_public_key)[0]        
+        public_key.append(bytes_to_words(ciphertext, 4))    
     return public_key
     
 def generate_private_key():
@@ -69,7 +92,7 @@ def encrypt(message, public_key, ciphertext_count=16):
         for count in range(ciphertext_count - 1):        
             key_byte = ord(urandom(1))
             _key_byte ^= key_byte
-            ciphertext_key_byte = public_key[key_byte]
+            ciphertext_key_byte = public_key[key_byte]           
             ciphertext_byte[0] ^= ciphertext_key_byte[0]
             ciphertext_byte[1] ^= ciphertext_key_byte[1]
             ciphertext_byte[2] ^= ciphertext_key_byte[2]

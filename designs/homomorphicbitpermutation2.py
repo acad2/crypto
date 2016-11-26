@@ -22,7 +22,7 @@ def shuffle_columns(a, b, c, d, k0, k1, k2, k3):
     
 def bit_permutation(inputs, key, wordsize=32): 
     """ Transpose the bits of the supplied inputs according to key.
-        Selects one of 128! permutations of bits. """
+        Selects one of 128! permutations of bits. (not evenly distributed because they key is not large enough) """
     a, b, c, d = inputs    
     k0, k1, k2, k3 = key
     for round in range(1):              
@@ -120,10 +120,10 @@ def invert_mix_columns(a, b, c, d):
     a ^= b ^ c    
     return a, b, c, d
     
-def keyed_homomorphic_permutation(state, key, rounds=2): 
-    """ Ultimately, xors together random and groups of state bits,
+def keyed_homomorphic_permutation(state, key, rounds=4): 
+    """ Ultimately, xors together random groups of state bits,
         such that each bit is made up of bit_i XOR bit_j XOR bit_k ... for
-        a large enough number of terms, to resist mick's attack. """
+        a large enough number of random terms. """
     a, b, c, d = bytes_to_words(state, 4)
     key = key[:]
     for i in range(rounds):        
@@ -152,7 +152,7 @@ def keyed_homomorphic_permutation(state, key, rounds=2):
     a, b, c, d = bit_permutation((a, b, c, d), bytes_to_words(key, 4))    
     state[:] = words_to_bytes((a, b, c, d), 4)
     
-def invert_keyed_homomorphic_permutation(state, key, rounds=2):
+def invert_keyed_homomorphic_permutation(state, key, rounds=4):
     assert isinstance(state, bytearray), type(state)
     a, b, c, d = bytes_to_words(state, 4)
     
@@ -203,12 +203,16 @@ def encrypt(data, key):
     padding = bytearray(urandom(8))
     xor_subroutine(data, padding)
     data.extend(padding)           
-    keyed_homomorphic_permutation(data, key)          
+    xor_subroutine(data, key[16:])
+    keyed_homomorphic_permutation(data, key[:16])   
+    xor_subroutine(data, key[16:])    
     return data    
     
 def decrypt(data, key):    
     """ Decrypt 64 bits of data from 128-bit ciphertext using key. """
-    invert_keyed_homomorphic_permutation(data, key)
+    xor_subroutine(data, key[16:])
+    invert_keyed_homomorphic_permutation(data, key[:16])
+    xor_subroutine(data, key[16:])
     padding = data[8:]
     xor_subroutine(data, padding)
     del data[8:]
@@ -218,7 +222,7 @@ def test_encrypt_decrypt():
     data = bytearray(8)
     data[0] = 1
     _data = data[:]
-    key = bytearray(16)
+    key = bytearray(32)
     encrypt(data, key)
     ciphertext = data[:]
     decrypt(data, key)
