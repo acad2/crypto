@@ -51,12 +51,9 @@ def shift_right(byte, amount, bit_width=8):
     return (byte >> amount) & ((2 ** bit_width) - 1)
         
 def xor_subroutine(bytearray1, bytearray2): 
-    size = min(len(bytearray1), len(bytearray2))
+    size = min(len(bytearray1), len(bytearray2))    
     for index in range(size):
         bytearray1[index] ^= bytearray2[index]
-        
-#    for index, byte in enumerate(bytearray2):
-#        bytearray1[index] ^= byte  
                
 def replacement_subroutine(bytearray1, bytearray2): 
     size = min(len(bytearray1), len(bytearray2))
@@ -304,11 +301,40 @@ def long_longs_to_bytes(*longs):
     return output
     
 def shuffle(data, key):
-    for i in reversed(range(1, 256)):
+    for i in reversed(range(1, len(data))):
         # Fisher-Yates shuffle
-        j = key[i] & (i - 1)                
+        j = key[i] % (i - 1)               
         data[i], data[j] = data[j], data[i]           
             
 def choice(a, b, c):
     return c ^ (a & (b ^ c))
     
+def egcd(a, b):
+    if a == 0:
+        return (b, 0, 1)
+    else:
+        g, y, x = egcd(b % a, a)
+        return (g, x - (b // a) * y, y)
+
+def modular_inverse(a, m):
+    g, x, y = egcd(a, m)
+    if g != 1:
+        raise Exception('modular inverse does not exist')
+    else:
+        return x % m
+        
+def multiplication_subroutine(data1, data2, modulus):    
+    amount = min(len(data1), len(data2))
+    for index in range(amount):
+        data1[index] = (data1[index] * data2[index]) % modulus
+    
+def addition_subroutine(data1, data2, modulus):    
+    size = min(len(data1), len(data2))    
+    for index in range(size):
+        data1[index] = (data1[index] + data2[index]) % modulus
+        
+def subtraction_subroutine(data1, data2, modulus):
+    size = min(len(data1), len(data2))
+    for index in range(size):
+        data1[index] = modular_subtraction(data1[index], data2[index], modulus) 
+        

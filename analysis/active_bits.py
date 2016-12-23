@@ -104,6 +104,9 @@ def search_minimum_active_bits(permutation, argument_function, output_function, 
     print("Maximum # active bits: {}".format(max(active_bits)))        
     print("Minimum state weight : {}".format(min(weights)))
         
+def test_8x64_function(function, arguments):
+    search_minimum_active_bits(lambda args: function(args), lambda *args: args, lambda args: args)            
+            
 def test_search_minimum_active_bits():
     from crypto.designs.permutation import permutation3
     search_minimum_active_bits(lambda args: permutation3.permutation(*args), lambda *args: args, lambda args: args)

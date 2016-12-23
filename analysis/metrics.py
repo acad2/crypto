@@ -56,7 +56,7 @@ def test_bias_of_data(random_data):
     
 def test_avalanche_hash(hash_function, blocksize=16):        
     print "Testing diffusion/avalanche... "
-    beginning = "\x00" * (blocksize - 2)
+    beginning = "\x01" * (blocksize - 2)
     _bytes = ''.join(chr(byte) for byte in range(256))
     
     ratio = []
@@ -83,8 +83,8 @@ def test_avalanche_hash(hash_function, blocksize=16):
 def test_avalanche_of_seed(encrypt_method, key, seedsize, seedname="seed"):
     padding = "\x00" * (seedsize - 1)
     print "Testing diffusion of {}: using variable data as {} for rng".format(seedname, seedname)
-    random_bytes1 = encrypt_method("\x00" * (1024 * 1024), key, padding + "\x00")
-    random_bytes2 = encrypt_method("\x00" * (1024 * 1024), key, padding + "\x01")    
+    random_bytes1 = encrypt_method("\x01" * (1024 * 1024), key, padding + "\x00")
+    random_bytes2 = encrypt_method("\x01" * (1024 * 1024), key, padding + "\x01")    
     ratio = []
     block_size = seedsize
     for block_number, block_one in enumerate(slide(random_bytes1, block_size)):
@@ -128,7 +128,7 @@ def test_randomness(random_bytes):
         _file.write(random_bytes)
         _file.flush()    
     print "Running ent..."
-    os.system(os.path.join(current_directory, "ent.exe ") + filename)
+    os.system(os.path.join(os.path.split(__file__)[0], "ent.exe ") + filename)
     os.remove(filename)
     
 def test_period(hash_function, blocksize=16, test_size=2):
@@ -153,7 +153,7 @@ def test_period(hash_function, blocksize=16, test_size=2):
     
 def test_bias(hash_function, byte_range=slice(0, 32)):
     biases = [[] for x in xrange(byte_range.stop)]    
-    padding = "\x00" *(byte_range.stop - byte_range.start - 2)
+    padding = "\x01" *(byte_range.stop - byte_range.start - 2)
     outputs2 = []   
     print "Testing for byte bias..."
     for byte1 in range(256):
@@ -181,27 +181,30 @@ def test_collisions(hash_function, output_size=3):
     else:
         print "No collisions after {} inputs with output size {}".format(count, output_size), len(set(outputs))
     
-def test_compression_performance(hash_function, test_message="\x00" * 2 ** 24):    
-    print "Time testing compression function; Compressing {} bytes 10 times... ".format(len(test_message))
-    start = timestamp()
+def test_compression_performance(hash_function, test_message="\x00" * 2 ** 16):    
+    print "Time testing compression function; Compressing {} bytes 10 times... ".format(len(test_message)) 
+    values = []
     for round in range(10):
+        sys.stdout.write("Round: {}\r".format(round))
+        start = timestamp()
         hash_function(test_message)
-    end = timestamp()
-    print (end - start) / 10
+        end = timestamp()
+        values.append(end - start)
+    print("Time required to compress {} bytes: {}".format(len(test_message) * 10, sum(values) / 10))
     
 def test_prng_performance_hash(hash_function):    
     print "Testing time to generate 1024 * 1024 bytes... "
     start = timestamp()
     output = _hash_prng(hash_function, len(hash_function('\x00')), 1024 * 1024)
     end = timestamp()
-    print end - start    
+    print("Time required to generate {} bytes: {}".format(1024 * 1024, end - start))
         
 def test_prng_performance_permutation(permutation, state_size):
     print "Testing time to generate 1024 * 1024 bytes... "
     start = timestamp()
     output = _hash_prng(permutation, state_size, 1024 * 1024)
     end = timestamp()
-    print end - start  
+    print("Time required to generate {} bytes: {}".format(1024 * 1024, end - start))
     
 def test_cipher_performance(performance_test_sizes, encrypt_method, key, seed):  
     for increment_size in performance_test_sizes:
@@ -220,14 +223,14 @@ def test_cipher_performance(performance_test_sizes, encrypt_method, key, seed):
         sys.stdout.write("{}100%\r".format("=" * 76))
         print "MB/s: ", 1 / (sum(times) / float(len(times)))
                         
-def test_fixed_zero_point(hash_function):
+def test_collisions_of_null_block(hash_function):
     if hash_function("\x00") == hash_function("\x00\x00"):
         print "[*]The supplied hash produces collisions for null input strings of varying length"
                          
 def test_for_involution(encrypt_function, blocksize, key, iv):
-    data = "\x00" * blocksize
+    data = "\x01" * blocksize
     ciphertext = encrypt_function(data, key, iv, "ecb")[:blocksize] # slice off padding block         
-    if encrypt_function(ciphertext, key, iv, "ecb")[:blocksize] == ("\x00" * blocksize):
+    if encrypt_function(ciphertext, key, iv, "ecb")[:blocksize] == data:
         print "[*]The supplied function is an involution F(F(x)) == x"
                             
 def test_permutation(permutation, state_size, avalanche_test=True, randomness_test=True, bias_test=True,
@@ -250,7 +253,7 @@ def test_hash_function(hash_function, avalanche_test=True, randomness_test=True,
         should be a function that accepts one string of bytes as input and returns
         one string of bytes as output. """
     output_size = len(hash_function("\x00"))
-    test_fixed_zero_point(hash_function)
+    test_collisions_of_null_block(hash_function)
     test_for_involution(lambda data, key, iv, mode: hash_function(data), output_size, 0, 0)
     if avalanche_test:
         test_avalanche_hash(hash_function, output_size)
@@ -284,12 +287,12 @@ def test_block_cipher(encrypt_method, key, iv, avalanche_test=True, randomness_t
     random_bytes = None
     if randomness_test:
         print "Generating 1MB of random test data... "
-        random_bytes = encrypt_method("\x00" * 1024 * 1024 * 1, key, iv)             
+        random_bytes = encrypt_method("\x01" * 1024 * 1024 * 1, key, iv)             
         test_randomness(random_bytes)
     
     if bias_test:
         if random_bytes is None:
-            random_bytes = encrypt_method("\x00" * 1024 * 1024 * 1, key, iv)                
+            random_bytes = encrypt_method("\x01" * 1024 * 1024 * 1, key, iv)                
         test_bias_of_data(random_bytes)
      
     if period_test:        

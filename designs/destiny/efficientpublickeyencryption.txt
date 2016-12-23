@@ -33,9 +33,9 @@ partially homomorphic ciphertexts and randomization without external parameters.
 
 Overall:
 
-Security of the public key encryption reduces to a hard problem. 
+Security of the public key encryption process reduces to a hard problem. 
 The secret decryption key is never exposed to attack - no plaintext/ciphertext pairs are ever revealed.
-The public key that is released for use by anyone was created by feeding uniformly random data into a secure encryption function.
+The public key that is released for use by anyone was created by feeding unknown uniformly random data into a secure encryption function.
 
 Public key encryption is fast, consisting of nothing but modest quantities of table lookups and xors.
 Private key decryption is fast, because it uses the decryption operation of a symmetric primitive.
