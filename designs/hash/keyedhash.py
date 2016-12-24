@@ -3,18 +3,18 @@ from crypto.utilities import pad_input, xor_subroutine
 STATE_SIZE = 64
 
 with open("publickey.bin", "a+b") as _file:
-    PUBLIC_KEY = _file.read()
-    if not PUBLIC_KEY or len(PUBLIC_KEY) / STATE_SIZE != 256:
+    HASH_KEY = _file.read()
+    if not HASH_KEY or len(HASH_KEY) / STATE_SIZE != 256:
         from os import urandom
-        PUBLIC_KEY = urandom(STATE_SIZE * 256)
-        _file.write(PUBLIC_KEY)         
+        HASH_KEY = urandom(STATE_SIZE * 256)
+        _file.write(HASH_KEY)         
     from crypto.utilities import slide
-    PUBLIC_KEY = [bytearray(block) for block in slide(PUBLIC_KEY, STATE_SIZE)]    
+    HASH_KEY = [bytearray(block) for block in slide(HASH_KEY, STATE_SIZE)]    
             
-def hash_function(data, public_key=PUBLIC_KEY, modulus=256):     
+def hash_function(data, hash_key=HASH_KEY, modulus=256):     
     output = bytearray(STATE_SIZE)        
     for index, byte in enumerate(bytearray(pad_input(data, STATE_SIZE))):
-        value = public_key[byte]
+        value = hash_key[byte]
         output[:] = ((output[count] + (value[count] * (index + byte + count + 1))) % 256 for count in range(STATE_SIZE))               
     return bytes(output)    
     
