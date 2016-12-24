@@ -52,6 +52,9 @@ def shift_right(byte, amount, bit_width=8):
         
 def xor_subroutine(bytearray1, bytearray2): 
     size = min(len(bytearray1), len(bytearray2))    
+    #print size
+    #print bytearray1
+    #print bytearray2
     for index in range(size):
         bytearray1[index] ^= bytearray2[index]
                
@@ -319,7 +322,7 @@ def egcd(a, b):
 def modular_inverse(a, m):
     g, x, y = egcd(a, m)
     if g != 1:
-        raise Exception('modular inverse does not exist')
+        raise ValueError('modular inverse does not exist')
     else:
         return x % m
         
@@ -333,6 +336,12 @@ def addition_subroutine(data1, data2, modulus):
     for index in range(size):
         data1[index] = (data1[index] + data2[index]) % modulus
         
+#def addition_subroutine(data1, data2, modulus): 
+#    data1[:] = ((byte + next(data2)) % modulus for byte in data1)
+#    
+#def multiplication_subroutine(data1, data2, modulus):
+#    data1[:] = ((byte * next(data2)) % modulus for byte in data1)
+    
 def subtraction_subroutine(data1, data2, modulus):
     size = min(len(data1), len(data2))
     for index in range(size):
