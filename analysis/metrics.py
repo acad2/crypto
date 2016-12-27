@@ -170,7 +170,7 @@ def test_collisions(hash_function, output_size=3):
     print "Testing for collisions with output of {} bytes... ".format(output_size)
     for count, possibility in enumerate(itertools.product(*(ASCII for count in range(output_size)))):
         hash_input = ''.join(possibility)        
-        hash_output = hash_function(hash_input)[:output_size]
+        hash_output = hash_function(("\x00" * 32) + hash_input)[:output_size]
         if hash_output in outputs:            
             format_args = (log(count, 2), output_size * 8)
             print "Collision after: 2 ** {}; output size: 2 ** {}".format(*format_args)            
