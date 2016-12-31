@@ -1,5 +1,7 @@
 import itertools
 
+raise NotImplementedError()
+
 def weight(words):
     return sum(format(word, 'b').count('1') for word in words)
 

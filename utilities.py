@@ -4,14 +4,12 @@ import itertools
 from operator import xor as _operator_xor
 import binascii
 
-# copied from pride so this module could conceivably be used independently
 def slide(iterable, x=16):
     """ Yields x bytes at a time from iterable """
     slice_count, remainder = divmod(len(iterable), x)
     for position in range((slice_count + 1 if remainder else slice_count)):
         _position = position * x
         yield iterable[_position:_position + x]         
-# end copied code
     
 def null_pad(seed, size):
     return bytearray(seed + ("\x00" * (size - len(seed))))

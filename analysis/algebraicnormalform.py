@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 # copied from http://cis.sjtu.edu.cn/index.php/A_Simple_Python_Script_for_Translating_Sbox_to_ANF_Boolean_Functions 
 
 """

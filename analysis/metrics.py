@@ -16,6 +16,9 @@ ASCII = ''.join(chr(x) for x in range(256))
 TEST_OPTIONS = {"avalanche_test" : True, "randomness_test" : True, "bias_test" : True,
                 "period_test" : True, "performance_test" : True, "randomize_key" : False}                 
     
+PERFORMANCE_TEST = {"randomness_test" : False, "avalanche_test" : False, 
+                    "period_test" : False, "bias_test" : False}
+                    
 def binary_form(_bytes):
     return ''.join(format(byte, 'b').zfill(8) for byte in bytearray(_bytes))
     
@@ -157,7 +160,7 @@ def test_bias(hash_function, byte_range=slice(0, 32)):
     outputs2 = []   
     print "Testing for byte bias..."
     for byte1 in range(256):
-        for byte2 in range(len(hash_function(padding + "\x00\x00"))):
+        for byte2 in range(len(hash_function(padding + "\x00\x00"))):            
             output = hash_function(padding + chr(byte1) + chr(byte2))
             for index, byte in enumerate(output[byte_range]):
                 biases[index].append(ord(byte))            
@@ -170,7 +173,7 @@ def test_collisions(hash_function, output_size=3):
     print "Testing for collisions with output of {} bytes... ".format(output_size)
     for count, possibility in enumerate(itertools.product(*(ASCII for count in range(output_size)))):
         hash_input = ''.join(possibility)        
-        hash_output = hash_function(("\x00" * 32) + hash_input)[:output_size]
+        hash_output = hash_function(hash_input)[:output_size]
         if hash_output in outputs:            
             format_args = (log(count, 2), output_size * 8)
             print "Collision after: 2 ** {}; output size: 2 ** {}".format(*format_args)            
@@ -206,22 +209,26 @@ def test_prng_performance_permutation(permutation, state_size):
     end = timestamp()
     print("Time required to generate {} bytes: {}".format(1024 * 1024, end - start))
     
-def test_cipher_performance(performance_test_sizes, encrypt_method, key, seed):  
+def test_cipher_performance(performance_test_sizes, encrypt_method, key, seed): 
+    data_amount = 1024 * 128
+    amount_string = "({} B {} KB {} MB)"
+    test_message = "Testing time to generate " + amount_string + " in {} byte increments:"
+    rate_message = amount_string + "/s: {}"
     for increment_size in performance_test_sizes:
-        print "Testing time to generate 1MB in {} byte increments... ".format(increment_size)
-        size = (1024 * 1024) / increment_size
+        print test_message.format(data_amount, data_amount / 1024.0, data_amount / (1024 * 1024.0), increment_size)
+        size = (data_amount) / increment_size
         times = []
         
         for round in range(10):
             sys.stdout.write("{}{}%\r".format("=" * (7 * round), 10 * round))
             sys.stdout.flush()
             start = timestamp()  
-            for chunk in range(size):
+            for chunk in range(size):                
                 encrypt_method("\x00" * increment_size, key, seed)                                    
             end = timestamp()
             times.append(end - start)
         sys.stdout.write("{}100%\r".format("=" * 76))
-        print "MB/s: ", 1 / (sum(times) / float(len(times)))
+        print rate_message.format(data_amount, data_amount / 1024.0, data_amount / (1024 * 1024.0), 1 / (sum(times) / float(len(times))))
                         
 def test_collisions_of_null_block(hash_function):
     if hash_function("\x00") == hash_function("\x00\x00"):
