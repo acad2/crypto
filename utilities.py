@@ -3,6 +3,7 @@ import struct
 import itertools
 from operator import xor as _operator_xor
 import binascii
+from fractions import gcd
 
 def slide(iterable, x=16):
     """ Yields x bytes at a time from iterable """
@@ -102,12 +103,12 @@ _type_resolver = {"bytes" : byte_form, "binary" : binary_form, "integer" : lambd
 def cast(input_data, _type):
     return _type_resolver[_type](input_data)
     
-def hamming_weight(byte):
+def hamming_weight(word32):
     # from http://stackoverflow.com/a/109025/3103584
     # "you are not meant to understand or maintain this code, just worship the gods that revealed it to mankind. I am not one of them, just a prophet"
-    byte = byte - ((byte >> 1) & 0x55555555)
-    byte = (byte & 0x33333333) + ((byte >> 2) & 0x33333333)
-    return (((byte + (byte >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24    
+    word32 = word32 - ((word32 >> 1) & 0x55555555)
+    word32 = (word32 & 0x33333333) + ((word32 >> 2) & 0x33333333)
+    return (((word32 + (word32 >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24    
     
 def generate_s_box(function):
     S_BOX = bytearray(256)
@@ -303,8 +304,8 @@ def long_longs_to_bytes(*longs):
     
 def shuffle(data, key):
     for i in reversed(range(1, len(data))):
-        # Fisher-Yates shuffle
-        j = key[i] % (i - 1)               
+        # Fisher-Yates shuffle        
+        j = key[i] % i            
         data[i], data[j] = data[j], data[i]           
             
 def choice(a, b, c):
@@ -345,3 +346,7 @@ def subtraction_subroutine(data1, data2, modulus):
     for index in range(size):
         data1[index] = modular_subtraction(data1[index], data2[index], modulus) 
         
+        
+
+
+            

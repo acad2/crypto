@@ -16,22 +16,41 @@ with open("keyedhashkey.bin", "a+b") as _file:
         _file.write(HASH_KEY)             
     HASH_KEY = [bytearray(block) for block in slide(HASH_KEY, STATE_SIZE)]    
             
-def pad_input(hash_input): 
+def pad_input(hash_input, post_processing_steps): 
+    hash_input += chr(post_processing_steps)
     input_size = len(hash_input)
-    hash_input += "\x80" # chr(128) 0b1000 0000
+    padding = (4 - (input_size % 4)) - 1    
+    hash_input += ("\x00" * padding) + "\x80" # chr(128) 0b1000 0000
     hash_input += struct.pack("Q", input_size)
     return bytearray(hash_input)
-                                    
+              
+    hash_input += chr(128)
+    input_size = len(hash_input) + 8 # + 8 for 64 bits for the size bytes at the end
+    padding = size - (input_size % size)
+    hash_input += ("\x00" * padding) + (struct.pack("Q", input_size)) 
+    assert not len(hash_input) % size, (len(hash_input), size)
+    return hash_input
+    
 def _hash(output, data, hash_key=HASH_KEY):    
-    for index in range(len(data)):                
-        byte8 = rotate_left(data[index], 1, 8)# ^ (index % 256)
-        byte8 ^= rotate_left(output[(index + 1) % STATE_SIZE], 2, 8)
-        byte8 ^= rotate_left(output[(index + 2) % STATE_SIZE], 3, 8)        
+    for index in range(len(data)):                        
+        byte8 = rotate_left(data[index], 1, 8) #^ (index % 256)
+        byte8 ^= output[(index + 1) % STATE_SIZE]
         output[index % STATE_SIZE] ^= byte8        
-        xor_subroutine(output, hash_key[output[index % STATE_SIZE]])                           
+        xor_subroutine(output, hash_key[output[index % STATE_SIZE]])       
+    #for a, b, c, d in slide(data, 4):
+    #    key = 0
+    #    key ^= rotate_left(output[0], 1, 8)
+    #    key ^= rotate_left(output[1], 2, 8)
+    #    key ^= rotate_left(output[2], 3, 8)
+    #    key ^= rotate_left(output[3], 4, 8)
+    #    xor_subroutine(output, hash_key[key ^ rotate_left(a, 1, 8)])
+    #    xor_subroutine(output, hash_key[key ^ rotate_left(b, 2, 8)])
+    #    xor_subroutine(output, hash_key[key ^ rotate_left(c, 3, 8)])
+    #    xor_subroutine(output, hash_key[key ^ rotate_left(d, 4, 8)])
        
-def output_transformation(output, data, hash_key=HASH_KEY, post_processing_steps=STATE_SIZE):    
-    # output transformation    
+       
+       
+def output_transformation(output, data, hash_key=HASH_KEY, post_processing_steps=STATE_SIZE):        
     rounds, extra = divmod(post_processing_steps, STATE_SIZE)
     for round in range(rounds):
         _hash(output, output, hash_key)
@@ -39,7 +58,7 @@ def output_transformation(output, data, hash_key=HASH_KEY, post_processing_steps
         _hash(output, output[:extra], hash_key)
         
 def hash_function(data, hash_key=HASH_KEY, post_processing_steps=STATE_SIZE):        
-    data = pad_input(data)    
+    data = pad_input(data, post_processing_steps)    
     output = bytearray(STATE_SIZE)        
     _hash(output, data, hash_key) 
     output_transformation(output, data, hash_key, post_processing_steps)
@@ -124,20 +143,20 @@ def test_authenticated_stream_cipher_metrics():
 def test_hash_function_metrics(): 
     print "Testing metrics of hash function"
     from crypto.analysis.metrics import test_hash_function, PERFORMANCE_TEST       
-    key = []
-    index = 0
-    bit = 1
-    for byte in range(256):
-        entry = bytearray(STATE_SIZE)        
-        entry[index] = bit
-        bit <<= 1
-        bit &= 255        
-        if not bit:
-            index += 1
-            bit = 1
-        key.append(entry)
+    #key = []
+    #index = 0
+    #bit = 1
+    #for byte in range(256):
+    #    entry = bytearray(STATE_SIZE)        
+    #    entry[index] = bit
+    #    bit <<= 1
+    #    bit &= 255        
+    #    if not bit:
+    #        index += 1
+    #        bit = 1
+    #    key.append(entry)
         
-    test_hash_function(lambda data: hash_function(data, hash_key=key, post_processing_steps=32))#, avalanche_test=False, randomness_test=False, period_test=False)#, bias_test=False)#, compression_test=False, performance_test=False)
+    test_hash_function(lambda data: hash_function(data), avalanche_test=False, randomness_test=False, period_test=False)#, bias_test=False)#, compression_test=False, performance_test=False)
     
 if __name__ == "__main__":
     #test_encrypt_decrypt()    
