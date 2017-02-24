@@ -346,7 +346,16 @@ def subtraction_subroutine(data1, data2, modulus):
     for index in range(size):
         data1[index] = modular_subtraction(data1[index], data2[index], modulus) 
         
-        
-
-
-            
+def prime_generator():
+    filter = set([2, 3, 5])
+    yield 2
+    yield 3
+    yield 5
+    for number in itertools.count(6):
+        for prime in filter:
+            if not number % prime:
+                break
+        else:
+            yield number
+            filter.add(number)
+          

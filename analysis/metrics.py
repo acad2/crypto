@@ -83,11 +83,12 @@ def test_avalanche_hash(hash_function, blocksize=16):
     print "Average Hamming distance ratio: ", average / bit_count
     print "Maximum Hamming distance ratio: ", maximum / bit_count    
     
-def test_avalanche_of_seed(encrypt_method, key, seedsize, seedname="seed"):
+def test_avalanche_of_seed(encrypt_method, key, seedsize, seedname="seed", 
+                           seed_generation_function=lambda padding, byte: padding + byte):
     padding = "\x00" * (seedsize - 1)
-    print "Testing diffusion of {}: using variable data as {} for rng".format(seedname, seedname)
-    random_bytes1 = encrypt_method("\x01" * (1024 * 1024), key, padding + "\x00")
-    random_bytes2 = encrypt_method("\x01" * (1024 * 1024), key, padding + "\x01")    
+    print "Testing diffusion of {}: using variable data as {} for rng".format(seedname, seedname)    
+    random_bytes1 = encrypt_method("\x01" * (1024 * 1024), key, seed_generation_function(padding, "\x00"))
+    random_bytes2 = encrypt_method("\x01" * (1024 * 1024), key, seed_generation_function(padding, "\x01"))
     ratio = []
     block_size = seedsize
     for block_number, block_one in enumerate(slide(random_bytes1, block_size)):
@@ -102,11 +103,14 @@ def test_avalanche_of_seed(encrypt_method, key, seedsize, seedname="seed"):
     print "Average Hamming distance ratio: ", average / bit_count
     print "Maximum Hamming distance ratio: ", maximum / bit_count 
     
-def test_avalanche_of_key(encrypt_method, iv, keysize):
+def test_avalanche_of_key(encrypt_method, iv, keysize, 
+                          key_generation_function=None):
     print "Testing diffusion of key: using variable data as key for rng"
     padding = "\x00" * (keysize - 1)    
-    random_bytes1 = encrypt_method("\x01" * (1024 * 1024), padding + "\x00", iv)         
-    random_bytes2 = encrypt_method("\x01" * (1024 * 1024), padding + "\x01", iv)        
+    if key_generation_function is None:
+        key_generation_function = lambda byte: padding + byte    
+    random_bytes1 = encrypt_method("\x01" * (1024 * 1024), key_generation_function("\x00"), iv)             
+    random_bytes2 = encrypt_method("\x01" * (1024 * 1024), key_generation_function("\x01"), iv)        
             
     ratio = []
     block_size = 16
@@ -212,7 +216,7 @@ def test_prng_performance_permutation(permutation, state_size):
 def test_cipher_performance(performance_test_sizes, encrypt_method, key, seed): 
     data_amount = 1024 * 128
     amount_string = "({} B {} KB {} MB)"
-    test_message = "Testing time to generate " + amount_string + " in {} byte increments:"
+    test_message = "Testing time to generate " + amount_string + " in {} byte chunks:"
     rate_message = amount_string + "/s: {}"
     for increment_size in performance_test_sizes:
         print test_message.format(data_amount, data_amount / 1024.0, data_amount / (1024 * 1024.0), increment_size)
@@ -279,7 +283,7 @@ def test_hash_function(hash_function, avalanche_test=True, randomness_test=True,
     
 def test_block_cipher(encrypt_method, key, iv, avalanche_test=True, randomness_test=True, bias_test=True,
                       period_test=True, performance_test=True, randomize_key=False, 
-                      blocksize=None, performance_test_sizes=(32, 256, 1500, 4096, 65536, 1024 * 1024)):
+                      blocksize=None, performance_test_sizes=(32, 256, 1500, 4096, 65536, 1024 * 128)):
     """ Test statistical metrics of the supplied cipher. cipher should be a 
         crypto.Cipher object or an object that supports an encrypt method
         that accepts plaintext bytes and key bytes and returns ciphertext bytes""" 
@@ -311,26 +315,40 @@ def test_block_cipher(encrypt_method, key, iv, avalanche_test=True, randomness_t
     
 def test_stream_cipher(encrypt_method, key, seed, avalanche_test=True, randomness_test=True, bias_test=True,
                        period_test=True, performance_test=True, randomize_key=False, rate=224,
-                       performance_test_sizes=(32, 256, 1500, 4096, 65536, 1024 * 1024)):  
+                       performance_test_sizes=(32, 256, 1500, 4096, 65536, 1024 * 128),
+                       key_generation_function=None, seed_generation_function=None):  
     keysize = len(key)
     if avalanche_test:
-        test_avalanche_of_seed(encrypt_method, key, len(seed))                
-        test_avalanche_of_key(encrypt_method, seed, keysize)                  
-    
+        if seed_generation_function:
+            test_avalanche_of_seed(encrypt_method, key, len(seed), seed_generation_function=seed_generation_function)   
+        else:
+            test_avalanche_of_seed(encrypt_method, key, len(seed))        
+        if key_generation_function:
+            test_avalanche_of_key(encrypt_method, seed, keysize, key_generation_function)                  
+        else:
+            test_avalanche_of_key(encrypt_method, seed, keysize)
+            
     random_bytes = None
     if randomness_test:
+        print "Generating random data for testing..."
         random_bytes = encrypt_method("\x00" * 1024 * 1024 * 1, key, seed)        
         test_randomness(random_bytes)
     
     if bias_test:
         if random_bytes is None:
+            print "Generating random data for bias test..."
             random_bytes = encrypt_method("\x00" * 1024 * 1024 * 1, key, seed)                
         test_bias_of_data(random_bytes)
         
     if period_test:
-        def test_function(data):
-            padding = "\x00" * (len(seed) - len(data))            
-            return encrypt_method("\x00" * 16, key, padding + data)       
+        if seed_generation_function:
+            def test_function(data):
+                padding = "\x00" * (len(seed) - len(data))            
+                return encrypt_method("\x00" * 16, key, seed_generation_function(padding, data))
+        else:
+            def test_function(data):
+                padding = "\x00" * (len(seed) - len(data))            
+                return encrypt_method("\x00" * 16, key, padding + data)       
         test_period(test_function)
         
     if performance_test:

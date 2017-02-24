@@ -40,6 +40,7 @@ def search_minimum_active_bits(permutation, argument_function, output_function, 
         - argument_function receives test inputs and returns them an a form appropriate for the interface of the permutation function
             - argument_function is used to adapt the test inputs to your functions interface
             - Arguments are the series (1, 0, 0, 0), (1, 0, 0, 1), (1, 0, 0, 2), (1, 0, 0, 3) ... (1, 0, 0, 255), (1, 0, 1, 0) ...
+                - only probes a maximum of 2 ** 32 possibilities that represent some of the worst case scenario states
             - Arguments are supplied to argument_function, which should return inputs in an appropriate form for the interface of the permutation
             - A permutation function which accepts as arguments 4 integers can use an argument_function that simply returns the inputs.
         

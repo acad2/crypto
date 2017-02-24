@@ -13,8 +13,7 @@ def print_state_4x64_256_as_4x64(inputs):
 def _print_state(inputs, bits): 
     weight_total = 0
     print inputs
-    for word in inputs:
-        print word
+    for word in inputs:        
         weight = hamming_weight(word)
         weight_total += weight
         print("{} ({}/{})".format(''.join(bit for bit in format(word, 'b').zfill(bits)), weight, bits))
@@ -56,6 +55,9 @@ def test_32x32_function(function, inputs, print_function=print_state_32x32):
 def test_4x32_function(function, inputs, print_function=print_state_4x32_128_as_4x32):
     test_function(function, inputs, print_function)
             
+def test_8x32_function(function, inputs, print_function=print_state_4x32_128_as_4x32):
+    test_function(function, inputs, print_function)
+    
 def test_4x64_function(function, inputs, print_function=print_state_4x64_256_as_4x64):    
     test_function(function, inputs, print_function)
     
