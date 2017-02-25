@@ -229,7 +229,7 @@ def bytes_to_integer(data):
         output |= data[index] << (8 * (size - 1 - index))
     return output
     
-def integer_to_bytes(integer, _bytes=16):
+def integer_to_bytes(integer, _bytes):
     output = bytearray()
     #_bytes /= 2
     for byte in range(_bytes):        

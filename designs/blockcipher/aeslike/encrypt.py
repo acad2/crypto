@@ -36,6 +36,7 @@ def mix_pairs(a, b, c, d, wordsize=WORDSIZE):
         c[index], d[index] = mix_pair(c[index], d[index], wordsize)        
     
 def shift_rows(b, d, amount, wordsize=WORDSIZE):
+    # this does the equivalent of rotate(b, (amount * 8), wordsize=32)
     _b = b[:amount]
     del b[:amount]
     b.extend(_b)
@@ -52,17 +53,52 @@ def mix_state(a, b, c, d, wordsize=WORDSIZE):
     
     # mix pairs()
     
-    # [a1b1] [a2b2] [a3b3] [a4b4]
-    # [b1a1] [b2a2] [b3a3] [b4a4] <--- shift left by 1
-                   
-    # [c1d1] [c2d2] [c3d3] [c4d4] 
-    # [d1c1] [d2c2] [d3c3] [d4c4] <--- shift left by 1
+    # a1b1 a2b2 a3b3 a4b4
+    # b1a1 b2a2 b3a3 b4a4 
+               
+    # c1d1 c2d2 c3d3 c4d4 
+    # d1c1 d2c2 d3c3 d4c4 
+    
+    # shift rows(b, d, 1)
+    
+    # a1b1 a2b2 a3b3 a4b4
+    # b2a2 b3a3 b4a4 b1a1 
+               
+    # c1d1 c2d2 c3d3 c4d4 
+    # d2c2 d3c3 d4c4 d1c1 
     
     # mix pairs()
     
-    # [a1b1b2a2] [a2b2b3a3] [a3b3b4a4] [a4b4b1a4]
-    # [b2a2b1a1] [b3a3a2b2] [b4a4a3b3] [b1a4a4b4] <--- shift left by 2
-    #...
+    # a1b1b2a2 a2b2b3a3 a3b3b4a4 a4b4b1a1
+    # b2a2a1b1 b3a3a2b2 b4a4a3b3 b1a1a4b4
+               
+    # c1d1d2c2 c2d2d3c3 c3d3d4c4 c4d4d1c1
+    # d2c2c1d1 d3c3c2d2 d4c4c3d3 d1c1c4d4
+    
+    # shift rows(b, d, 2)
+    
+    # a1b1b2a2 a2b2b3a3 a3b3b4a4 a4b4b1a1
+    # b4a4a3b3 b1a1a4b4 b2a2a1b1 b3a3a2b2
+               
+    # c1d1d2c2 c2d2d3c3 c3d3d4c4 c4d4d1c1
+    # d4c4c3d3 d1c1c4d4 d2c2c1d1 d3c3c2d2
+    
+    # mix pairs()    
+    
+    # a1b1b2a2b4a4a3b3 a2b2b3a3b1a1a4b4 a3b3b4a4b2a2a1b1 a4b4b1a1b3a3a2b2
+    # b4a4a3b3a1b1b2a2 b1a1a4b4a2b2b3a3 b2a2a1b1a3b3b4a4 b3a3a2b2a4b4b1a1
+               
+    # c1d1d2c2d4c4c3d3 c2d2d3c3d1c1c4d4 c3d3d4c4d2c2c1d1 c4d4d1c1d3c3c2d2
+    # d4c4c3d3c1d1d2c2 d1c1c4d4c2d2d3c3 d2c2c1d1c3d3d4c4 d3c3c2d2c4d4d1c1
+    
+    # mix the a row with the c row, and the b row with the d row 
+    
+    # a1b1b2a2b4a4a3b3c1d1d2c2d4c4c3d3 a2b2b3a3b1a1a4b4c2d2d3c3d1c1c4d4 a3b3b4a4b2a2a1b1c3d3d4c4d2c2c1d1 a4b4b1a1b3a3a2b2c4d4d1c1d3c3c2d2           
+    # b4a4a3b3a1b1b2a2d4c4c3d3c1d1d2c2 b1a1a4b4a2b2b3a3d1c1c4d4c2d2d3c3 b2a2a1b1a3b3b4a4d2c2c1d1c3d3d4c4 b3a3a2b2a4b4b1a1d3c3c2d2c4d4d1c1
+    
+    # c1d1d2c2d4c4c3d3a1b1b2a2b4a4a3b3 c2d2d3c3d1c1c4d4a2b2b3a3b1a1a4b4 c3d3d4c4d2c2c1d1a3b3b4a4b2a2a1b1 c4d4d1c1d3c3c2d2a4b4b1a1b3a3a2b2
+    # d4c4c3d3c1d1d2c2b4a4a3b3a1b1b2a2 d1c1c4d4c2d2d3c3b1a1a4b4a2b2b3a3 d2c2c1d1c3d3d4c4b2a2a1b1a3b3b4a4 d3c3c2d2c4d4d1c1b3a3a2b2a4b4b1a1
+
     mix_pairs(a, b, c, d, wordsize)
     shift_rows(b, d, 1, wordsize)    
     mix_pairs(a, b, c, d, wordsize)
@@ -71,11 +107,10 @@ def mix_state(a, b, c, d, wordsize=WORDSIZE):
     mix_pairs(a, c, b, d, wordsize)
     
 def sbox_layer(a, b, c, d):
-    for index in range(4):
-        a[index] = S_BOX256[a[index]]
-        b[index] = S_BOX256[b[index]]        
-        c[index] = S_BOX256[c[index]]
-        d[index] = S_BOX256[d[index]]                 
+    a[0] = S_BOX256[a[0]]; a[1] = S_BOX256[a[1]]; a[2] = S_BOX256[a[2]]; a[3] = S_BOX256[a[3]]
+    b[0] = S_BOX256[b[0]]; b[1] = S_BOX256[b[1]]; b[2] = S_BOX256[b[2]]; b[3] = S_BOX256[b[3]]
+    c[0] = S_BOX256[c[0]]; c[1] = S_BOX256[c[1]]; c[2] = S_BOX256[c[2]]; c[3] = S_BOX256[c[3]]
+    d[0] = S_BOX256[d[0]]; d[1] = S_BOX256[d[1]]; d[2] = S_BOX256[d[2]]; d[3] = S_BOX256[d[3]]               
     
 def transposition(a, b, c, d):    
     temp = a[0]
@@ -100,12 +135,12 @@ def encrypt(plaintext, key, wordsize=WORDSIZE, rounds=ROUNDS):
     # 128 bit state    
     assert len(key) == KEY_SIZE
     assert isinstance(plaintext, bytearray)
-    a, b, c, d = plaintext[:4], plaintext[4:8], plaintext[8:12], plaintext[12:16]
+    a, b, c, d = plaintext[:4], plaintext[4:8], plaintext[8:12], plaintext[12:16]    
     for round in range(rounds):
         add_key_and_constants(a, b, c, d, key, round)        
-        sbox_layer(a, b, c, d)
-        mix_state(a, b, c, d)
-        transposition(a, b, c, d)
+        sbox_layer(a, b, c, d)       
+        mix_state(a, b, c, d)        
+        transposition(a, b, c, d)        
     plaintext[:] = a + b + c + d
     return plaintext
             
@@ -116,13 +151,15 @@ def test_encrypt():
     key = range(KEY_SIZE)     
     #key = bytearray(32)
     #key[0] = 1
-    message = bytearray("Awesome1" * 2)
+    message = bytearray(range(16))
+    message[0] = 1
     ciphertext = encrypt(message, key)
     print ciphertext
     #plaintext = decrypt(message, key)
     #assert plaintext == message, (plaintext, message)
     
-    message = bytearray("Awesome2" * 2)
+    message = bytearray(range(16))
+    message[0] = 2
     ciphertext = encrypt(message, key)
     print ciphertext
     #plaintext = decrypt(message, key)
@@ -142,7 +179,7 @@ def test_metrics():
             encrypt(data, key)      
             
     
-    Test_Cipher.test_metrics(generate_key(), "\x00" * 16)
+    Test_Cipher.test_metrics(generate_key(), "\x00" * 16, avalanche_test=False, randomness_test=False, bias_test=False, period_test=False)
 
 def test_active_bits():    
     from crypto.analysis.active_bits import search_minimum_active_bits

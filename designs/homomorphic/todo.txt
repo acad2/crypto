@@ -1,0 +1,114 @@
+-------------------------
+Confidential IV mode
+provides randomization and security against chosen plaintext attack to E
+encryption:
+R = urandom(cipher_blocksize_bits)
+c_R = E(R, key)
+c_0 = E(M_0 + R, key)
+output c_R, c_0
+
+decryption:
+R = D(c_R, key)
+M_0 = D(c_0, key) - R
+output M_0
+
+Why? If E is not broken this should be unnecessary.
+E is an algebraically homomorphic cipher, it benefits from having randomization and CPA security
+With this mode, we don't have to build these features into new algebraically homomorphic ciphers
+  - do we need a fresh R for every single block, or can we reuse it?
+      - yes, it must be a new R for every block:
+          - assume E is OTP:
+            c_m1 = m1 + k1 + r1           # 1 known, 2 unknown
+            c_r1 = k2 + r1                #          + 1? 2? unknown
+            c_m2 = m2 + k1 + r1           # 2 known, 2 unknown
+            c_r2 = k2 + r2
+            assuming m1 are known/chosen:
+            c_m1 - m1 = k + r1
+            c_m2 - (k + r1) = (m2 + k + r1) - (k + r1) = m2
+              - knowing m1 allowed decryption of c_m2 without knowing k
+
+            assuming R is not re-used:
+            c_m1 = m1 + k + r1           # 1 known, 2 unknown
+            c_m2 = m2 + k + r2           # 2 known, 3 unknown
+            c_m1 = m1 = k + r1
+            c_m2 - (k + r1) = m2 + k + r2 - k + r1 = m2 + r2 + r1 ; - m2 = r2 + r1
+
+            c_m3 = m3 + k + r3           # 3 known, 4 unknown
+  - if E provides no diffusion (i.e. a OTP), then each bit can be attacked in isolation
+  - two options: 
+      - require *all* of the decrypted bits to be of any use, i.e. hash(D(c_m, k))
+          - usable for key exchange, as the output of hash is random
+              - key exchange algorithm can be turned into public key encryption using the hash output as key for symmetric cipher
+          - requires one hash invocation upon decryption (computed during protocol execution)
+          - can use 256-bit integer with 256-bit block
+          - use mod 256 and additive key layer with counted # of operations
+              - won't be using key exchange for homomorphic circuit evaluation, not "general purpose"
+
+      - use a diffusing prp in E
+          - usable for public key encryption
+          - requires prp for each E
+              - for public key crypto, the secret key cipher E is computed relatively infrequently and in limited quantities (computed during public key generation)
+              - cost is not that bad and is paid up front by the private key holder
+              - if using the compressed public key technique, cost becomes 1 prp invocation computed up front
+              - number of prps computed during protocol execution is 0
+          - using a 256-bit integer with a 256-bit block won't work 
+              - 32-bit integer with a 256-bit block 
+          - use mod 257 and multiplicative key layer for unlimited/untracked operations
+              - use public key encryption for homomorphic circuit evaluation
+
+
+Why not add authentication and integrity mechanisms?
+Because we intend to use this mode in conjunction with homomorphic ciphers, we assume a use case where it is understood that ciphertexts will be manipulated by (untrusted) other parties
+  - What does integrity mean in this context?
+  - Could mean only valid ciphertexts were added together (handlers may not generate a random block and add it to a ciphertext without decryption error)
+     - if c_3 = c_1 + c_2 and this form of integrity is applied, then handlers may generate valid integrity ciphertexts by using c_1 and c_2 as a basis to produce the rest
+  - The integrity mechanism would need to support homomorphic operations, similarly to the ciphertexts
+     - i.e.: \\$c_3 = c_1 + c_2\\ tag_3 = tag_1 + tag_2$
+     - conceivably possible, but what does it prove? it doesn't prove c_3 was never modified, it is a modification of c_1 by c_2
+  - Authentication?
+     - malleable authentication seem to be a contradiction
+     - could get signatures
+
+
+
+-------------------------
+compressed public key technique
+results in 256-bit (or 512-bit?) public key (for a 256-bit plaintext word)
+release E(1, k) as the compressed public key
+
+to compress a public key:
+e_1 := E(1, k)
+output e_1
+
+to decompress a public key that uses log encoding
+e_2 = e_1 << 1
+e_3 = e_2 << 1
+...
+e_256 = e_255 << 1
+    - avoid creating a superincreasing sequence! the above is not a good idea!
+
+
+to decompress a public key that uses 0 encoding:
+e_0 := E(0, k)
+e_1 = e_0 + e_0 + e_0 + ... + e_0_n
+e_2 = e_1 + e_1 + e_1 + ... + e_0_n
+...
+
+to decompress a public key that uses 0-N encoding:
+e_1 := E(1, k)
+e_2 = e_1 + e_1
+e_3 = e_2 + e_1
+..
+e_0 = e_128 + e_128
+
+
+if using an additive key layer, then each e_i must consist of the same number of key terms or else decryption will not function correctly:
+  - c_r = r + k2
+    c_m = r + k1 + m
+    c_r2 = r + k2 + r + k2
+    c_m2 = r + k1 + m + r + k1 + m
+
+    c_r3 = c_r2 + c_r2 = r + k2 + r + k2 + r + k2 + r + k2
+    c_m3 = c_m2 + c_m2 = r + k1 + m + r + k1 + m + r + k1 + m + r + k1 + m
+alternatively, use a multiplicative key layer and forget about this complication
+
