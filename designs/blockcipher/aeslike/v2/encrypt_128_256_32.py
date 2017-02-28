@@ -81,15 +81,76 @@ def sbox_layer(a, b, c, d):
     c = (S_BOX256[(c >> 24) & 255] << 24) | (S_BOX256[(c >> 16) & 255] << 16) | (S_BOX256[(c >> 8) & 255] << 8) | S_BOX256[c & 255]
     d = (S_BOX256[(d >> 24) & 255] << 24) | (S_BOX256[(d >> 16) & 255] << 16) | (S_BOX256[(d >> 8) & 255] << 8) | S_BOX256[d & 255]
     return a, b, c, d
+        
+def shuffle_pairs(a, b, c, d, key, wordsize=WORDSIZE): 
+    t = b
+    a ^= b
+    a &= key[0]
+    a ^= b
     
-def transposition(a, b, c, d, mask0=0xFF000000, mask1=0x00FF0000, mask2=0x0000FF00, mask3=0x000000FF):             
-    _a = ((c & mask3) << 24) | ((b & mask1) <<  0) | ((b & mask0) >> 16) | (d & mask3)    
-    _b = ((d & mask0) <<  0) | ((b & mask2) <<  8) | ((c & mask1) >>  8) | ((a & mask0) >> 24)
-    _c = ((d & mask1) <<  8) | ((a & mask3) << 16) | ((d & mask2) >>  0) | ((c & mask0) >> 24)
-    _d = ((a & mask1) <<  8) | ((c & mask2) <<  8) | ((a & mask2) >>  0) | (b & mask3)
-    return _a, _b, _c, _d
+    b ^= t
+    b &= key[0]
+    b ^= t
+    a = vector_rotate(a, 1)
 
+    t = a
+    b ^= a
+    b &= key[1]
+    b ^= a
     
+    a ^= t
+    a &= key[1]
+    a ^= t
+    b = vector_rotate(b, 2)
+    
+    t = b
+    
+
+       
+    a ^= b     
+    a = vector_rotate(a, 1)
+    
+    b ^= a    
+    b = vector_rotate(b, 2)
+    
+    a ^= b    
+    a = vector_rotate(a, 4)
+    
+    b ^= a
+    
+    return a, b, c, d
+    
+def shift_rows(b, d, amount, wordsize=WORDSIZE):    
+    b = rotate_left(b, (8 * amount), 32)#wordsize)
+    d = rotate_left(d, (8 * amount), 32)#wordsize)
+    return b, d
+                
+def keyed_bit_permutation(a, b, c, d, wordsize=WORDSIZE):
+    # a1 a2 a3 a4
+    # b1 b2 b3 b4
+    # c1 c2 c3 c4
+    # d1 d2 d4 d4
+    
+    # mix pairs()
+    
+    # [a1b1] [a2b2] [a3b3] [a4b4]
+    # [b1a1] [b2a2] [b3a3] [b4a4] <--- shift left by 1
+                   
+    # [c1d1] [c2d2] [c3d3] [c4d4] 
+    # [d1c1] [d2c2] [d3c3] [d4c4] <--- shift left by 1
+    
+    # mix pairs()
+    
+    # [a1b1b2a2] [a2b2b3a3] [a3b3b4a4] [a4b4b1a4]
+    # [b2a2b1a1] [b3a3a2b2] [b4a4a3b3] [b1a4a4b4] <--- shift left by 2
+    #...
+    a, b, c, d = mix_pairs(a, b, c, d, wordsize)
+    b, d = shift_rows(b, d, 1, wordsize)    
+    a, b, c, d = mix_pairs(a, b, c, d, wordsize)
+    b, d = shift_rows(b, d, 2, wordsize)
+    a, b, c, d = mix_pairs(a, b, c, d, wordsize) 
+    a, c, b, d = mix_pairs(a, c, b, d, wordsize)
+    return a, b, c, d
     
 def encrypt(plaintext, key, wordsize=WORDSIZE, rounds=ROUNDS):      
     # 128 bit state    
@@ -101,8 +162,7 @@ def encrypt(plaintext, key, wordsize=WORDSIZE, rounds=ROUNDS):
     for round in range(rounds):
         a, b, c, d = add_key_and_constants(a, b, c, d, key, round)        
         a, b, c, d = sbox_layer(a, b, c, d)       
-        a, b, c, d = mix_state(a, b, c, d)         
-        a, b, c, d = transposition(a, b, c, d)      
+        a, b, c, d = mix_state(a, b, c, d)                     
     plaintext[:] = integer_to_bytes(a, 4) + integer_to_bytes(b, 4) + integer_to_bytes(c, 4) + integer_to_bytes(d, 4)
     return plaintext
             

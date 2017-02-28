@@ -1,9 +1,9 @@
 from os import urandom
 import itertools
 
-from crypto.utilities import xor_subroutine, rotate_left
+from crypto.utilities import xor_subroutine, rotate_left, rotate_right
 
-KEY_SIZE = 16
+KEY_SIZE = 32
 WORDSIZE = 8
 ROUNDS = 1
 
@@ -13,12 +13,19 @@ S_BOX256 = []
 for byte in range(256):
     S_BOX256.append((S_BOX[byte >> 4] << 4) | S_BOX2[byte & 15])              
         
-def add_key_and_constants(a, b, c, d, key, round):
+def add_key(a, b, c, d, key):    
     for index in range(4):
-        a[index] ^= key[0 + index] ^ S_BOX256[0 + index + round]
-        b[index] ^= key[4 + index] ^ S_BOX256[4 + index + round]
-        c[index] ^= key[8 + index] ^ S_BOX256[8 + index + round]
-        d[index] ^= key[12 + index] ^ S_BOX256[12 + index + round]
+        a[index] ^= key[0 + index] 
+        b[index] ^= key[4 + index] 
+        c[index] ^= key[8 + index] 
+        d[index] ^= key[12 + index]
+            
+def add_constants(a, b, c, d, round):
+    for index in range(4):
+        a[index] ^= S_BOX256[0 + index + round]    
+        b[index] ^= S_BOX256[4 + index + round]
+        c[index] ^= S_BOX256[8 + index + round]
+        d[index] ^= S_BOX256[12 + index + round]
             
 def mix_pair(top, bottom, wordsize=WORDSIZE):    
     top ^= bottom
@@ -111,36 +118,79 @@ def sbox_layer(a, b, c, d):
     b[0] = S_BOX256[b[0]]; b[1] = S_BOX256[b[1]]; b[2] = S_BOX256[b[2]]; b[3] = S_BOX256[b[3]]
     c[0] = S_BOX256[c[0]]; c[1] = S_BOX256[c[1]]; c[2] = S_BOX256[c[2]]; c[3] = S_BOX256[c[3]]
     d[0] = S_BOX256[d[0]]; d[1] = S_BOX256[d[1]]; d[2] = S_BOX256[d[2]]; d[3] = S_BOX256[d[3]]               
+        
+def shuffle_pair(top, bottom, key, index, wordsize=WORDSIZE):   
+    # a ^ (k & (a ^ b))
+    # b ^= a
+    # b &= k
+    # b ^= a
     
-def transposition(a, b, c, d):    
-    temp = a[0]
-    a[0] = c[3]
-    c[3] = c[0]
-    c[0] = d[1]
-    d[1] = c[2]
-    c[2] = d[2]
-    d[2] = a[2]
-    a[2] = b[0]
-    b[0] = d[0]
-    d[0] = a[1]
-    a[1] = b[1]
-    b[1] = b[2]
-    b[2] = c[1]
-    c[1] = a[3]
-    a[3] = d[3]
-    d[3] = b[3]
-    b[3] = temp     
+    t = bottom
+    bottom ^= top
+    bottom &= key[index]
+    bottom ^= top    
     
+    top ^= t
+    top &= key[index]
+    top ^= t
+    top = rotate_left(top, 1, wordsize)
+    
+    t = top
+    top ^= bottom
+    top &= key[index + 1]
+    top ^= bottom        
+    
+    bottom ^= t
+    bottom &= key[index + 1]
+    bottom ^= t
+    bottom = rotate_left(bottom, 2, wordsize)
+    
+    t = bottom
+    bottom ^= top
+    bottom &= key[index + 2]
+    bottom ^= top    
+    
+    top ^= t
+    top &= key[index + 2]
+    top ^= t
+    top = rotate_left(top, 4, wordsize)
+    
+    t = top
+    top ^= bottom    
+    top &= key[index + 3]    
+    top ^= bottom           
+    
+    bottom ^= t
+    bottom &= key[index + 3]
+    bottom ^= t
+    return top, bottom
+        
+def shuffle_pairs(a, b, c, d, key, wordsize=WORDSIZE):    
+    for index in range(4):                       
+        a[index], b[index] = shuffle_pair(a[index], b[index], key, (index * 4), wordsize)        
+        c[index], d[index] = shuffle_pair(c[index], d[index], key, (index * 4), wordsize)     
+    
+def keyed_bit_permutation(a, b, c, d, key, wordsize=WORDSIZE):          
+    shuffle_pairs(a, b, c, d, key)
+    shift_rows(b, d, 1, wordsize)
+    shuffle_pairs(a, b, c, d, key)
+    shift_rows(b, d, 2, wordsize)
+    shuffle_pairs(a, b, c, d, key) 
+    shuffle_pairs(a, c, b, d, key)                       
+        
 def encrypt(plaintext, key, wordsize=WORDSIZE, rounds=ROUNDS):      
     # 128 bit state    
     assert len(key) == KEY_SIZE
     assert isinstance(plaintext, bytearray)
-    a, b, c, d = plaintext[:4], plaintext[4:8], plaintext[8:12], plaintext[12:16]    
+    key2 = key[16:32]
+    a, b, c, d = plaintext[:4], plaintext[4:8], plaintext[8:12], plaintext[12:16]   
+    add_key(a, b, c, d, key)    
     for round in range(rounds):
-        add_key_and_constants(a, b, c, d, key, round)        
+        add_constants(a, b, c, d, round)        
+        keyed_bit_permutation(a, b, c, d, key2)
         sbox_layer(a, b, c, d)       
-        mix_state(a, b, c, d)        
-        transposition(a, b, c, d)        
+        mix_state(a, b, c, d)                      
+    add_key(a, b, c, d, key)
     plaintext[:] = a + b + c + d
     return plaintext
             
@@ -153,14 +203,14 @@ def test_encrypt():
     #key[0] = 1
     message = bytearray(range(16))
     message[0] = 1
-    ciphertext = encrypt(message, key)
+    ciphertext = encrypt(message, key)[:]
     print ciphertext
     #plaintext = decrypt(message, key)
     #assert plaintext == message, (plaintext, message)
     
     message = bytearray(range(16))
     message[0] = 2
-    ciphertext = encrypt(message, key)
+    ciphertext = encrypt(message, key)[:]
     print ciphertext
     #plaintext = decrypt(message, key)
     #assert plaintext == message, (plaintext, message)
@@ -186,8 +236,13 @@ def test_active_bits():
     from crypto.utilities import integer_to_bytes, bytes_to_integer
     
     def test_function(state):
-        a, b, c, d = state
-        mix_state(a, b, c, d)
+        a, b, c, d = state        
+        #sbox_layer(a, b, c, d)
+        mix_state(a, b, c, d)               
+        #sbox_layer(a, b, c, d)
+        #mix_state(a, b, c, d)        
+        #mix_state(a, b, c, d)
+        #mix_state(a, b, c, d)        
         return a, b, c, d
         
     def argument_function(a, b, c, d):

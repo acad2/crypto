@@ -32,7 +32,48 @@ def hamming_weight(word):
 QUICK_TEST = lambda: bit_generator(1)
 THOROUGH_TEST = lambda: itertools.chain(bit_generator(1), bit_generator(3))
 
-def search_minimum_active_bits(permutation, argument_function, output_function, display_progress=True, test_inputs=QUICK_TEST):
+def count_active_bits(function_input, output, last_input, last_output, active_bits):            
+    number_different_bits = sum(hamming_weight(word) for word in (last_output[index] ^ _output for index, _output in enumerate(output)))            
+   
+    if number_different_bits: # hack; get rid of duplicate inputs   
+        input_difference = sum(hamming_weight(word) for word in (last_input[index] ^ _input for index, _input in enumerate(function_input)))
+        active_bits.append(number_different_bits + input_difference)
+        
+def display_active_bits_progress(active_bits, weights):            
+    print("Minimum # active bits: {}".format(min(active_bits)))
+    print("Median  # active bits: {}".format(sorted(active_bits)[len(active_bits) / 2]))
+    print("Average # active bits: {}".format(sum(active_bits) / len(active_bits)))
+    print("Maximum # active bits: {}".format(max(active_bits)))        
+    print("Minimum state weight : {}".format(min(weights)))
+    
+def count_active_sboxes(function_input, output, last_input, last_output, active_words, sbox_size=8):
+    state = bytearray()
+    _function_input = []
+    _output = []
+    _last_input = []
+    _last_output = []
+    for index in range(len(function_input)):
+        _function_input.extend(integer_to_bytes(function_input[index], 4))
+        _output.extend(integer_to_bytes(output[index], 4))
+        _last_input.extend(integer_to_bytes(last_input[index], 4))
+        _last_output.extend(integer_to_bytes(last_output[index], 4))
+    
+    count_active_words = lambda input1, input2: sum(1 for index, item in enumerate(input1) if item != input2[index])
+    #assert len(_function_input) == len(last_input), (_function_input, 
+    input_difference = count_active_words(_function_input, _last_input)    
+    output_difference = count_active_words(_output, _last_output)    
+    active_words.append(input_difference + output_difference)    
+        
+def display_active_words_progress(active_words, weights):            
+    print("Minimum # active words: {}".format(min(active_words)))
+    print("Median  # active words: {}".format(sorted(active_words)[len(active_words) / 2]))
+    print("Average # active words: {}".format(sum(active_words) / len(active_words)))
+    print("Maximum # active words: {}".format(max(active_words)))        
+    print("Minimum state weight : {}".format(min(weights)))
+    
+def search_minimum_active_bits(permutation, argument_function, output_function, display_progress=True, 
+                               test_inputs=QUICK_TEST, count_active_word_function=count_active_bits, 
+                               display_progress_function=display_active_bits_progress):
     """ Searches for the minimum number of active bits for permutation.
         
         - permutation is the function to be tested. 
@@ -69,41 +110,25 @@ def search_minimum_active_bits(permutation, argument_function, output_function, 
     last_output = output_function(permutation(argument_function(1, 0, 0, 0)))
     _inputs = set()
     for x, y in itertools.product(test_inputs(), test_inputs()):        
-        for count, z in enumerate(test_inputs()):                
-            #print x, y, z            
-            output = output_function(permutation(argument_function(1, x, y, z)))   
-            #assert output != last_output, (output, x, y, z, last_z)
-            output_hamming_weight = sum(hamming_weight(word) for word in output)
-           # assert output_hamming_weight, (output, x, y, z, last_z)
+        for count, z in enumerate(test_inputs()):                                   
+            output = output_function(permutation(argument_function(1, x, y, z)))
+            
+            output_hamming_weight = sum(hamming_weight(word) for word in output)           
             weights.append(output_hamming_weight)
-            
-            number_different_bits = sum(hamming_weight(word) for word in (last_output[index] ^ _output for index, _output in enumerate(output)))            
-            #assert number_different_bits
-            if number_different_bits: # hack; get rid of duplicate inputs   
-                input_difference = sum(hamming_weight(word) for word in (last_input[index] ^ _input for index, _input in enumerate((1, x, y, z))))
-                active_bits.append(number_different_bits + input_difference)
-            
+
+            count_active_word_function((1, x, y, z), output, last_input, last_output, active_bits)            
             last_input = (1, x, y, z)
-                        
-            
+                                    
         if display_progress and x != last_x:
             last_x = x            
             print("\n" + ('-' * 79))
-            print("Minimum # active bits: {}".format(min(active_bits)))
-            print("Median  # active bits: {}".format(sorted(active_bits)[len(active_bits) / 2]))
-            print("Average # active bits: {}".format(sum(active_bits) / len(active_bits)))
-            print("Maximum # active bits: {}".format(max(active_bits)))        
-            print("Minimum state weight : {}".format(min(weights)))
+            display_progress_function(active_bits, weights)
             
     weights.pop(-1) # remove the 0, 0, 0 entries
     active_bits.pop(-1)
     print("\nSearch complete" + ('-' * (80 - len("\nSearch complete"))))
     print("Search space: 2 ** {}".format(log(count ** 3, 2)))
-    print("Minimum # active bits: {}".format(min(active_bits)))
-    print("Median  # active bits: {}".format(sorted(active_bits)[len(active_bits) / 2]))
-    print("Average # active bits: {}".format(sum(active_bits) / len(active_bits)))
-    print("Maximum # active bits: {}".format(max(active_bits)))        
-    print("Minimum state weight : {}".format(min(weights)))
+    display_progress_function(active_bits, weights)
         
 def test_8x64_function(function, arguments):
     search_minimum_active_bits(lambda args: function(args), lambda *args: args, lambda args: args)            

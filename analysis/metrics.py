@@ -166,8 +166,8 @@ def test_bias(hash_function, byte_range=slice(0, 32)):
     for byte1 in range(256):
         for byte2 in range(len(hash_function(padding + "\x00\x00"))):            
             output = hash_function(padding + chr(byte1) + chr(byte2))
-            for index, byte in enumerate(output[byte_range]):
-                biases[index].append(ord(byte))            
+            for index, byte in enumerate(bytearray(output[byte_range])):
+                biases[index].append(byte)
             outputs2.extend(output[byte_range])        
     print "output size: {}; symbols that appear at index: {}".format(len(output), [len(set(_list)) for _list in biases])
     print "Symbols out of 256 that appeared anywhere: {}".format(len(set(outputs2)))

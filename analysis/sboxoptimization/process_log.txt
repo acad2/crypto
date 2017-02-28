@@ -1,0 +1,3 @@
+Pid= 4708, Hashed   h(cmd)=0CDA538B4CFB4A5D Modified cmd=c:\users\_\documents\github\crypto\analysis\sboxoptimization\deg3dontsatbard4x4a.eqs
+C:\Users\_\Documents\GitHub\crypto\analysis\sboxoptimization\xl0.exe /deg3 /dontsat /bard 4x4a.eqs
+0CDA538B4CFB4A5D

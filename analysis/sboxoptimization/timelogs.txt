@@ -1,0 +1,19 @@
+
+//xl0 /deg3 /dontsat /bard 4x4a.eqs 
+//                   => Stats on behaviour:
+         correct key   0/  1 cases
+
+//                   => Stats on solver time only:
+//                     1 values,   median    0.00 s,   av best 50%   -1.#J s
+//                   => average    0.00 s =  0.000 h
+//                   => av  Q1    -1.#J s = -1.#IO h
+//                   => max 25     0.00 s =  0.000 h
+//                   => av  50    -1.#J s = -1.#IO h
+//                   => max 50     0.00 s =  0.000 h
+//                   => av Q12    -1.#J s = -1.#IO h
+//                   => max 75     0.00 s =  0.000 h
+//                   => min all 100000.00 s = 27.778 h
+//                   => max all    0.00 s =  0.000 h
+//                   => stdev      0.00 s =  0.000 h
+//                   => IQR        0.00 s =  0.000 h
+
