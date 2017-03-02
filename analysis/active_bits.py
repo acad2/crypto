@@ -34,10 +34,10 @@ THOROUGH_TEST = lambda: itertools.chain(bit_generator(1), bit_generator(3))
 
 def count_active_bits(function_input, output, last_input, last_output, active_bits):            
     number_different_bits = sum(hamming_weight(word) for word in (last_output[index] ^ _output for index, _output in enumerate(output)))            
-   
-    if number_different_bits: # hack; get rid of duplicate inputs   
-        input_difference = sum(hamming_weight(word) for word in (last_input[index] ^ _input for index, _input in enumerate(function_input)))
-        active_bits.append(number_different_bits + input_difference)
+    #assert number_different_bits, (function_input, last_input, output, last_output)
+    #if number_different_bits: # hack; get rid of duplicate inputs   
+    input_difference = sum(hamming_weight(word) for word in (last_input[index] ^ _input for index, _input in enumerate(function_input)))
+    active_bits.append(number_different_bits + input_difference)
         
 def display_active_bits_progress(active_bits, weights):            
     print("Minimum # active bits: {}".format(min(active_bits)))
@@ -122,6 +122,7 @@ def search_minimum_active_bits(permutation, argument_function, output_function, 
         if display_progress and x != last_x:
             last_x = x            
             print("\n" + ('-' * 79))
+            print "Displaying progress: ", len(active_bits), 
             display_progress_function(active_bits, weights)
             
     weights.pop(-1) # remove the 0, 0, 0 entries

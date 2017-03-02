@@ -1,3 +1,5 @@
+# didnt work
+
 from crypto.utilities import rotate_left, slide, bytes_to_words, words_to_bytes, pad_input
 
 WORDSIZE = 32
@@ -42,7 +44,7 @@ def mix_words(a, b, c, d, wordsize=WORDSIZE):
 def compression_function(data):
     o0, o1, o2, o3 = 0, 1, 8 , 64
     for a, b, c, d in slide(bytes_to_words(data, 4), 4):
-        a, b, c, d = mix_words(a ^ o0, b ^ o1, c ^ o2, d ^ o3)
+        a, b, c, d = mix_words(a, b, c, d)
         s0, s1, s2, s3 = mix_words(a, 1, 8, 64)
         s0, s1, s2, s3 = mix_words(s0, b, s1, s3)
         s0, s1, s2, s3 = mix_words(s0, s1, c, s3)
@@ -71,7 +73,7 @@ def test_hash_function():
 
 def test_metrics():
     from crypto.analysis.metrics import test_hash_function
-    test_hash_function(hash_function, avalanche_test=False)
+    test_hash_function(hash_function)
             
             
 if __name__ == "__main__":
