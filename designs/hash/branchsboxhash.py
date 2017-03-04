@@ -2,19 +2,17 @@ from crypto.utilities import rotate_left, pad_input, slide, bytes_to_words, word
 
 ROUNDS = 32
 
-def branch(word):
-    # 0 1 2 3 ... 60 61 62 63
-    
+def branch(word):    
     word ^= rotate_left(word, 3, 64) # two bits influence each bit
     word ^= rotate_left(word, 6, 64) # four bits influence each bit
-    word ^= rotate_left(word, 13, 64) # eight bits influence each bit
-    word ^= rotate_left(word, 26, 64) # sixteen bits influence each bit 
-    word ^= rotate_left(word, 41, 64) # thirty-two bits influence each bit
+    word ^= rotate_left(word, 17, 64) # eight bits influence each bit
+    word ^= rotate_left(word, 5, 64) # sixteen bits influence each bit 
+    word ^= rotate_left(word, 27, 64) # thirty-two bits influence each bit
     return word
     
 def mix(word0, word1):
     word0 ^= word1  
-    word1 ^= rotate_left(word0, 2, 64)  
+    word1 ^= rotate_left(word0, 7, 64)  
     return word0, word1
     
 def sbox(a, b, c, d):
@@ -36,13 +34,13 @@ def shift_rows(b, c, d):
     return rotate_left(b, 16, 64), rotate_left(c, 32, 64), rotate_left(d, 48, 64)
     
 def linear_layer(a, b, c, d):    
-    b, c, d = shift_rows(b, c, d)            
+    b, c, d = shift_rows(b, c, d)  
     a = branch(a); b = branch(b); c = branch(c); d = branch(d);       
-    a, b = mix(a, b); c, d = mix(c, d);
+    a, b = mix(a, b); c, d = mix(c, d);              
     a, c = mix(a, c); b, d = mix(b, d); 
     return a, b, c, d        
             
-def compression_function(data, rounds=4):
+def compression_function(data, rounds=ROUNDS):
     output = [0, 0, 0, 0]    
     for a, b, c, d in slide(bytes_to_words(data, 8), 4):        
         a ^= output[0]; b ^= output[1]; c ^= output[2]; d ^= output[3];         
@@ -73,3 +71,4 @@ def test_linear_branch_number():
 if __name__ == "__main__":
     #test_hash_function()
     test_linear_branch_number()
+    

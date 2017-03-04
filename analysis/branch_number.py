@@ -7,7 +7,7 @@ def branch_number(function):
         for y in range(256):
             output = function(y, x)
             output2 = function(y, (x + 1) % 256)
-            difference = sum(hamming_weight(output[index] ^ output2[index]) for index in range(2))
+            difference = sum(hamming_weight(output[index] ^ output2[index]) for index in range(len(output)))
             difference += hamming_weight(x ^ ((x + 1) % 256))
             branching.append(difference)
     return min(branching)
