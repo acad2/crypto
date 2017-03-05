@@ -1,8 +1,8 @@
 from crypto.utilities import pad_input, slide, bytes_to_words, words_to_bytes
 
-from roundfunction2 import round_function
+from roundfunction3 import round_function
 
-ROUNDS = 32
+ROUNDS = 1
 INTEGER64_OVERFLOW = (2 ** 64) - 1 # 0xFFFFFFFFFFFFFFFF
     
 def add_block(a, b, c, d, in0, in1, in2, in3, counter):
@@ -15,12 +15,12 @@ def compression_function(data, rounds=ROUNDS):
     counter = 1
     for in0, in1, in2, in3 in slide(data, 4): # work on 4 64-bit words at a time (256 bit state)    
        # print "Digesting: ", in0, in1, in2, in3
-        a, b, c, d = add_block(a, b, c, d, in0, in1, in2, in3, 0)        
+        a, b, c, d = add_block(a, b, c, d, in0, in1, in2, in3, counter)        
         
         assert counter <= INTEGER64_OVERFLOW
         for round in range(rounds):    
             a, b, c, d = round_function(a, b, c, d)
-        a, b, c, d = add_block(a, b, c, d, in0, in1, in2, in3, 0)
+        a, b, c, d = add_block(a, b, c, d, in0, in1, in2, in3, counter)
         counter += 1    
     a, b, c, d = round_function(a, b, c, d)    
     return bytes(words_to_bytes((a, b, c, d), 8))

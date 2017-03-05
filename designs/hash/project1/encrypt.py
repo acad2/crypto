@@ -35,7 +35,7 @@ def test_authenticated_stream_cipher():
     message = bytearray("I love you :)" * 10)
     _message = message[:]
     key = "\x00" * 16
-    nonce = "\x32" * 16
+    nonce = "\x31" * 16
     data = "Why not!"        
     tag = authenticated_stream_cipher(message, key, nonce, data)    
     #print message
