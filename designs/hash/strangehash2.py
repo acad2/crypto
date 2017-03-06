@@ -1,4 +1,4 @@
-from crypto.utilities import rotate_left, pad_input, slide, bytes_to_words, words_to_bytes
+from crypto.utilities import rotate_left, pad_input, slide, bytes_to_words, odd_size_to_bytes
 
 def branch(word):             
     # 0 1 2 3  4 5 6 7  8 9 10 11  12 13 14 15
@@ -19,10 +19,6 @@ def strange_hash(data, key=KEY):
         output.append(state)        
     return odd_size_to_bytes(output, 12)
     
-def odd_size_to_bytes(hash_output, word_size): 
-    bits = ''.join(format(word, 'b').zfill(word_size) for word in hash_output)
-    return bytearray(int(_bits, 2) for _bits in slide(bits, 8))
-        
 def test_strange_hash():
     outputs = []
     for byte in range(256):

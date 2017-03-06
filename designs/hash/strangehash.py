@@ -1,6 +1,6 @@
 from crypto.utilities import rotate_left, pad_input, slide
 
-def branch(word): # branch == 5
+def branch(word): 
     word ^= rotate_left(word, 3, 8)
     word ^= rotate_left(word, 6, 8)
     return word
@@ -27,6 +27,37 @@ def test_strange_hash():
         outputs.append(bytes(strange_hash(chr(byte))))
     print '\n'.join(bytes(item) for item in outputs[:64])
         
+def test_min_weights():
+    from operator import itemgetter
+    from crypto.analysis.branch_number import branch_number
+    _weights = []
+    for r1 in range(8):
+        for r2 in range(8):
+            def branch(word):
+                word ^= rotate_left(word, r1, 8)
+                word ^= rotate_left(word, r2, 8)
+                return word
+            weights = []
+            for byte in range(32):
+                weights.append(format(branch(byte), 'b').count('1'))
+                if weights[-1] == 0:
+                    weights.pop(-1)
+            _weights.append((r1, r2, weights))
+    good_rotations = []
+    for r1, r2, weight in _weights:        
+        if weight and min(weight) >= 3:
+            good_rotations.append((r1, r2))
+    
+    outputs = []
+    for r1, r2 in good_rotations:
+        def branch(word):
+            word ^= rotate_left(word, r1, 8)
+            word ^= rotate_left(word, r2, 8)
+            return word
+        outputs.append((r1, r2, branch_number(lambda x, y: (branch(x), y))))
+    print sorted(outputs, key=itemgetter(2))
+            
 if __name__ == "__main__":
-    test_strange_hash()
+    #test_strange_hash()
+    test_min_weights()
     

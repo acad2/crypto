@@ -5,8 +5,8 @@ PRINT_STRING = "Branch number for 2x {}-bit words: {} (optimum: {})"
 
 def branch8(word):
     # 0 1 2 3  4 5 6 7    
-    word ^= rotate_left(word, 3)
-    word ^= rotate_left(word, 6)
+    word ^= rotate_left(word, 4)
+    word ^= rotate_left(word, 7)
     return word
 
 def mix8(a, b):
@@ -66,7 +66,7 @@ def linear64(a, b):
     return mix64(branch64(a), branch64(b))
                 
 def test_branch8():
-    print PRINT_STRING.format(8, branch_number(linear8), 8)            
+    print PRINT_STRING.format(8, branch_number(lambda x, y: (branch8(x), y)), 8)            
     #_globals = globals()
     #for a in range(1, 8):
     #    for b in range(1, 8):

@@ -359,3 +359,7 @@ def prime_generator():
             yield number
             filter.add(number)
           
+def odd_size_to_bytes(hash_output, word_size): 
+    bits = ''.join(format(word, 'b').zfill(word_size) for word in hash_output)
+    return bytearray(int(_bits, 2) for _bits in slide(bits, 8))
+                  
