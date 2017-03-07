@@ -3,7 +3,11 @@ ROUNDS = 1
 def rotate_left(word, amount):
     return ((word << amount) | (word >> (64 - amount))) & 0xFFFFFFFFFFFFFFFF
     
-def generate_round_constant(word):
+def add_key(data, key):
+    data[0] ^= key[0]; data[1] ^= key[1]; data[2] ^= key[2]; data[3] ^= key[3];    
+    return a, b, c, d
+    
+def generate_round_constant(word): # 10 instructions
     word ^= rotate_left(word, 3)
     word ^= rotate_left(word, 6)
     word ^= rotate_left(word, 17)
@@ -11,13 +15,23 @@ def generate_round_constant(word):
     word ^= rotate_left(word, 24)
     return word
     
-def mix_columns(a, b, c, d):
+def shift_rows(b, c, d, r1, r2, r3): # 3 instructions
+    b = rotate_left(b, r1)
+    c = rotate_left(c, r2)    
+    d = rotate_left(d, r3)
+    return b, c, d
+    
+def mix_columns(a, b, c, d): # 4 instructions
     a ^= d # ad
     b ^= c # bc
     c ^= a # acd
     d ^= b # bcd
     return a, b, c, d
-        
+                
+def shift_and_mix(a, b, c, d, r1, r2, r3):    # 7 instructions =
+    b, c, d = shift_rows(b, c, d, r1, r2, r3) # 3 instructions + 
+    return mix_columns(a, b, c, d)            # 4 instructions 
+    
 def sbox(a, b, c, d): # 9 instructions 
     """ Optimal 4x4 s-box implementation; Applies 64 s-boxes in parallel on the columns. """                        
     t = a    
@@ -27,16 +41,6 @@ def sbox(a, b, c, d): # 9 instructions
     b ^= c & t    
     return a, b, c, d  
     
-def shift_rows(b, c, d, r1, r2, r3): # 3 instructions
-    b = rotate_left(b, r1)
-    c = rotate_left(c, r2)    
-    d = rotate_left(d, r3)
-    return b, c, d
-    
-def shift_and_mix(a, b, c, d, r1, r2, r3):    # 7 instructions =
-    b, c, d = shift_rows(b, c, d, r1, r2, r3) # 3 instructions + 
-    return mix_columns(a, b, c, d)            # 4 instructions 
-    
 def round_function(a, b, c, d, round_number): # 41 instructions (not counting loop)
     a ^= generate_round_constant(round_number) # 11      
     a, b, c, d = shift_and_mix(a, b, c, d, 1, 2, 3) # each 4x4 subsection is active      # 7
@@ -45,15 +49,15 @@ def round_function(a, b, c, d, round_number): # 41 instructions (not counting lo
     return sbox(a, b, c, d) # 9 instructions
             
 def encrypt(data, key, rounds=ROUNDS):
-    a, b, c, d = data[0], data[1], data[2], data[3]
-    k0, k1, k2, k3 = key[0], key[1], key[2], key[3]
+    add_key(data, key)
+    a, b, c, d = data[0], data[1], data[2], data[3]            
     
-    a ^= k0; b ^= k1; c ^= k2; d ^= k3;
     for round in range(1, rounds + 1):        
         a, b, c, d = round_function(a, b, c, d, round)
-    a ^= k0; b ^= k1; c ^= k2; d ^= k3;
+    
     data[0], data[1], data[2], data[3] = a, b, c, d    
-            
+    add_key(data, key)
+    
 def test_encrypt():
     key = [0] * 4
     data = [0] * 4
