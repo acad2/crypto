@@ -1,0 +1,148 @@
+\documentclass[preprint]{iacrtrans}
+\usepackage[utf8]{inputenc}
+
+% Select what to do with todonotes: 
+% \usepackage[disable]{todonotes} % notes not showed
+\usepackage[draft,color=orange!20!white,linecolor=orange,textwidth=3cm,colorinlistoftodos]{todonotes}   % notes showed
+\setlength{\marginparwidth}{3cm}
+\usepackage{graphicx}
+\usepackage{soul}
+\graphicspath{{images/}} % end dirs with `/'
+% \usepackage{longtable}
+\usepackage{tikz}
+\usetikzlibrary{arrows}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{positioning}
+\usetikzlibrary{calc}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{arrows}
+\usetikzlibrary{crypto.symbols}
+\tikzset{shadows=no}        % Option: add shadows to XOR, ADD, etc.
+
+\author{Ella Rose\inst{1}}
+\institute{Paso Robles, California \email{python_pride@protonmail.com}}
+\title[\texttt Design 2/24]{\texttt Design 2/24}
+
+\begin{document}
+
+\maketitle
+
+% use optional argument because the \LaTeX command breaks the PDF keywords
+\keywords[Block Cipher]{Block Cipher}
+
+\begin{abstract}
+  We define and explain the design of a 128-block cipher. It is similar in layout and design to Rinjdael, and could be modeled as such with modified linear and s-box layers. The modifications seek to replace one of the slower parts of Rijndael, the mixColumns routine, with an SIMD/parallel friendly routine that is scales well to 8-bit platforms. Additionally, the s-box is replaced with the concatenation of 2 "golden" 4x4 s-boxes. 
+\end{abstract}
+
+\todototoc
+\listoftodos
+
+\section{Introduction}
+The Rijndael cipher has proven itself to be well designed. It has remained secure for years, despite seeing immense amounts of cryptanalysis by extremely talented researchers. However, the mixColumns operation is relatively complicated both in implementation and in theory. We describe a design similar to Rijndael that uses a conceptually simpler linear mixing function. This function is dubbed mixState and uses only XOR gates and rotations. It provides full diffusion in one round in a scalable and parallel-friendly manner.
+
+\section{Definitions}
+We use $\oplus$ to denote XOR and $\lll$ to denote bitwise rotation left. The state is modeled as a 4x4 grid of 8-bit words. The 32-bit rows will be referred to by $a$, $b$, $c$, and $d$. The 8-bit bytes of the state will be address by $state_i$, where $i$ is the index of the byte in question. We use zero based indexing; The upper most word of a is considered to be $i = 0$, and the least significant word in d is considered to be $i = 15$. We denote the 8-bit s-box as s\_box, while we denote the two 4-bit s-boxes as s\_box4a and s\_box4b.
+
+\section{Algorithm}
+The permutation consists of five steps: addKey, addConstant, subBytes, mixState, transposeState. The addKey step is self explanatory, and is implemented using XOR to add the key to the state:
+
+\begin{align}
+\displaystyle\sum_{i=0}^{15} state_i \oplus key_i
+\end{align}\\
+
+ The addConstant step uses the index, round number, and s-box to produce and apply a constant to each 8-bit word:
+\begin{align}
+\displaystyle\sum_{i=0}^{15} state_i \oplus s\_box(i + round_i)
+\end{align}\\
+
+The subBytes step uses two separate 4x4 s-boxes on each 8-bit word; One s-box is applied to the upper 4 bits, while the other s-box is applied to the lower 4 bits. On a platform that is not space constrained, we simplify the process and concatenate the s-box entries to create an 8x8 s-box. The 8-bit s-box is applied to each 8-bit word:
+
+\begin{align}
+\displaystyle\sum_{i=0}^{15} subBytes(state_i)
+\end{align}\\
+
+The mixState function alternates between mixing vertical pairs of 8-bit words and shifting the $b$ and $d$ rows. First, we define a central component of mixState, mixPair:
+
+\begin{align}
+x := r1_i \\
+y := r2_i \\
+x := x \oplus y \\
+x := x \lll 1 \\
+y := y \oplus x \\
+y := y \lll 2 \\
+x := x \oplus y \\
+x := x \lll 4 \\
+y := y \oplus x \\
+\end{align}
+
+In the above, $r1_i$ and $r2_i$ represents either $a_i$ and $b_i$ or $c_i$ and $d_i$. After the first XOR, each 1x2-bit subsection has been activated. After the first rotation and second xor, each 2x2-bit subsection has been activated. After the second rotation and third xor, each 4x2 bit subsection has been activated. Finally, after the final rotation and  mixPair is a component of the mixPairs function, which applies mixPair to each of the eight pairs of 8-bit words:
+
+\begin{align}
+\displaystyle\sum_{i=0}^{4} mixPair(a_i, b_i), mixPair(c_i, d_i)\\
+\end{align}
+
+Inside the mixState function, applications of mixPairs are interleaved with shiftRows instructions, with a final application of mixPairs operating across halves in order to mix the top and bottom rows of the state:
+
+\begin{align}
+mixPairs(a, b, c, d)\\
+shiftRows(b, d, 1) \\
+mixPairs(a, b, c, d) \\
+shiftRows(b, d, 2) \\
+mixPairs(a, b, c, d) \\
+mixPairs(a, c, b, d) \\
+\end{align}
+
+After mixState is applied, the words are transposed by feeding the indices into to s\_box4a:
+
+\begin{align}
+for\ i\ in\ 0\ ...\ 16:\\
+	\quad j = sbox[i] \\
+	\quad state_j = state_i \\
+\end{align}
+
+\section{Design\ Rationale}
+In this section we will explain the reasoning behind each step. \\
+
+The addConstant function creates a different permutation for each round. This is primarily to guard against slide attacks. The constants are generated by the s\_box, index, and round number because these resources are conveniently accessible when the constants are applied. We see no reason to utilize a more complex function to generate the constants. \\
+
+The addKey function is self explanatory - in order for the transformation to provide confidentiality, secret information must be introduced. \\
+
+An s-box serves the purpose of adding non-linearity to the algorithm. The s-boxes chosen here were selected from the work "Cryptographic Analysis of All 4x4-Bit S-Boxes". The s-box that is used for the transposition layer facilitates an efficient implementation, namely:
+
+\begin{align}
+    temp = a[0]\\
+    a[0] = c[3]\\
+    c[3] = c[0]\\
+    c[0] = d[1]\\
+    d[1] = c[2]\\
+    c[2] = d[2]\\
+    d[2] = a[2]\\
+    a[2] = b[0]\\
+    b[0] = d[0]\\
+    d[0] = a[1]\\
+    a[1] = b[1]\\
+    b[1] = b[2]\\
+    b[2] = c[1]\\
+    c[1] = a[3]\\
+    a[3] = d[3]\\
+    d[3] = b[3]\\
+    b[3] = temp\\
+\end{align}
+
+Otherwise, no special consideration was given to which "golden" 4x4 s-boxes were used: Since each golden 4x4-sbox possesses more or less equivalent cryptographic properties, implementation considerations such as above are the sole criteria for selecting among the available mappings. 
+
+Two 4x4 s-boxes are used instead of an 8x8 s-box because of the potential for space savings in constrained environments. Additionally, it may be possible to decompose each 4x4 s-box into a circuit that can be computed discretely, and the size of the s-box would seem to influence the complexity of the resultant circuit. This could be advantageous for creating constant time implementations. Additionally, the smaller s-boxes may (or may not) be less vulnerable to cache based timing attacks, as the contents of both tables should fit in a cache line. \\
+
+The mixState function attempts to spread input differences over as much of the state as possible. It does so with an implementation that scales well with different optimization opportunities on 8-bit platforms, 32-bit platforms, and SIMD capable platforms.
+
+On constrained (i.e. 8-bit) platforms, mixPairs can be applied successively on two 8-bit words at a time\\
+If space is available, the mixPairs function can be memoized and stored in a 65KB table\\
+If 32-bit words are available, mixPairs can evaulatethe XORs for four pairs of bytes in parallel by operating on two rows at once\\
+If vector rotate instructions are available, then the 32-bit mixPairs function listed above may perform the leftward rotations on each byte in parallel\\
+If enough registers are available, multiple instances of the algorithm could be run in parallel.\\
+
+mixState is supposed to provide "weak alignment", as opposed to the "strong alignment" that Rijndael has. This means that differences do not propagate along cleanly defined boundaries, and instead spread randomly over the entire state. This is supposed to reduce "clustering" of trails.
+
+The transposition step ensures an irregular arrangement of word pairs are fed into the mixState function. 
+\end{document}
+

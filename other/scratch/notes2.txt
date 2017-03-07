@@ -1,0 +1,27 @@
+# one advantage of a block cipher is state size: you can get away with an 80-128 bit block size
+#   - you can also use less rounds then a hash
+# a stream cipher should have a block size twice the key
+#   - at least 80 bits of key material implies at least 160 bits of state
+# a hash function needs 256+ bits of state and lots of rounds
+
+
+
+iv = g
+a = r1
+b = r2
+h_a = one_way_function(iv, a)
+h_b = one_way_function(iv, b)
+h_ab = one_way_function(h_b, a)
+h_ab = one_way_function(h_a, b)
+
+one way function such that h(h(iv, k1), h(iv, k2)) == h(h(iv, k2), h(iv, k1))
+branch(m) ^ branch(k1)
+branch(m) ^ branch(k2)
+
+
+#h_1(m) || h_2(m) improves collision resistance
+#h_2(h_1(m)) improves preimage resistance
+
+#h_2(h_1(h_1(m) || h_2(m))) ?
+
+# non-reversible cryptography will always be vulnerable to side channel analysis because of the information radiating in the form of heat when information is not preserved in the non-reversible circuit. Every non-reversibly evaluated xor gate leaks information in the form of heat.

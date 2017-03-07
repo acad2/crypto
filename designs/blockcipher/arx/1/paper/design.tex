@@ -1,0 +1,154 @@
+\documentclass[preprint]{iacrtrans}
+\usepackage[utf8]{inputenc}
+
+% Select what to do with todonotes: 
+% \usepackage[disable]{todonotes} % notes not showed
+\usepackage[draft,color=orange!20!white,linecolor=orange,textwidth=3cm,colorinlistoftodos]{todonotes}   % notes showed
+\setlength{\marginparwidth}{3cm}
+\usepackage{graphicx}
+\usepackage{soul}
+\graphicspath{{images/}} % end dirs with `/'
+% \usepackage{longtable}
+\usepackage{tikz}
+\usetikzlibrary{arrows}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{positioning}
+\usetikzlibrary{calc}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{arrows}
+\usetikzlibrary{crypto.symbols}
+\tikzset{shadows=no}        % Option: add shadows to XOR, ADD, etc.
+
+\author{Ella Rose\inst{1}}
+\institute{Paso Robles, California \email{python_pride@protonmail.com}}
+\title[\texttt Design 3-4-17]{\texttt Design 3-4-17}
+
+\begin{document}
+
+\maketitle
+
+% use optional argument because the \LaTeX command breaks the PDF keywords
+\keywords[Block Cipher]{Block Cipher}
+
+\begin{abstract}
+  We define and explain the design of a 256-block cipher. The minimalist design is tailored to produce high throughput and low latency on general purpose CPUs, and simple implementation in hardware. Additionally, due to the bit-sliced nature of the design, we predict that it would be reasonably efficient in constrained environments..
+\end{abstract}
+
+\todototoc
+\listoftodos
+
+\section{Introduction}
+We describe a cipher algorithm that uses simple XOR, AND, and rotate left instructions on four 64-bit words. Minimum amounts of diffusion are guaranteed through the application of a shift rows and mix column like structure. The 4x4 s-box is the most compact  implementation of all ideal 4x4 s-boxes, and is implemented in 9 instructions. % to do: \cite{http://skew2011.mat.dtu.dk/proceedings/Finding%20Optimal%20Bitsliced%20Implementations%20of%204%20to%204-bit%20S-boxes.pdf}
+
+\section{Definitions}
+We use $\oplus$ to denote XOR, $\land$ to denote AND, and $\lll$ to denote bitwise rotation left. The state is modeled as a 4x64 grid, with each 64-bit word representing a row. The 64-bit rows will be referred to by $a$, $b$, $c$, and $d$. We define functions in the following section about the algorithm. 
+
+\section{Algorithm}
+The cipher is an Even-Mansour based construct. It uses a key addition layer, followed by application of a permutation, followed by another key addition layer. The design uses this simple key addition layer, as opposed to generating round keys and applying them after every iteration of the permutation (as is common), because we cannot cite an explicit reason or benefit for so many key application layers. This saves implementation complexity, as there is no key schedule or cacheing of the key schedule.
+
+Each iteration of the permutation consists of alternating linear diffusion and non-linear layers. The diffusion layer consists of three applications of the shift and mix function with differing rotation amounts, which is designed to spread differences around the state evenly. This is followed by the non-linear layer, which is an optimal bitsliced implementation of an optimal 4x4 s-box. The s-box is applied 64 times in parallel on each 4-bit high 1-bit wide section of the state.
+
+Each application of the permutation is preceded by the addition of a round constant. The round constants are generated via a simple function that provides a high degree of difference between outputs.
+
+In psuedocode, the cipher is defined as follows:
+
+\begin{verbatim}
+add_key(state, key)
+for round_number in 1 ... round_count:
+        add_constant(state, round)
+        permutation(state)
+add_key(state, key)
+\end{verbatim}
+
+Next, we will define the $generate\_constant$ function:
+
+\begin{align}
+constant := round\_number\\
+constant := constant \oplus (constant <<< 3)\\
+constant := constant \oplus (constant <<< 6)\\
+constant := constant \oplus (constant << 17)\\
+constant := constant \oplus (constant << 15)\\
+constant := constant \oplus (constant << 24)\\
+\end{align}
+
+And the add constant function:
+
+\begin{align}
+a = a \oplus generate\_constant(round\_number)
+\end{align}
+
+Now we can define the permutation:
+
+%\begin{align}
+
+
+
+\begin{align}
+\displaystyle\sum_{i=0}^{4} mixPair(a_i, b_i), mixPair(c_i, d_i)\\
+\end{align}
+
+Inside the mixState function, applications of mixPairs are interleaved with shiftRows instructions, with a final application of mixPairs operating across halves in order to mix the top and bottom rows of the state:
+
+\begin{align}
+mixPairs(a, b, c, d)\\
+shiftRows(b, d, 1) \\
+mixPairs(a, b, c, d) \\
+shiftRows(b, d, 2) \\
+mixPairs(a, b, c, d) \\
+mixPairs(a, c, b, d) \\
+\end{align}
+
+After mixState is applied, the words are transposed by feeding the indices into to s\_box4a:
+
+\begin{align}
+for\ i\ in\ 0\ ...\ 16:\\
+	\quad j = sbox[i] \\
+	\quad state_j = state_i \\
+\end{align}
+
+\section{Design\ Rationale}
+In this section we will explain the reasoning behind each step. \\
+
+The addConstant function creates a different permutation for each round. This is primarily to guard against slide attacks. The constants are generated by the s\_box, index, and round number because these resources are conveniently accessible when the constants are applied. We see no reason to utilize a more complex function to generate the constants. \\
+
+The addKey function is self explanatory - in order for the transformation to provide confidentiality, secret information must be introduced. \\
+
+An s-box serves the purpose of adding non-linearity to the algorithm. The s-boxes chosen here were selected from the work "Cryptographic Analysis of All 4x4-Bit S-Boxes". The s-box that is used for the transposition layer facilitates an efficient implementation, namely:
+
+\begin{align}
+    temp = a[0]\\
+    a[0] = c[3]\\
+    c[3] = c[0]\\
+    c[0] = d[1]\\
+    d[1] = c[2]\\
+    c[2] = d[2]\\
+    d[2] = a[2]\\
+    a[2] = b[0]\\
+    b[0] = d[0]\\
+    d[0] = a[1]\\
+    a[1] = b[1]\\
+    b[1] = b[2]\\
+    b[2] = c[1]\\
+    c[1] = a[3]\\
+    a[3] = d[3]\\
+    d[3] = b[3]\\
+    b[3] = temp\\
+\end{align}
+
+Otherwise, no special consideration was given to which "golden" 4x4 s-boxes were used: Since each golden 4x4-sbox possesses more or less equivalent cryptographic properties, implementation considerations such as above are the sole criteria for selecting among the available mappings. 
+
+Two 4x4 s-boxes are used instead of an 8x8 s-box because of the potential for space savings in constrained environments. Additionally, it may be possible to decompose each 4x4 s-box into a circuit that can be computed discretely, and the size of the s-box would seem to influence the complexity of the resultant circuit. This could be advantageous for creating constant time implementations. Additionally, the smaller s-boxes may (or may not) be less vulnerable to cache based timing attacks, as the contents of both tables should fit in a cache line. \\
+
+The mixState function attempts to spread input differences over as much of the state as possible. It does so with an implementation that scales well with different optimization opportunities on 8-bit platforms, 32-bit platforms, and SIMD capable platforms.
+
+On constrained (i.e. 8-bit) platforms, mixPairs can be applied successively on two 8-bit words at a time\\
+If space is available, the mixPairs function can be memoized and stored in a 65KB table\\
+If 32-bit words are available, mixPairs can evaulatethe XORs for four pairs of bytes in parallel by operating on two rows at once\\
+If vector rotate instructions are available, then the 32-bit mixPairs function listed above may perform the leftward rotations on each byte in parallel\\
+If enough registers are available, multiple instances of the algorithm could be run in parallel.\\
+
+mixState is supposed to provide "weak alignment", as opposed to the "strong alignment" that Rijndael has. This means that differences do not propagate along cleanly defined boundaries, and instead spread randomly over the entire state. This is supposed to reduce "clustering" of trails.
+
+The transposition step ensures an irregular arrangement of word pairs are fed into the mixState function. 
+\end{document}
+

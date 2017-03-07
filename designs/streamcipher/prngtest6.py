@@ -11,12 +11,7 @@ S_BOX2 = [4, 10, 1, 6, 8, 15, 7, 12, 3, 0, 13, 14, 5, 9, 11, 2]
 S_BOX256 = []
 for byte in range(256):
     S_BOX256.append((S_BOX[byte >> 4] << 4) | S_BOX2[byte & 15])                    
-    
-def branch(word):
-    word ^= rotate_left(word, 3, 8)
-    word ^= rotate_left(word, 6, 8)
-    return word
-    
+        
 def transposition(seed):        
     #|  0  1  2  3 
     #|  4  5  6  7
@@ -65,12 +60,29 @@ def _permutation(seed, key, index, index2, wordsize):
     #
     left ^= (key[index % KEY_SIZE]) # add key
     right ^= (key[index2 % KEY_SIZE])
-                    
-    left = (left) # linear layer; each output bit depends on 8 input bits
-    right = (right)
-    left ^= right    
-    right ^= rotate_left(left, 2)    
-        
+                        
+    # a0 a1 a2 a3 a4 a5 a6 a7
+    # b0 b1 b2 b3 b4 b5 b6 b7
+    # a0b0 a1b1 a2b2 a3b3 a4b4 a5b5 a6b6 a7b7 a ^ b
+    
+    #   b0   b1   b2   b3   b4   b5   b6   b7
+    # a1b1 a2b2 a3b3 a4b4 a5b5 a6b6 a7b7 a0b0 a = rotate_left(a, 1); b ^= a;
+    
+    # a1b1    a2b2    a3b3    a4b4    a5b5    a6b6    a7b7    a0b0 = b
+    # a3b23   a4b34   a5b45   a6b56   a7b67   a0b07   a1b01   a2b12 
+    # a13b123 a24b234 a35b345 a46b456 a57b567 a06b067 a17b017 a02b012 b = rotate_left(b, 3); a ^= b
+    
+    # a13b123 a24b234 a35b345 a46b456 a57b567 a06b067 a17b017 a02b012
+    
+    
+    left ^= right                   # linear layer 
+    left = rotate_left(left, 1, 8)
+    right ^= left
+    right = rotate_left(right, 3, 8)
+    left ^= right
+    left = rotate_left(left, 
+    
+    
     right = S_BOX256[right]
     left = S_BOX256[left]  # non-linear layer
         

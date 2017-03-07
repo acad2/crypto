@@ -27,20 +27,20 @@ def branch(word):
     word ^= rotate_left(word, 6, 8)
     return word
     
-KEY = list(set([branch(word) for word in range(32)]))
+KEY = [branch(word) for word in range(32)]
 KEY = dict((entry, KEY.index(entry)) for entry in KEY)
 _KEY = dict((value, key) for key, value in KEY.items())
 
 def encrypt(data, key, decoder=KEY, rounds=ROUNDS):
     key <<= 5
     for round in range(rounds):
-        print "Data: ", data
+        #print "Data: ", data
         data ^= key
-        print "Data ^ key: ", data
+        #print "Data ^ key: ", data
         data = branch(data)
-        print "Branch(data): ", data
+        #print "Branch(data): ", data
         data = decoder[data]
-        print "Decoder[data]: ", data
+        #print "Decoder[data]: ", data
     return data
     
 def decrypt(data, key, encoder=_KEY, rounds=ROUNDS):
@@ -55,7 +55,7 @@ def decrypt(data, key, encoder=_KEY, rounds=ROUNDS):
     
 def test_encrypt():
     ciphertexts = []
-    key = 0
+    key = 1
     for byte in range(32):
         ciphertext = encrypt(byte, key)
         plaintext = decrypt(ciphertext, key)

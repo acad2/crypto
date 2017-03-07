@@ -5,8 +5,8 @@ PRINT_STRING = "Branch number for 2x {}-bit words: {} (optimum: {})"
 
 def branch8(word):
     # 0 1 2 3  4 5 6 7    
-    word ^= rotate_left(word, 4)
-    word ^= rotate_left(word, 7)
+    word ^= rotate_left(word, 3)
+    word ^= rotate_left(word, 6)
     return word
 
 def mix8(a, b):
