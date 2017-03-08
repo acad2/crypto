@@ -50,7 +50,7 @@ def sbox(a, b, c, d): # 9 instructions
             
     return a, b, c, d  
     
-def round_function(a, b, c, d, round_number): # 41 instructions (not counting loop)        
+def round_function(a, b, c, d, round_number): # 41 instructions (not counting loop)            
     a ^= generate_round_constant(round_number) # 11     
     a, b, c, d = sbox(a, b, c, d)              # 9 
     a, b, c, d = shift_and_mix(a, b, c, d, 1, 2, 3) # each 4x4 subsection is active      # 7
@@ -98,11 +98,11 @@ def test_for_rotational_symmetry():
 def test_diffusion():
     from crypto.analysis.branch_number import branch_number
     rounds = 2
-    def test_function(b, c):
-        a = d = 0
+    def test_function(a, b):
+        c = d = 0
         for round in range(1, 1 + rounds):
             a, b, c, d = round_function(a, b, c, d, round)        
-        return b, 0, 0, 0# b, c, d
+        return b, 0, 0, 0#b, c, d#0, 0, 0# b, c, d
     print("Differences after {} rounds: {}".format(rounds, branch_number(test_function)))
         
 # if the best differential is 1/4 or 1/2**2 and there really are 64 active s-boxes per 2 rounds, then ...
@@ -116,26 +116,34 @@ def test_diffusion():
 
 def test_sbox_representation():
     from encrypt import sbox as sbox_f
-    sbox = [int(character, 16) for character in "086d5f7c4e2391ba"]
+    SBOX = [int(character, 16) for character in "086d5f7c4e2391ba"]
+    
+    def get_int(a, b, c, d):
+        out = 0
+    
+        if a: out |= 0x01
+        if b: out |= 0x02
+        if c: out |= 0x04
+        if d: out |= 0x08
+    
+        return out
     
     _sbox = []
-    
-    for a in range(2):
-        for b in range(2):
-            for c in range(2):
-                for d in range(2):             
-                    #print
-                    a, b, c, d = sbox_f(a, b, c, d)
-                    #print '\n'.join(format(word, 'b').zfill(64) for word in (a, b, c, d))
-                    _sbox.append(((a & 1) << 0) | ((b & 1) << 1) | ((c & 1) << 2) | ((d & 1) << 3))
-                    
-    print sbox
-    print _sbox
-    print sbox == _sbox                
+    for _input in range(16):
+        a = _input & 1
+        b = _input & 2
+        c = _input & 4
+        d = _input & 8
+        
+        a, b, c, d = sbox_f(a, b, c, d)
+        _output = get_int(a, b, c, d)
+        assert sbox[_input] == _output, (sbox[_input], _output, _input, a, b, c, d)
+        print _input
+        _sbox.append(_output)
     
 if __name__ == "__main__":
-    test_sbox_representation()
+    #test_sbox_representation()
     #test_encrypt()
     #test_for_rotational_symmetry()
-    #test_diffusion()
+    test_diffusion()
     
