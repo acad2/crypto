@@ -3,14 +3,14 @@
 #define WORDSIZE unsigned long long
 #define ROUNDS 16
 #define rotate_left(word, amount)((word << amount) | (word >> (64 - amount)))
-#define add_key(a, b, c, d, k0, k1, k2, k3)({a ^= k0; b ^= k1; c ^= k2; d ^= k3;})
+#define add_key(data, key)({data[0] ^= key[0]; data[1] ^= key[1]; data[2] ^= key[2]; data[3] ^= key[3];})
 #define generate_constant(round_number)({\
-    constant = round_number;\
-    constant ^= rotate_left(constant, 3);\
-    constant ^= rotate_left(constant, 6);\
-    constant ^= rotate_left(constant, 17);\
-    constant ^= rotate_left(constant, 15);\
-    constant ^= rotate_left(constant, 24);})
+    t = round_number;\
+    t ^= rotate_left(t, 3);\
+    t ^= rotate_left(t, 6);\
+    t ^= rotate_left(t, 17);\
+    t ^= rotate_left(t, 15);\
+    t ^= rotate_left(t, 24);})
     
 #define shift_rows(b, c, d, r0, r1, r2)({b = rotate_left(b, r0); c = rotate_left(c, r1); d = rotate_left(d, r2);})
 #define mix_columns(a, b, c, d)({a ^= d; b ^= c; c ^= a; d ^= b;})
@@ -27,17 +27,15 @@
 #define store(data, a, b, c, d)({data[0] = a; data[1] = b; data[2] = c; data[3] = d;})
     
 void encrypt(WORDSIZE* data, WORDSIZE* key){
-    WORDSIZE a, b, c, d, t, k0, k1, k2, k3;
+    WORDSIZE a, b, c, d, t;
     unsigned char round;
-    load(data, a, b, c, d);
-    load(key, k0, k1, k2, k3);
-    
-    add_key(a, b, c, d, k0, k1, k2, k3);
-    for (round = 0; round <= ROUNDS; round++){
-        round_function(a, b, c, d);}
-    add_key(a, b, c, d, k0, k1, k2, k3);
-    
+    add_key(data, key)
+    load(data, a, b, c, d);    
+        
+    for (round = 1; round <= (ROUNDS + 1); round++){
+        round_function(a, b, c, d, round);}
+        
     store(data, a, b, c, d);}
-    
+    add_key(data, key)
 
     

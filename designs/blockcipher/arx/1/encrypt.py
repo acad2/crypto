@@ -3,8 +3,8 @@ ROUNDS = 1
 def rotate_left(word, amount):
     return ((word << amount) | (word >> (64 - amount))) & 0xFFFFFFFFFFFFFFFF
     
-def add_key(data, key):
-    data[0] ^= key[0]; data[1] ^= key[1]; data[2] ^= key[2]; data[3] ^= key[3];    
+def add_key(a, b, c, d, key):
+    a ^= key[0]; b ^= key[1]; c ^= key[2]; d ^= key[3];    
     return a, b, c, d
     
 def generate_round_constant(word): # 10 instructions
@@ -28,35 +28,46 @@ def mix_columns(a, b, c, d): # 4 instructions
     d ^= b # bcd
     return a, b, c, d
                 
-def shift_and_mix(a, b, c, d, r1, r2, r3):    # 7 instructions =
+def shift_and_mix(a, b, c, d, r1, r2, r3):    # 7 instructions =    
     b, c, d = shift_rows(b, c, d, r1, r2, r3) # 3 instructions + 
     return mix_columns(a, b, c, d)            # 4 instructions 
     
 def sbox(a, b, c, d): # 9 instructions 
     """ Optimal 4x4 s-box implementation; Applies 64 s-boxes in parallel on the columns. """                        
+    # something is wrong with this implementation - http://skew2011.mat.dtu.dk/proceedings/Finding%20Optimal%20Bitsliced%20Implementations%20of%204%20to%204-bit%20S-boxes.pdf page 9
+    # function does not produce correct result -> 086d5f7c4e2391ba 
     t = a    
     a = (a & b) ^ c
-    c = (b & c) ^ d
+    c = (b | c) ^ d
     d = (d & a) ^ t
     b ^= c & t    
+    
+    #t = d
+    #d = (d & c) ^ b
+    #b = (b & c) ^ a
+    #a = (a & d) ^ t
+    #c ^= b & t     
+            
     return a, b, c, d  
     
-def round_function(a, b, c, d, round_number): # 41 instructions (not counting loop)
-    a ^= generate_round_constant(round_number) # 11      
+def round_function(a, b, c, d, round_number): # 41 instructions (not counting loop)        
+    a ^= generate_round_constant(round_number) # 11     
+    a, b, c, d = sbox(a, b, c, d)              # 9 
     a, b, c, d = shift_and_mix(a, b, c, d, 1, 2, 3) # each 4x4 subsection is active      # 7
     a, b, c, d = shift_and_mix(a, b, c, d, 4, 8, 12) # each 16x4 subsection is active    # 7
     a, b, c, d = shift_and_mix(a, b, c, d, 16, 32, 48) # each 64x4 subsection is active  # 7   
-    return sbox(a, b, c, d) # 9 instructions
+    return a, b, c, d
             
-def encrypt(data, key, rounds=ROUNDS):
-    add_key(data, key)
+def encrypt(data, key, rounds=ROUNDS):    
     a, b, c, d = data[0], data[1], data[2], data[3]            
     
     for round in range(1, rounds + 1):        
+        a, b, c, d = add_key(a, b, c, d, key)
         a, b, c, d = round_function(a, b, c, d, round)
     
+    a, b, c, d = add_key(a, b, c, d, key)
     data[0], data[1], data[2], data[3] = a, b, c, d    
-    add_key(data, key)
+    
     
 def test_encrypt():
     key = [0] * 4
@@ -72,12 +83,13 @@ def test_for_rotational_symmetry():
     constant = generate_round_constant(1)
     data1[0] = 1 #constant ^ 1#generate_round_constant(1) ^ 1
     data2[0] = 2 #constant ^ 2#generate_round_constant(1) ^ 2
-    _data1 = round_function(*data1 + [1])
-    _data2 = round_function(*data2 + [1])
+    _data1 = round_function(*round_function(*round_function(*data1 + [1]) + (2, )) + (3, ))
+    _data2 = round_function(*round_function(*round_function(*data2 + [1]) + (2, )) + (3, ))
     for index in range(4):
         print format(_data1[index], 'b').zfill(64)
-        print format(rotate_right(_data2[index], 1, 64), 'b').zfill(64)
-        if _data1[index] != rotate_right(_data2[index], 1, 64):
+        print format(_data2[index], 'b').zfill(64)
+        print("Differences: {}".format(format(_data1[index] ^ _data2[index], 'b').count('1')))
+        if _data1[index] != rotate_right(_data2[index], 1, 64):            
             print "Rotational symmetry not detected"
             break
     else:
@@ -85,15 +97,45 @@ def test_for_rotational_symmetry():
     
 def test_diffusion():
     from crypto.analysis.branch_number import branch_number
-    def test_function(a, b):
-        c = d = 0
-        for round in range(1, 4):
+    rounds = 2
+    def test_function(b, c):
+        a = d = 0
+        for round in range(1, 1 + rounds):
             a, b, c, d = round_function(a, b, c, d, round)        
-        return a, b, c, d
-    print branch_number(test_function)        
+        return b, 0, 0, 0# b, c, d
+    print("Differences after {} rounds: {}".format(rounds, branch_number(test_function)))
         
+# if the best differential is 1/4 or 1/2**2 and there really are 64 active s-boxes per 2 rounds, then ...
+# if we can assume that each application of shift_and_mix doubles the number of terms that represents any given bit, then the formula for the number of terms is:
+#   2 ** applications
+#   2 ** (3 applications * rounds) = level
+#       2 ** (3 * r) = 2 ** 128
+#       3 * r = 128
+#       r = 128 / 3 == 42.6 
+#   2 ** (3 * 10) = 2 ** 30
+
+def test_sbox_representation():
+    from encrypt import sbox as sbox_f
+    sbox = [int(character, 16) for character in "086d5f7c4e2391ba"]
+    
+    _sbox = []
+    
+    for a in range(2):
+        for b in range(2):
+            for c in range(2):
+                for d in range(2):             
+                    #print
+                    a, b, c, d = sbox_f(a, b, c, d)
+                    #print '\n'.join(format(word, 'b').zfill(64) for word in (a, b, c, d))
+                    _sbox.append(((a & 1) << 0) | ((b & 1) << 1) | ((c & 1) << 2) | ((d & 1) << 3))
+                    
+    print sbox
+    print _sbox
+    print sbox == _sbox                
+    
 if __name__ == "__main__":
-    test_encrypt()
-    test_for_rotational_symmetry()
-    test_diffusion()
+    test_sbox_representation()
+    #test_encrypt()
+    #test_for_rotational_symmetry()
+    #test_diffusion()
     
