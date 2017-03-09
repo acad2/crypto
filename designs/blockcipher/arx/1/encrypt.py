@@ -1,4 +1,5 @@
-ROUNDS = 1
+ROUNDS = 4              # 2 ** (-differential_probability * active_sboxes) == 2 ** (-2 * 64) == (2 ** -128) ?
+KEY_ADDITION_LAYERS = 4 # minimum of 4: https://eprint.iacr.org/2013/391.pdf "...block ciphers based on the EM scheme with one key should have at least 4 rounds ..."
 
 def rotate_left(word, amount):
     return ((word << amount) | (word >> (64 - amount))) & 0xFFFFFFFFFFFFFFFF
@@ -34,20 +35,11 @@ def shift_and_mix(a, b, c, d, r1, r2, r3):    # 7 instructions =
     
 def sbox(a, b, c, d): # 9 instructions 
     """ Optimal 4x4 s-box implementation; Applies 64 s-boxes in parallel on the columns. """                        
-    # something is wrong with this implementation - http://skew2011.mat.dtu.dk/proceedings/Finding%20Optimal%20Bitsliced%20Implementations%20of%204%20to%204-bit%20S-boxes.pdf page 9
-    # function does not produce correct result -> 086d5f7c4e2391ba 
     t = a    
     a = (a & b) ^ c
     c = (b | c) ^ d
     d = (d & a) ^ t
-    b ^= c & t    
-    
-    #t = d
-    #d = (d & c) ^ b
-    #b = (b & c) ^ a
-    #a = (a & d) ^ t
-    #c ^= b & t     
-            
+    b ^= c & t        
     return a, b, c, d  
     
 def round_function(a, b, c, d, round_number): # 41 instructions (not counting loop)            
@@ -58,12 +50,13 @@ def round_function(a, b, c, d, round_number): # 41 instructions (not counting lo
     a, b, c, d = shift_and_mix(a, b, c, d, 16, 32, 48) # each 64x4 subsection is active  # 7   
     return a, b, c, d
             
-def encrypt(data, key, rounds=ROUNDS):    
+def encrypt(data, key, rounds=ROUNDS, key_addition_layers=KEY_ADDITION_LAYERS):    
     a, b, c, d = data[0], data[1], data[2], data[3]            
     
-    for round in range(1, rounds + 1):        
+    for key_number in range(key_addition_layers):
         a, b, c, d = add_key(a, b, c, d, key)
-        a, b, c, d = round_function(a, b, c, d, round)
+        for round in range(1, rounds + 1):                  
+            a, b, c, d = round_function(a, b, c, d, (rounds * key_number) + round)
     
     a, b, c, d = add_key(a, b, c, d, key)
     data[0], data[1], data[2], data[3] = a, b, c, d    
@@ -74,7 +67,7 @@ def test_encrypt():
     data = [0] * 4
     data[0] = 1
     encrypt(data, key)
-    #print data
+    print data
     
 def test_for_rotational_symmetry():
     from crypto.utilities import rotate_right
@@ -143,7 +136,7 @@ def test_sbox_representation():
     
 if __name__ == "__main__":
     #test_sbox_representation()
-    #test_encrypt()
+    test_encrypt()
     #test_for_rotational_symmetry()
     test_diffusion()
     
