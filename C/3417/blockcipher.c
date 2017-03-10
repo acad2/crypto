@@ -15,7 +15,7 @@
 #define shift_rows(b, c, d, r0, r1, r2)({b = rotate_left(b, r0); c = rotate_left(c, r1); d = rotate_left(d, r2);})
 #define mix_columns(a, b, c, d)({a ^= d; b ^= c; c ^= a; d ^= b;})
 #define shift_and_mix(a, b, c, d, r0, r1, r2)({shift_rows(b, c, d, r0, r1, r2); mix_columns(a, b, c, d);})
-#define sbox(a, b, c, d)({t = a; a = (a & b) ^ c; c = (b & c) ^ d; d = (d & a) ^ t; b ^= c & t;})
+#define sbox(a, b, c, d)({t = a; a = (a & b) ^ c; c = (b | c) ^ d; d = (d & a) ^ t; b ^= c & t;})
 #define round_function(a, b, c, d, round_number)({\
     a ^= generate_constant(round_number);\
     shift_and_mix(a, b, c, d, 1, 2, 3);\

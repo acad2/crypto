@@ -1,0 +1,197 @@
+\documentclass[preprint]{iacrtrans}
+\usepackage[utf8]{inputenc}
+
+\usepackage{algpseudocode}
+
+% Select what to do with todonotes: 
+% \usepackage[disable]{todonotes} % notes not showed
+\usepackage[draft,color=orange!20!white,linecolor=orange,textwidth=3cm,colorinlistoftodos]{todonotes}   % notes showed
+\setlength{\marginparwidth}{3cm}
+\usepackage{graphicx}
+\usepackage{soul}
+\graphicspath{{images/}} % end dirs with `/'
+% \usepackage{longtable}
+\usepackage{tikz}
+\usetikzlibrary{arrows}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{positioning}
+\usetikzlibrary{calc}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{arrows}
+\usetikzlibrary{crypto.symbols}
+\tikzset{shadows=no}        % Option: add shadows to XOR, ADD, etc.
+
+\author{Anonymous\inst{1}}
+\institute{City, State \email{address@provider.com}}
+\title[\texttt Design 3-8-17]{\texttt Design 3-8-17}
+
+\begin{document}
+
+\maketitle
+
+% use optional argument because the \LaTeX command breaks the PDF keywords
+\keywords[Block Cipher]{Block Cipher}
+
+\begin{abstract}
+  We define a substitution-permutation based block cipher with an 256-bit block size and 512-bit key size. The design is oriented towards desktop CPUs and dedicated hardware. The bit sliced design works best with the largest word size available, so we define a variant that utilizes 64-bit words. The design makes use of only XOR/AND gates and rotations. The 4x4 S-Box is calculated discretely each application, and uses the shortest possible number of instructions among all ideal 4x4 S-Boxes.\\ 
+\end{abstract}
+
+\todototoc
+\listoftodos
+
+\section{Introduction}
+ Block ciphers are a widely used component in many cryptography schemes. They can be used with a mode of operation to provide confidentiality (as well as authenticity and integrity) to data, they can be combined with a counter to create a secure random number generator, and they can be used as the compression function inside of a hash function. When required, block ciphers can be designed with a smaller state size (80-128 bits) then a hash or stream cipher (160 bits+), which can lead to smaller and less expensive hardware implementations. Block ciphers are a very versatile class of algorithm.
+
+Substitution-Permutation Networks (SPN) are a class of block cipher construction. Typically, a substiution-permutation network will consist of key addition layers interleaved with alternating applications of non-linear and linear functions. The non-linear function is often times referred to as an "S-Box", and frequently is implemented in the form of a lookup table or memoized function (but does not have to be). The S-Box is usually designed to resist linear and differential cryptanalysis and provides the source of "confusion" in the cipher. The linear function typically provides the "diffusion" in the cipher, and is responsible for ensuring that small input differences propagate to large output differences. The cannonical example of a Substitution-Permutation network is the Advanced Encryption Standard ("AES").
+
+We define a SPN cipher algorithm that is oriented towards 64-bit CPUs and dedicated hardware. The linear layer guarantees a very high number of active S-Boxes over the course of two rounds, and the non-linear layer is applied without the use of tables. This enables the algorithm to be resilient to timing based side channel attacks that can practically break an otherwise theoretically secure algorithm. In many other designs, discrete evaluation of the S-Box function can introduce a significant slowdown in the algorithm. This not the case here, as application of the S-Box requires only 9 instructions. Since the S-Box is applied on 64 sets of bits at once in parallel, the total instruction cost to apply the S-Box to the entire state on an architecture with 64-bit words is only 9 instructions.\footnote{This is 9 instructions, which does not mean 9 clock cycles - The CPU very well may able to do it in well under 9 clock cycles due to pipelining and multiple execution units}
+
+
+\section{Definitions}
+We use $\oplus$ to denote XOR, $\land$ to denote AND, and $\lll$ to denote bitwise rotation left. The state consists of four 64-bit words. We denote the four words as $a$, $b$, $c$, and $d$. We refer to the key that is exclusive-or'd into the state as the "Linear Key", and the key that is used for the bit transposition as the "Non-Linear Key". The four 64-bit words of the a key will be referred to as $k0$, $k1$, $k2$, and $k3$. The incrementing counter that is fed to the constant generation function is denoted as $i$\\
+
+We will use the following function names: $K_l$ refers to the linear key addition layer, while $K_n$ refers to the non-linear key addition layer (the keyed bit permutation); $K_f$ refers to the composition of $K_n$ and $K_l$, meaning $K_f(a, b, c, d) \equiv K_l(K_n(a, b, c, d))$. Application of the linear layer is denoted as $L(a, b, c, d)$, while application of the non-linear/S-Box layer is denoted as $S(a, b, c, d)$. The "load" function unpacks a 256-bit key into four 64-bit words.
+
+\section{Algorithm}
+ We define a Substitution-Permutation Network type cipher algorithm. The first thing to note is that the algorithm utilizes a non standard key addition layer. The key addition layer consists of two parts; First, a non-linear key addition layer is applied, in the form of a keyed bitwise permutation. Second, a standard linear key addition layer is applied, in the form of exclusive-or with the Linear Key. The key addition layer is applied before/after every four iterations of the permutation.
+
+Each round of the permutation consists of generation and addition of the round constant to the word $a$ of the state via exclusive-or, application of the non-linear layer or "S-Box" to the columns of the state, and lastly the linear branching layer. Two rounds are required for full diffusion; One "step" consists of 4 iterations of the round function, and the key addition layer occurs before/after each step. \\
+
+\begin{algorithmic}
+\Function{$encrypt$}{$a, b, c, d, nonlinear\_key, linear\_key$}
+	\State $i \gets 0;$
+	\For {$step \gets 0; step < 4; step \gets step + 1$}
+		\State $a, b, c, d \gets bit\_shuffle(a, b, c, d, nonlinear\_key);$
+		\State $a, b, c, d \gets add\_key(a, b, c, d, linear\_ key);$
+	
+		\For{$round \gets 0; round < 4; round \gets round + 1;$}	
+			\State $a, b, c, d \gets round_function(a, b, c, d, i);$	
+			\State $i \gets i + 1$
+		\EndFor
+	\EndFor
+\EndFunction\\
+\end{algorithmic}
+
+The bit shuffle function is the non-linear key addition layer. It uses the nonlinear key as the selector input to the choice swap function to transpose bits. The choice swap function powers the shuffle columns function, which transposes the elements of each 4-bit column. Successive applications of shuffle columns are interleaved with shift rows, so that that three applications ensures coverage of the entire state. Similarly to the linear diffusion layer, two rounds are applied to ensure a high degree of difference in the output distribution.\\
+
+\begin{algorithmic}
+\Function{$bit\_shuffle$}{$a, b, c, d, nonlinear\_key$}
+	\State $k0, k1, k2, k3 \gets load(nonlinear\_key)$
+	\For{$round \gets 0; round < 2; round \gets round + 1;$}
+		\State $a, b, c, d \gets shift\_and\_shuffle(a, b, c, d, \ 1,\ \ 2,\ \ 3, k0, k1, k2, k3);$
+		\State $a, b, c, d \gets shift\_and\_shuffle(a, b, c, d, \ 4,\ \ 8,\ 12, k0, k1, k2, k3);$
+		\State $a, b, c, d \gets shift\_and\_shuffle(a, b, c, d, 16, 32,\ 48, k0, k1, k2, k3);$
+	\EndFor
+\EndFunction\\
+\end{algorithmic}
+
+
+The add key function simply combines the linear key with the state via the exclusive-or function:\\
+
+\begin{algorithmic}
+\Function{$add\_key$}{$a, b, c, d, linear\_key$}
+	\State $k0, k1, k2, k3 \gets load(linear\_key)$ % need to clarify k0 and friends are used for linear key to, and define load
+	\State $a \gets a \oplus k0$
+	\State $b \gets b \oplus k1$
+	\State $c \gets c \oplus k2$
+	\State $d \gets d \oplus k3$
+\EndFunction
+\end{algorithmic}
+
+
+
+The permutation is composed of three functions: addition of the round constant, the non-linear S-Box layer, and the linear diffusion layer. Each round constant is generated by supplying successive values of an incrementing counter to the constant generation function .
+
+\begin{algorithmic}
+\Function{$round\_function$}{$a, b, c, d, i$}
+	\State $a \gets a \oplus generate\_constant(i)$
+	\State $a, b, c, d \gets S\-Box(a, b, c, d)$
+	\State $a, b, c, d \gets linear\_layer(a, b, c, d)$
+\EndFunction\\
+\end{algorithmic}
+
+The $generate\_constant$ function is defined as follows: \\
+
+\begin{algorithmic}
+\Function{$generate\_gonstant$}{$i$}
+	\State $constant \gets i$
+	\State $constant \gets constant \oplus (constant \lll 3)$
+	\State $constant \gets constant \oplus (constant \lll 6)$
+	\State $constant \gets constant \oplus (constant \lll 17)$
+	\State $constant \gets constant \oplus (constant \lll 15)$
+	\State $constant \gets constant \oplus (constant \lll 24)$	
+\EndFunction\\
+\end{algorithmic}
+
+The non-linear S-Box function applies a 4x4 S-Box with ideal cryptographic properties on each of the 64 columns of the state. The S-Box is not evaluated via table lookup, but is computed explicitly upon each invocation. This removes a tming side channel that could otherwise be used to break the algorithm in practice The non-linear S-box addition layer is defined as follows: \\
+
+\begin{algorithmic}
+\Function{$S\-Box$}{$a, b, c, d$}
+	\State $t \gets a$
+	\State $a \gets (a \land b) \oplus c$
+	\State $c \gets (b \lor c) \oplus d$
+	\State $d \gets (d \land a) \oplus t$
+	\State $b \gets b \oplus (c \land t)$
+\EndFunction\\
+\end{algorithmic}
+
+Finally, the linear diffusion function consists of three applications of the $Shift\_And\_Mix$ function with varying rotation amounts. The shift and mix function can be viewed as a variant of the well established shiftRows and mixColumns paradigm for providing diffusion. The "mixColumns" function presented here is minimalist, and utilizes four instructions total to mix all 64 columns of the state in parallel. \\
+
+\begin{algorithmic}
+\Function{$linear\_layer$}{$a, b, c, d$}
+	\State $a, b, c, d \gets shift\_and\_mix(a, b, c, d, 1, 2, 3)$
+	\State $a, b, c, d \gets shift\_and\_mix(a, b, c, d, 4, 8, 16)$
+	\State $a, b, c, d \gets shift\_and\_mix(a, b, c, d, 16, 32, 48)$
+\EndFunction\\
+
+\Function{$shift\_and\_mix$}{$a, b, c, d, r1, r2, r3$}
+	\State $b, c, d \gets shift\_rows(b, c, d, r1, r2, r3)$
+	\State $a, b, c, d \gets mix\_columns(a, b, c, d)$
+\EndFunction\\
+
+\Function{$shift\_rows$}{$b, c, d, r_1, r_2, r_3$}
+	\State $b\gets b \lll r_1$
+	\State $c \gets c \lll r_2$
+	\State $d \gets d \lll r_3$
+\EndFunction\\
+
+\Function{$mix\_columns$}{$a, b, c, d$}
+	\State $a \gets a \oplus d$
+	\State $b \gets b \oplus c$
+	\State $c \gets c \oplus a$
+	\State $d \gets d \oplus b$
+\EndFunction\\
+\end{algorithmic}
+
+\section{Design\ Rationale}
+The non-linear key addition layer, or keyed bitwise permutation, is designed to thwart algebraic attacks by making it to where the terms of the equations that describe the cipher output are a secret. The transposition may additionally complicate linear and differential cryptanalysis. A software implementation of the bitwise permutation utilizes the choice swap function to conditionally transpose bits according to the key. Because this is a bit sliced operation, it should scale reasonably well across different architectures and word sizes. A hardware implementation has the potential to implement the bitwise permutation via crossed wires, which could save considerable time. The software implementation of the bitwise permutation is not terribly slow, but it does use more instructions then the linear and non-linear parts of the round function. Resistance of the algorithm against related key attacks was not considered; Considering the nature of the transposition operation, it is probable that one could easily find two keys that will take a given input to identical output states. For this reason, combined with the fact that no key schedule is applied to the non-linear key, we do not recommend the usage of this variant as the building block of a compression function.
+
+The linear exclusive-or key addition layer is standard and is used in many if not most (modern) cipher designs. This is ideal for minimizing implementation complexity: On dedicated hardware, using an integer addition based key addition layer would require implementing an adder, which requires significantly more complexity then a simple xor gate. Additionally, exclusive-or is an involution, which can simplify implementation even more in some cases. \\
+
+No key schedule is applied to either the linear key or non-linear key. Application of a key schedule requires additional space, time, and code complexity, for benefits that often times are not immediately obvious or ever explicitly stated. The cipher LED utilizes no key schedule, relying on addition of the round constants to simulate the activity of alternative round keys; It appears to be resistant even to related key attacks because/despite of this fact. We choose to utilize this model in the design here and collect the time, space, and complexity savings.
+
+The rotation amounts in the linear layer were not chosen heuristically or arbitrarily. By using these amounts, we ensure that input differences will spread out and maximize the number of active s-boxes. This can be easily seen with the help of visual aid. The first shift and mix step is analogous to the shift and mix step of AES, applying a column mixing operation on 4 words and then rotating the rows sideways to spread the differences to the neighboring columns. Because the state is 64 bits wide instead of 16 bits wide, we require three applications with increasing rotation amounts to spread an input difference across the complete state. The mix column operation here operates on 4 bits at a time; The goal is to ensure that approximately half of the input bits influence half of the output bits. This is accomplished by the exclusive-or of one of the bits with another bit, for doing so ensures that two bits now influence the augend. Due to the requirement of maintaining bijectivity, we are unable to make exactly half of the input bits influence half of the output bits; We can outline exactly which bits influence which other bits by examing the mix column operation closely:
+
+\begin{algorithmic}
+\Function{$mix\_columns$}{$a, b, c, d$}
+	\State $a \gets a \oplus d$ 
+	\Comment{$a$ is influenced by $a, d$}
+	\State $b \gets b \oplus c$ 
+	\Comment{$b$ is influenced by $b, c$}
+	\State $c \gets c \oplus a$ 
+	\Comment{$c$ is influenced by $a, c, d$}
+	\State $d \gets d \oplus b$ 
+	\Comment{$d$ is influenced by $b, c, d$}
+\EndFunction
+\end{algorithmic}
+
+The S-Box was presented in Finding Optimal Bitsliced Representations of 4x4 S-Boxes; It is represented via a circuit diagram on page 9, table 5. This particular mapping offers ideal cryptographic properties as well as the lowest implementation cost among all ideal 4x4 s-boxes. Due to the fact that one can easily examine the system of equations that represents the cipher simply by examining the combined linear and non-linear layers, we opted to implement our keyed bit transposition layer as a countermeasure against potential algebraic attacks. 
+
+The constant generation function was created in a manner that follows the train of thought of the mix column function: simply ensure each input bit influences half of the output bits. Due to the word size, we had to run a search to find the best rotation amounts; We judged results by maximizing the minimum difference between successive output words. Successive outputs of the constant generation function have a high weight and hamming distance. Addition of the round constants eliminates rotational symmetry that would otherwise be present in the design. Usually, round constants provide resistance against slide attacks; Due to the block size of the construction here, slid pairs should not occur often enough to be a problem; This mostly likely provides greater resistance to generic slide attacks then addition of the constant.
+
+
+\section{Conclusion}
+ We define an 256-bit Substitution-Permutation based block cipher with a 512-bit key that is oriented towards 64-bit CPUs and dedicated hardware. Our design uses only simple XORs, ANDs, and rotations, and offers a simple and constant-time implementation. While perhaps not ideal for smaller architectures, the bit-sliced nature of the design indicates that it should scale reasonably well across different architectures and word sizes. We introduce a non-linear key addition layer to attempt to thwart algebraic attacks against the cipher structure.
+
+\end{document}
+

@@ -1,0 +1,93 @@
+\documentclass[preprint]{iacrtrans}
+\usepackage[utf8]{inputenc}
+
+% Select what to do with todonotes: 
+% \usepackage[disable]{todonotes} % notes not showed
+\usepackage[draft,color=orange!20!white,linecolor=orange,textwidth=3cm,colorinlistoftodos]{todonotes}   % notes showed
+\setlength{\marginparwidth}{3cm}
+\usepackage{graphicx}
+\usepackage{soul}
+\graphicspath{{images/}} % end dirs with `/'
+% \usepackage{longtable}
+\usepackage{tikz}
+\usetikzlibrary{arrows}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{positioning}
+\usetikzlibrary{calc}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{arrows}
+\usetikzlibrary{crypto.symbols}
+\tikzset{shadows=no}        % Option: add shadows to XOR, ADD, etc.
+
+\author{Anonymous\inst{1}}
+\institute{City, State \email{address@provider.com}}
+\title[\texttt Design date]{\texttt Design date}
+
+\begin{document}
+
+\maketitle
+
+% use optional argument because the \LaTeX command breaks the PDF keywords
+\keywords[Block Cipher]{Block Cipher}\todo{Keywords?}
+
+\begin{abstract}
+  We define a substitution-permutation based block cipher with an N\todo{Block size?}-bit block size and K\todo{Key size?}-bit key size. The design is oriented towards PLATFORM TYPE\todo{Constrained Devices? Consumer CPUs? What architecture/native word sizes?}. The design makes use of certain instruction types or gates. \todo{XOR/AND? ADD/XOR? Multiplication? Modular Exponentiation? Lookup Tables?}\\ 
+\end{abstract}
+
+\todototoc
+\listoftodos
+
+\section{Introduction}
+ Block ciphers are a widely used component in many cryptography schemes. They can be used with a mode of operation to provide confidentiality (as well as authenticity and integrity) to data, they can be combined with a counter to create a secure random number generator, and they can be used as the compression function inside of a hash function. When required, block ciphers can be designed with a smaller state size (80-128 bits) then a hash or stream cipher (160 bits+), which can lead to smaller and less expensive hardware implementations. Block ciphers are a very versatile class of algorithm.
+
+Substitution-Permutation networks are class of block cipher construction. Typically, a substiution-permutation network will consist of key addition layers interleaved with alternating applications of non-linear and linear functions. The non-linear function is often times referred to as an "S-Box", and frequently is implemented in the form of a lookup table or memoized function (but does not have to be). The S-Box is usually designed to resist linear and differential cryptanalysis and provides the source of "confusion" in the cipher. The linear function typically provides the "diffusion" in the cipher, and is responsible for ensuring that small input differences propagate to large output differences. The cannonical example of a Substitution-Permutation network is the Advanced Encryption Standard ("AES").
+
+\todo{Explain the motivation for the design described here}
+
+
+\section{Definitions}
+\todo{Define the notation used in this paper}\\
+\todo{Define how the state is laid out and indexed/addressed}\\
+We use $\oplus$ to denote XOR and $\lll$ to denote bitwise rotation left. We denote application of the S-Box via $S(x)$ and application of the inverse S-Box via $S^{-i}(x)$. The elements of the state are indexed as: \todo{How is the state indexed?}
+
+\section{Algorithm}
+\todo{Define the algorithm in detail}\\
+\todo{Describe the block cipher construction type, i.e. Feistel, SPN, Even-Mansour, ARX, etc}\\
+\todo{Define the round function or permutation}
+
+ We define a Substitution-Permutation network type cipher algorithm. The algorithm consists of alternating applications of a key addition layer every number of rounds. \todo{After how many rounds is the key applied?} The round function consists of a linear diffusing function and non-linear confusing function. Denoting the key addition layer as $K_f(x)$, the linear layer as $L_f(x)$, and the non-linear layer as $N_f(x)$, the following composed function is iterated ROUND COUNT \todo{Insert round count} number of times:
+
+\begin{align}
+   N(L(K(m)))
+\end{align}
+
+The key addition layer adds the words of the key to the words of the state using exclusive-or. \todo{How does the key act on the state?}
+
+The linear layer is computed as follows: \todo{How is the linear layer computed?}
+
+The non-linear layer consists of the application of the S-Box on W-bit sub-sections of the state. \todo{How is the S-Box applied? What word size? On columns or rows?}
+
+\section{Design\ Rationale}
+\todo{Explain the reasoning for each step of the algorithm}\\
+\todo{Explain how constants are generated and what purpose they serve}\\
+\todo{Describe why the linear and non-linear layers were designed/chosen}\\
+\todo{Justify numerical design decisions, such as word transpositions indices and rotation amounts}\\
+
+The exclusive-or key addition layer is standard and is used in many if not most (modern) cipher designs \todo{Is the key addition layer just XOR?} . This is ideal for minimizing implementation complexity: On dedicated hardware, using an integer addition based key addition layer would require implementing an adder, which requires significantly more complexity then a simple xor gate.\\
+
+The key scheduling algorithm was designed for the following reasons: \todo{Is there a key schedule? Why was the key schedule designed the way it was?}
+
+The linear layer is structured some way for certain reasons \todo{Why/How does it provide diffusion? Does it accomplish anything other then diffusion?}
+
+The S-Box was selected according to the following critera: \todo{How was the S-Box selected?}
+
+The constants were generated via the following function: .\todo{How were the constants generated? Or, how was the function that generates the constants selected?} Addition of different constants each round should provide resistance to slide attacks. \todo{Do the constants accomplish anything else? Is any other symmetry (i.e rotational symmetry) present without them?}
+
+
+
+\section{Conclusion}
+ We define an N-bit Substitution-Permutation based block cipher with a K-bit key that is oriented towards PLATFORM TYPE. \todo{Fill in values for block size/key size and platform type} 
+\todo{Concisely summarize the rest of the paper in a paragraph or two}
+
+\end{document}
+
