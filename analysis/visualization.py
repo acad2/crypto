@@ -16,7 +16,8 @@ def _print_state(inputs, bits):
     for word in inputs:        
         weight = hamming_weight(word)
         weight_total += weight
-        print("{} ({}/{})".format(''.join(bit for bit in format(word, 'b').zfill(bits)), weight, bits))
+        bit_string = ''.join(bit for bit in format(word, 'b').zfill(bits))
+        print("{} ({}/{})".format(bit_string, weight, bits))
     print("{} ({}/{})".format(' ' * bits, weight_total, (bits * len(inputs))))
     
 def print_state_4x32_128_as_4x32(inputs, message=''):
