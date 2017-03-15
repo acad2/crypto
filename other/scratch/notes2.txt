@@ -25,3 +25,17 @@ branch(m) ^ branch(k2)
 #h_2(h_1(h_1(m) || h_2(m))) ?
 
 # non-reversible cryptography will always be vulnerable to side channel analysis because of the information radiating in the form of heat when information is not preserved in the non-reversible circuit. Every non-reversibly evaluated xor gate leaks information in the form of heat.
+
+
+
+
+
+
+
+cipher design strategies
+First, you have to establish
+"The simple" - RC4 like (shuffling huge array of words)
+
+"The small" - 8-bit friendly/constrained device friendly.
+
+"The fast" - salsa like (SIMD with big registers)

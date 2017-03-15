@@ -1,8 +1,47 @@
+""" encrypted_iv, random_key0 = permutation(iv || encryption_key)
+    ciphertext_0, random_key1 = permutation(plaintext_0 || random_key0)
+    ciphertext_1, random_key2 = permutation(plaintext_1 || random_key1)
+    ...
+    ciphertext_n, decryption_key = permutation(plaintext_n || random_key_n+1)
+    decryption_key = decryption_key XOR key_material
+    output iv, ciphertext_0 ... ciphertext_n, decryption_key
+
+    decryption_key = decryption_key XOR key_material
+    plaintext_n, random_key_n-1 = invert_permutation(ciphertext_n || decryption_key)
+    plaintext_n-1, random_key_n-2 = invert_permutation(ciphertext_n-1 || decryption_key_n-1)
+    ...
+    _iv, _encryption_key = invert_permutation(encrypted_iv || random_key_0)
+    if _iv == iv and _encryption_key == encryption_key:
+        output plaintext_0 ... plaintext_n
+    else:
+        output InvalidTag
+        
+    perks: single pass authenticated encryption
+           would appear to be beneficial to security to use new keys for subsequent blocks
+               - especially if you don't send the encrypted iv;
+                    - adversaries never see plaintext:ciphertext pairs under the initial encryption key
+                    - all the plaintext:ciphertext pairs they do see are encrypted under a random key that will most likely only ever be used once
+           works with a permutation; no block cipher construction and mode of operation required
+           does not require having all of the blocks available up front to start processing
+           support for configurable rate/key size
+           
+    flaws: requires implementing the inverse of the permutation
+           cannot process blocks in parallel (is this true of all one pass authenticated encryption schemes?)
+           cannot validate tag before decrypting (is this true of all one pass authenticated encryption schemes?)
+                      
+    interesting: the encryption key is not sufficient to decrypt a cryptogram. 
+                 the information that is output at the end is actually a decryption key, encrypted with the mac key.                    
+                    - could encrypt the decryption key with the initial encryption key
+                    - or could use a different key
+                        
+                 the iv is actually the authentication tag
+                 could encrypt IV with yet another key"""           
+              
 from crypto.utilities import slide, xor_subroutine  
 from arxcalibur512 import permutation, invert_permutation
 
 ROUNDS = 1
-from pprint import pprint
+
 def encrypt(data, iv, key, mac_key):
     # state_0, state_k0 = permute(iv || key)
     # state_1, state_k1 = permute(data_0 || state_k0)
@@ -20,7 +59,7 @@ def encrypt(data, iv, key, mac_key):
     for block in slide(iv + data, 8):
         state = block + block_key        
         for round in range(ROUNDS):
-            state = permutation(*state)           
+            state = permutation(*[round, ] + state)           
         ciphertexts.extend(state[:8])
         block_key = list(state[8:])
     
@@ -37,7 +76,7 @@ def decrypt(data_and_tag, iv, key, mac_key):
     for ciphertext in reversed(list(slide(ciphertexts, 8))):
         state = ciphertext + block_key
         for round in range(ROUNDS):
-            state = invert_permutation(*state)
+            state = invert_permutation(*[round, ] + state)
         plaintexts.extend(state[:8])
         block_key = list(state[8:])   
     

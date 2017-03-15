@@ -18,7 +18,7 @@ def shift_rows(b, c, d, r1, r2, r3, wordsize=WORDSIZE):
     d = rotate_left(d, r3, wordsize)
     return b, c, d
     
-def mix_block(a, b, c, d):
+def mix_block(a, b, c, d):    
     a, b, c, d = mix_columns(a, b, c, d)
     b, c, d = shift_rows(b, c, d, 1, 2, 3)
     
@@ -27,9 +27,18 @@ def mix_block(a, b, c, d):
 
     a, b, c, d = mix_columns(a, b, c, d)
     b, c, d = shift_rows(b, c, d, 8, 12, 16)    
-    return a, b, c, d
+    return [a, b, c, d]
+
+def add_constant(counter, block0, block1, block2, block3):
+    a, b, c, d = mix_block(*mix_block(counter, counter + 1, counter + 2, counter + 3))
+    block0[0] ^= a
+    block1[0] ^= b
+    block2[0] ^= c
+    block3[0] ^= d
     
-def mix_blocks(block0, block1, block2, block3):    
+def mix_blocks(counter, block0, block1, block2, block3):    
+    add_constant(counter, block0, block1, block2, block3)
+    
     for round in range(ROUNDS):
         block0 = mix_block(*block0)
         block1 = mix_block(*block1)
@@ -40,22 +49,21 @@ def mix_blocks(block0, block1, block2, block3):
     a1, b1, c1, d1 = block1    #a1, b0, c3, d2    
     a2, b2, c2, d2 = block2    #a2, b1, c0, d3    
     a3, b3, c3, d3 = block3    #a3, b2, c1, d0            
-    return [(a0, b3, c2, d1), (a1, b0, c3, d2), (a2, b1, c0, d3), (a3, b2, c1, d0)]
+    return [[a0, b3, c2, d1], [a1, b0, c3, d2], [a2, b1, c0, d3], [a3, b2, c1, d0]]
 
-def permutation(a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3):
-    state0, state1, state2, state3 = ((a0, b0, c0, d0), (a1, b1, c1, d1), (a2, b2, c2, d2), (a3, b3, c3, d3))
-    state0, state1, state2, state3 = mix_blocks(state0, state1, state2, state3)
-    state0, state1, state2, state3 = mix_blocks(state0, state1, state2, state3)
+def permutation(counter, a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3):
+    state0, state1, state2, state3 = ([a0, b0, c0, d0], [a1, b1, c1, d1], [a2, b2, c2, d2], [a3, b3, c3, d3])
+    state0, state1, state2, state3 = mix_blocks(counter, state0, state1, state2, state3)
+    state0, state1, state2, state3 = mix_blocks(counter + 1, state0, state1, state2, state3)
     return state0 + state1 + state2 + state3
         
-
-def invert_permutation(a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3):
-    state0, state1, state2, state3 = ((a0, b0, c0, d0), (a1, b1, c1, d1), (a2, b2, c2, d2), (a3, b3, c3, d3))    
-    state0, state1, state2, state3 = unmix_blocks(state0, state1, state2, state3)    
-    state0, state1, state2, state3 = unmix_blocks(state0, state1, state2, state3)    
+def invert_permutation(counter, a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3):
+    state0, state1, state2, state3 = ([a0, b0, c0, d0], [a1, b1, c1, d1], [a2, b2, c2, d2], [a3, b3, c3, d3])
+    state0, state1, state2, state3 = unmix_blocks(counter + 1, state0, state1, state2, state3)    
+    state0, state1, state2, state3 = unmix_blocks(counter, state0, state1, state2, state3)    
     return state0 + state1 + state2 + state3
         
-def unmix_blocks(block0, block1, block2, block3):
+def unmix_blocks(counter, block0, block1, block2, block3):
     a0, b0, c0, d0 = block0
     a1, b1, c1, d1 = block1
     a2, b2, c2, d2 = block2
@@ -71,6 +79,8 @@ def unmix_blocks(block0, block1, block2, block3):
         block1 = unmix_block(*block1)
         block2 = unmix_block(*block2)
         block3 = unmix_block(*block3)
+        
+    add_constant(counter, block0, block1, block2, block3)
     return block0, block1, block2, block3
     
 def unmix_block(a, b, c, d):
@@ -82,7 +92,7 @@ def unmix_block(a, b, c, d):
 
     b, c, d = invert_shift_rows(b, c, d, 1, 2, 3)
     a, b, c, d = invert_mix_columns(a, b, c, d)    
-    return a, b, c, d
+    return [a, b, c, d]
     
 def invert_shift_rows(b, c, d, r1, r2, r3, wordsize=WORDSIZE):
     b = rotate_left(b, wordsize - r1, wordsize)
