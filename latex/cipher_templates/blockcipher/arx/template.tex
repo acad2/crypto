@@ -1,0 +1,69 @@
+\documentclass[preprint]{iacrtrans}
+\usepackage[utf8]{inputenc}
+
+% Select what to do with todonotes: 
+% \usepackage[disable]{todonotes} % notes not showed
+\usepackage[draft,color=orange!20!white,linecolor=orange,textwidth=3cm,colorinlistoftodos]{todonotes}   % notes showed
+\setlength{\marginparwidth}{3cm}
+\usepackage{graphicx}
+\usepackage{soul}
+\graphicspath{{images/}} % end dirs with `/'
+% \usepackage{longtable}
+\usepackage{tikz}
+\usetikzlibrary{arrows}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{positioning}
+\usetikzlibrary{calc}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{arrows}
+\usetikzlibrary{crypto.symbols}
+\tikzset{shadows=no}        % Option: add shadows to XOR, ADD, etc.
+
+\author{Anonymous\inst{1}}
+\institute{City, State \email{address@provider.com}}
+\title[\texttt Design date]{\texttt Design date}
+
+\begin{document}
+
+\maketitle
+
+% use optional argument because the \LaTeX command breaks the PDF keywords
+\keywords[Block Cipher]{Block Cipher}\todo{Keywords?}
+
+\begin{abstract}
+  We define a block cipher with an N\todo{Block size?}-bit block size and K\todo{Key size?}-bit key size. The design is oriented towards PLATFORM TYPE\todo{Constrained Devices? Consumer CPUs? What architecture/native word sizes?}. The design makes use of certain instruction types or gates. \todo{XOR/AND? ADD/XOR? Multiplication? Modular Exponentiation? Lookup Tables?}\\ 
+\end{abstract}
+
+\todototoc
+\listoftodos
+
+\section{Introduction}
+ Block ciphers are a widely used component in many cryptography schemes. They can be used with a mode of operation to provide confidentiality (as well as authenticity and integrity) to data, they can be combined with a counter to create a secure random number generator, and they can be used as the compression function inside of a hash function. When required, block ciphers can be designed with a smaller state size (80-128 bits) then a hash or stream cipher (160 bits+), which can lead to smaller and less expensive hardware implementations. Block ciphers are a very versatile class of algorithm.
+
+The ARX construction is one method for designing a block cipher. ARX based ciphers forego the use of lookup tables as a source of non-linearity, utilizing integer addition and boolean functions combined with rotations and xor to obtain the required source of "confusion". ARX designs are generally simple to implement without exposing timing based side channels. They tend to be efficient in software on a modern CPU, as many designs can utilize the parallelism offered by large registers and vectorized instructions. 
+
+\todo{Explain the motivation for the design described here}
+
+
+\section{Definitions}
+\todo{Define the notation used in this paper}\\
+\todo{Define how the state is laid out and indexed/addressed}\\
+We use $\oplus$ to denote XOR, $\land$ to denote AND, and $\lll$ to denote bitwise rotation left...
+
+\section{Algorithm}
+\todo{Define the algorithm in detail}\\
+\todo{Describe the block cipher construction type, i.e. Feistel, SPN, Even-Mansour, ARX, etc}\\
+\todo{Define the round function or permutation}
+
+\section{Design\ Rationale}
+\todo{Explain the reasoning for each step of the algorithm}\\
+\todo{Explain how constants are generated and what purpose they serve}\\
+\todo{Describe why the linear and non-linear layers were designed/chosen}\\
+\todo{Justify numerical design decisions, such as word transpositions indices and rotation amounts}\\
+
+\section{Conclusion}
+ We define an N-bit block cipher with a K-bit key that is oriented towards PLATFORM TYPE. \todo{Fill in values for block size/key size and platform type} 
+\todo{Concisely summarize the rest of the paper in a paragraph or two}
+
+\end{document}
+

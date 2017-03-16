@@ -33,7 +33,7 @@ def pad_input(hash_input, post_processing_steps):
     
 def _hash(output, data, hash_key=HASH_KEY):    
     for index in range(len(data)):                        
-        byte8 = rotate_left(data[index], 1, 8) #^ (index % 256)
+        byte8 = rotate_left(data[index], 1, 8) ^ (index % 256)
         byte8 ^= output[(index + 1) % STATE_SIZE]
         output[index % STATE_SIZE] ^= byte8        
         xor_subroutine(output, hash_key[output[index % STATE_SIZE]])       
@@ -156,7 +156,7 @@ def test_hash_function_metrics():
     #        bit = 1
     #    key.append(entry)
         
-    test_hash_function(lambda data: hash_function(data), avalanche_test=False, randomness_test=False, period_test=False)#, bias_test=False)#, compression_test=False, performance_test=False)
+    test_hash_function(lambda data: hash_function(data))#, avalanche_test=False, randomness_test=False, period_test=False)#, bias_test=False)#, compression_test=False, performance_test=False)
     
 if __name__ == "__main__":
     #test_encrypt_decrypt()    

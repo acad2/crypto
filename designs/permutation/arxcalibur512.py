@@ -29,8 +29,11 @@ def mix_block(a, b, c, d):
     b, c, d = shift_rows(b, c, d, 8, 12, 16)    
     return [a, b, c, d]
 
+def generate_constant(counter):
+    return mix_block(*mix_block(counter, counter + 1, counter + 2, counter + 3))    
+    
 def add_constant(counter, block0, block1, block2, block3):
-    a, b, c, d = mix_block(*mix_block(counter, counter + 1, counter + 2, counter + 3))
+    a, b, c, d = generate_constant(counter)
     block0[0] ^= a
     block1[0] ^= b
     block2[0] ^= c

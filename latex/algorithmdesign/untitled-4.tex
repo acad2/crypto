@@ -65,7 +65,7 @@
 
 Meet Bob and Alice. Bob and Alice are pen pals; they write letters to each other, and send them through the mail. Additionally, we will introduce Eve:  Eve has no respect for others, as well as a pathological need to try and do wrong; She is not opposed to lying, cheating, and stealing, and is very creative in this arts. She will go to great length to do these things if she thinks it will benefit her; Even when there is no real benefit to her, she will do such things whenever she can get away with it, simply because she can.
 
-Unfortunately, Eve is the mail carrier. Fortunately, Bob and Alice are aware of Eve's nature, and they seek to find ways of communicating with each other without Eve interfering. In order to do so, they need to enumerate all of the ways that Eve could abuse their communications, and develop appropriate counter-measures.
+Unfortunately, Eve is the mail carrier, and is responsible for delivering messages to/from the pair. Fortunately, Bob and Alice are aware of Eve's nature, and they seek to find ways of communicating with each other without Eve interfering. In order to do so, they need to enumerate all of the ways that Eve could abuse their communications, and develop appropriate counter-measures. 
 
 \subsection{Lying, Cheating, and Stealing}
 
@@ -81,11 +81,12 @@ Finally, Eve could simply choose not to deliver the messages at all.
 
 \subsection{Solutions}
 
+In order to preclude Eve's ability to read their messages, Bob and Alice realize they need some way to obscure the information such that only the intended recipient may recover the actual information from the transported information. They need some kind of set of steps that they can apply to their message that will: 1: Produce output that is meaningless, and 2: The steps can be undone by the intended receipient to recover the actual message. 
+
+So clearly, they reason, they need some kind of technique that will allow the two of them be able to perform the steps, but nobody else (i.e. Eve) should be able to perform the steps. After some thought, they realize that if they can keep some part of the steps secret, and only the two of them know the secret steps, then clearly Eve will not be able perform the transformation and recover the message. The pair realize that Eve will go out of her way to attempt to figure out the secret steps, and that they will likely need to include many secrets; If they only use one secret, Eve could easily guess it. 
 
 
-
-For example, Bob might send Alice a christmas card with money inside, and a note that says "I am sending you \$20; I hope you have a nice holiday". Upon opening this, Eve could simply take the money, and leave a new note in the card that say "Sorry, I can't afford gifts this year; I hope you have a nice holiday anyways. PS: Please send me some money". Then she could easily repeat this process.
-
+% communicating the coin flip
 
 
 
