@@ -39,3 +39,56 @@ First, you have to establish
 "The small" - 8-bit friendly/constrained device friendly.
 
 "The fast" - salsa like (SIMD with big registers)
+
+
+
+What is diffusion, anyways?
+----
+job of diffusion: spread inputs to many different s-boxes
+    - how to maximize diffusion?
+        - placing *every* term as input to *every* s-box is actually not ideal
+            - this means that the outputs of every s-box will be identical
+    - so what is the optimal maximum number of terms to appear in the given number of s-boxes?
+        - need to take into account:
+            - total number of terms: k
+            - total number of s-box applications: n
+        - ideally: 50% of the input bits should influence any given output bit
+            - insert branch8 as example
+            - ideally, the distribution of the input bits should be randomly distributed
+            - so each input bit should appear as input to 1/2 of the total s-boxes
+        - each term should appear in n/2 s-boxes
+        - each s-box should have as input k/2 terms
+    
+    
+            
+So what is confusion? What even are s-boxes, anyways?
+--------
+An "s-box" is really a "non-linear function evaluator"
+What is a non-linear function? 
+    - TODO -------------------------------
+    
+Why do we require non-linear functions?
+    - A linear equation is easily solved, given a few input output pairs
+        - This applies even with an arbitrary number of rounds
+        - insert shuffle-key-diffuse example
+    - Non-linear equations are harder to work with, algebraically
+    - We ultimately want a system of equations that is prohibitively complex, with many terms of high degree
+         
+"active s-boxes" = non-linear equations that are different, between two pairs of states
+    - the "non-active" s-boxes have identical terms between the two pairs of states
+worst case: no diffusion: AES with no mix columns; each 8-bit word is described by one distinct equation, with no other words mixed in
+So "diffusion" revisited: spreading around inputs to different "non-linear function evaluators" (the "s-box" that is applied in parallel on the state)
+
+what degree is sufficient? How non-linear does it need to be?
+
+ 1 -> 2 = 3
+ 2 -> 4 = 6 = 9
+ 4 -> 8 = 12 = 21
+ 8 -> 16 = 24 = 45
+ 16 -> 32 = 48 = 93
+ 32 -> 64 = 96 = 189
+ 64 -> 128 = 192 = 381
+ 
+ 
+ 
+            
