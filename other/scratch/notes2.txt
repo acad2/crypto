@@ -92,3 +92,70 @@ what degree is sufficient? How non-linear does it need to be?
  
  
             
+# 0 1 2 3 # a ^= rotate_left(a, 1)
+# 1 2 3 0
+# 01 12 23 03 # good - each bit appears in 2 places
+
+# 01 12 23 03  # 1 and 1
+# 12 23 03 01 
+# 02 13 02 13 # not good - repetitive patterns
+
+
+# 01 12 23 03 # 1 and 2
+# 23 03 01 12 
+# 0123 0123 0123 # not good - all identical
+
+
+# 01 12 23 03 # 1 and 3
+# 03 01 12 23
+# 13 02 13 02 # still not good
+
+
+ 
+# 0 1 2 3 # a ^= rotate_left(a, 2)
+# 2 3 0 1
+# 02 13 02 13
+
+
+# 0 1 2 3 # a ^= rotate_left(a, 3)
+# 3 0 1 2
+# 03 01 12 23
+
+
+# for a function: 50% is ideal
+
+
+# for a permutation:
+
+# 0 1   # a ^= b
+# 2 3
+# 02 13
+
+#  3  2     # b ^= rotate_left(a, 1)
+# 02 13 
+# 023 123
+
+# 02 13
+# 023 123
+
+
+
+
+
+# 02 13
+# 2 3
+
+# 01 23
+
+
+
+
+# error correcting code based diffusion test?
+# establish an 8-1-d code for the linear layer
+# > d == better diffusion
+
+# bivs diffusion test :)
+
+
+
+            
