@@ -20,14 +20,39 @@ def mix_columns(a, b, c, d, mask=(2 ** 32) - 1):
     
     return a, b, c, d
 
+def choice(a, b, c):
+    return c ^ (a & (b ^ c))
+    
+def shuffle_columns(a, b, c, d):
+    t = a
+    a = choice(c, a, b)
+    b = choice(c, b, t)
+    
+    t = c
+    c = choice(a, c, d)
+    d = choice(a, d, t)
+    
+    t = b
+    b = choice(d, b, c)
+    c = choice(d, c, t)
+    
+    t = d
+    d = choice(b, d, a)
+    a = choice(b, a, t)
+    return a, b, c, d
+        
+        
 def mix_block(a, b, c, d):
-    a, b, c, d = mix_columns(a, b, c, d)
+   # a, b, c, d = mix_columns(a, b, c, d)
+    a, b, c, d = shuffle_columns(a, b, c, d)
     b, c, d = shift_rows(b, c, d, 1, 2, 3)
     
-    a, b, c, d = mix_columns(a, b, c, d)
+#    a, b, c, d = mix_columns(a, b, c, d)
+    a, b, c, d = shuffle_columns(a, b, c, d)
     b, c, d = shift_rows(b, c, d, 4, 8, 12)
 
-    a, b, c, d = mix_columns(a, b, c, d)
+ #   a, b, c, d = mix_columns(a, b, c, d)
+    a, b, c, d = shuffle_columns(a, b, c, d)
     b, c, d = shift_rows(b, c, d, 8, 12, 16) 
     return a, b, c, d
     
