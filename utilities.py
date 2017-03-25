@@ -35,11 +35,11 @@ def rotate(input_string, amount):
         amount = amount % len(input_string)
         return input_string[-amount:] + input_string[:-amount]                
 
-def rotate_right(x, r, bit_width=8, _mask=dict((bit_width, ((2 ** bit_width) - 1)) for bit_width in (8, 16, 32, 64, 128))): 
+def rotate_right(x, r, bit_width=8, _mask=dict((bit_width, ((2 ** bit_width) - 1)) for bit_width in (2, 4, 8, 16, 32, 64, 128))): 
     r %= bit_width
     return ((x >> r) | (x << (bit_width - r))) & _mask[bit_width]
     
-def rotate_left(x, r, bit_width=8, _mask=dict((bit_width, ((2 ** bit_width) - 1)) for bit_width in (8, 16, 32, 64, 128))):  
+def rotate_left(x, r, bit_width=8, _mask=dict((bit_width, ((2 ** bit_width) - 1)) for bit_width in (2, 4, 8, 16, 32, 64, 128))):  
     r %= bit_width
     return ((x << r) | (x >> (bit_width - r))) & _mask[bit_width]
     

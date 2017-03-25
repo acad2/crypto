@@ -1,0 +1,148 @@
+\documentclass[preprint]{iacrtrans}
+\usepackage[utf8]{inputenc}
+
+\usepackage{algpseudocode}
+
+% Select what to do with todonotes: 
+% \usepackage[disable]{todonotes} % notes not showed
+\usepackage[draft,color=orange!20!white,linecolor=orange,textwidth=3cm,colorinlistoftodos]{todonotes}   % notes showed
+\setlength{\marginparwidth}{3cm}
+\usepackage{graphicx}
+\usepackage{soul}
+\graphicspath{{images/}} % end dirs with `/'
+% \usepackage{longtable}
+\usepackage{tikz}
+\usetikzlibrary{arrows}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{positioning}
+\usetikzlibrary{calc}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{arrows}
+\usetikzlibrary{crypto.symbols}
+\tikzset{shadows=no}        % Option: add shadows to XOR, ADD, etc.
+
+\author{Anonymous\inst{1}}
+\institute{City, State \email{address@provider.com}}
+\title[\texttt Design date]{\texttt Design date}
+
+\begin{document}
+
+\maketitle
+
+% use optional argument because the \LaTeX command breaks the PDF keywords
+\keywords[Permutation]{Permutation}
+
+\begin{abstract}
+  We define a permutation with an 512-bit block size. The design is oriented towards consumer CPUs, though it should be scalable across a wide variety of platforms. The design makes use of only constant time bitwise operations (XOR/AND/OR) and fixed rotations. 
+\end{abstract}
+
+\todototoc
+\listoftodos
+
+\section{Introduction}
+ Psuedorandom permutations are a core building block of modern cryptography. They are utilized to create block ciphers in Substitution-Permutation networks, as well as to create hash functions via the Sponge construction. By separating the design of cipher and hash constructions from the design of permutations, we can simplify the responsibilities of each component. The permutation should produce a random output block for any given input block; This implies the requirement for resisting known generic distinguishing frameworks, such as linear and differential cryptanalysis. 
+
+We define a 512-bit permutation, which is large enough to instantiate a sponge construction. It is a bit-sliced SIMD design. We utilize the class 13 representative from the paper "Finding Optimal Bit-Sliced Representations of 4x4 S-Boxes" with minimal instruction cost. Additionally, we present a method for generating "good" constants at effectively no extra cost.
+
+\section{Definitions}
+We use $\oplus$ to denote XOR, $\land$ to denote AND, $\lor$ to denote OR, and $\lll$ to denote bitwise rotation left. We use $\Vert$ to indicate concatenation. \\
+
+The state consists of 4 adjacent slices, where each slice consists of 4 32-bit words arranged in rows. We refer to each 4-bit high, 1-bit wide subsection of a slice as a column, and each 1-bit high, 32-bit wide subsection of a slice as a row. There are 32 columns per slice, for a total of 128 columns in the entire state. The top row of each slice collectively is referred to as $a$, the second row is referred to as $b$, the third row is referred to as $c$, and the bottom row of each slice is referred to as $d$. When a subscript is affixed, it indexes the slice; Slices are numbered $0, 1, 2, 3$ from front to back. $a_0$ means the top row of the first slice, $a_1$ means the top row of the second slice, etc.
+
+We require the use of one temporary variable, which is referred to as $t$. We refer to the inputs to the constant generation function as $constantSeed$; When subscripted, the number indexes the slice.
+
+\section{Algorithm}
+Each slice is mixed in parallel according to the following steps:
+
+\begin{algorithmic}
+\Function{$permutation$}{$a, b, c, d$}
+	\State $a \gets addConstant(a)$
+	\State $a, b, c, d \gets linear(a, b, c, d)$
+	\State $a, b, c, d \gets nonlinear(a, b, c, d)$
+\EndFunction\\
+\Function{$add\_constant$}{$a$}
+	\State $a \gets a \oplus constantSeed$
+	\State $constantSeed_0 \gets constantSeed_0 + 4$
+	\State $constantSeed_1 \gets constantSeed_1 + 4$
+	\State $constantSeed_2 \gets constantSeed_2 + 4$
+	\State $constantSeed_3\gets constantSeed_3 + 4$
+\EndFunction\\
+\Function{$linear$}{$a, b, c, d$}
+	\State $a, b, c, d \gets mix\_and\_shift(a, b, c, d, 1, 2, 3)$
+	\State $a, b, c, d \gets mix\_and\_shift(a, b, c, d, 4, 8, 12)$
+	\State $a, b, c, d, \gets mix\_and\_shift(a, b, c, d, 8, 12, 16)$
+	\State $a, b, c, d \gets mix\_and\_shift(a, b, c, d, 1, 2, 3)$
+	\State $a, b, c, d \gets mix\_and\_shift(a, b, c, d, 4, 8, 12)$
+	\State $a, b, c, d, \gets mix\_and\_shift(a, b, c, d, 8, 12, 16)$	
+\EndFunction
+\Function{$mix\_and\_shift$}{$a, b, c, d, r1, r2, r3$}
+	\State $a, b, c, d \gets mix\_columns(a, b, c, d)$
+	\State$b, c, d \gets shift\_rows(b, c, d, r1, r2, r3)$
+\EndFunction
+\Function{$mix\_columns$}{$a, b, c, d$}
+	\State $a \gets a \oplus b$
+	\State $c \gets c \oplus d$
+	\State $b \gets b \oplus c$
+	\State $d \gets d \oplus a$
+\EndFunction
+\Function{$shift\_rows$}{$b, c, d, r1, r2, r3$}
+	\State $b \gets b \lll r1$
+	\State $c \gets c \lll r2$
+	\State $d \gets d \lll r3$
+\EndFunction\\
+\Function{$nonlinear$}{$a, b, c, d$}
+	\State $t \gets a$
+	\State $a \gets (a \land b) \oplus c$
+	\State $c \gets (c \lor b) \oplus d$
+	\State $d \gets (d \land a) \oplus t$
+	\State $b \gets b \oplus (c \land t)$
+\EndFunction\\
+\end{algorithmic}
+
+This is followed by a sliding of the rows, such that the rows of the slices become mixed:
+
+\begin{algorithmic}
+\Function{$slide\_rows$}{$b, c, d$}
+	\State $b \gets b_1 \Vert b_2 \Vert b_3 \Vert b_0$
+	\State $c \gets c_2 \Vert c_3 \Vert c_0 \Vert c_1$	
+	\State $d \gets d_3 \Vert d_0 \Vert d_1 \Vert d_2$
+\EndFunction
+\end{algorithmic}
+
+\todo{Describe the layout of the state with pictures!}\\
+
+\section{Design\ Rationale}
+\subsection{Constants}
+The addition of the round constant serves multiple purposes. Some attacks can exploit the fact that identical functions are used every round; Addition of the round constants ensures that the permutation is different each round, which may resist some attacks. The constants also break the rotational symmetry that would otherwise be present in such a bit sliced design.
+
+The constants are derived by applying the linear diffusing function to a unique sequence of values (the "seed"). This offers numerous advantages: reduced code size, reduced degrees of freedom, and "good" constants with a high hamming distance. Additionally, we can receive these benefits for no extra computational cost by utilizing the linearity of the diffusing function: 
+
+\begin{align}
+Linear(state \oplus constantSeed) \equiv Linear(state) \oplus Linear(constantSeed)
+\end{align}
+
+The constant seed is initialized with the values $1, 2, 3, 4$. After each generation of constants, the values are each incremented by $4$. The initial sequence is simply a counter that counts upwards, starting at $1$. We start at $1$ instead of $0$ because an all $0$ input to the linear function produces an all $0$ output, meaning no constant would be applied. The increment was chosen as $4$ instead of $1$ so that all the inputs to the constant generation function would be unique.
+
+The constantSeed is only added to row $a$. The constant generated by $linear(constantSeed, 0, 0, 0)$ will cover the other rows as well.
+
+It is not clear whether or not constants would  benefit from "confusion" or higher algebraic degree; As such, we have no reason to apply the S-Box during the constant generation process.
+
+The constants are applied before the non-linear function, rather then after it. Doing so ensures both S-Box inputs and outputs are dependent on the round, rather then just the outputs. Additionally, adding the constants before application of the S-Box enables the constants to increase the algebraic degree of the output. This would not occur if they were added in via xor after the S-Box is applied.
+
+\subsection{Linear layer}
+The linear diffusion layer is designed to ensure an even and optimal distribution of bits across each slice of the state. The two applications of the set of mix and shift operations ensures maximum output differences and a high number of active s-boxes. Testing of the lowest weight states demonstrated a minimum number of 25 active s-boxes per slice per round of the permutation; These tests were not exhaustive, but covered the states that were most likely to produce the lowest number of active s-boxes.
+
+The rotation amounts for shift rows were selected to spread the differences around as evenly and quickly as possible. This is easily demonstrated with a visual aide. \todo{visual aide!}
+
+\subsection{Nonlinear S-Box}   %\cite{Finding Optimal Bit-Sliced representations of 4x4 S-Boxes}
+We chose to utilize the non-linear function with the lowest known implementation cost; The selected S-Box can be implemented in just nine instructions. This scales very well with larger registers. Because it is computed discretely instead of via table lookup, it is resistant against timing based side channel attacks, which can practically break and otherwise theoretically secure algorithm.
+
+Additionally, this choice offers total transparency: The algebraic structure is present for all to scrutinize; There does not appear to be any room to hide a backdoor of any kind.
+
+\subsection{Slide Rows}
+Some mechanism for obtaining diffusion between slices is clearly required. The slide rows method is an analogue to the tried and true shift rows method for providing diffusion. There effectively was no choice in selecting the rotation amounts - it must be some combination of rotations by 1, 2, and 3, so the simplest one was selected.
+
+\section{Conclusion}
+ We define an 512-bit permutation that is oriented towards consumer CPUs. We utilize a technique for efficiently generating high quality round constants for no computational expense.
+\end{document}
+

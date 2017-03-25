@@ -16,7 +16,6 @@
 
 #define add_constant(a) ({load_register(t, round_constants, 0);\
                           round_constants[0] += 4; round_constants[1] += 4; round_constants[2] += 4; round_constants[3] += 4;\
-                          t ^= rotate_left(t, 3); t ^= rotate_left(t, 6); t ^= rotate_left(t, 13); t ^= rotate_left(t, 8);\
                           a ^= t;})
                            
 void permutation(WORDSIZE* state){    
@@ -26,28 +25,21 @@ void permutation(WORDSIZE* state){
     load_register(a, state, 0); load_register(b, state, 4); 
     load_register(c, state, 8); load_register(d, state, 12);           
     
-    for (index = 0; index < 16; index++){                     
-        add_constant(a);      
-        sub_bytes(a, b, c, d);
-                
-        shift_rows(b, c, d, 1, 2, 3);
-        mix_columns(a, b, c, d);
+    for (index = 0; index < 8; index++){                     
+        add_constant(a);                
         
+        for (index2 = 0; index2 < 2; index2++){              
+            mix_columns(a, b, c, d);
+            shift_rows(b, c, d, 1, 2, 3);
+            
+            mix_columns(a, b, c, d);
+            shift_rows(b, c, d, 4, 8, 12);
+            
+            mix_columns(a, b, c, d);
+            shift_rows(b, c, d, 8, 12, 16);}
         
-        shift_rows(b, c, d, 4, 8, 12);
-        mix_columns(a, b, c, d);
-                
-        shift_rows(b, c, d, 8, 12, 16);
-        mix_columns(a, b, c, d);    
-//        for (index2 = 0; index2 < 2; index2++){              
-//            mix_columns(a, b, c, d);
-//            shift_rows(b, c, d, 1, 2, 3);
-//            
-//            mix_columns(a, b, c, d);
-//            shift_rows(b, c, d, 4, 8, 12);
-//            
-//            mix_columns(a, b, c, d);
-//            shift_rows(b, c, d, 8, 12, 16);}
+        sub_bytes(a, b, c, d);            
+        
         shift_sections(b, c, d);}
         
     store_register(a, state, 0); store_register(b, state, 4);

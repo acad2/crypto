@@ -157,5 +157,58 @@ what degree is sufficient? How non-linear does it need to be?
 # bivs diffusion test :)
 
 
+           
+            
+- the constants should come before the non-linear function
+    - makes s-box inputs independent
+        - only makes s-box *outputs* independent if the constant is xor'd in after the s-box
+    - constants do not increase algebraic degree if they are xor'd in *after* the non-linear function is applied
+
+- the constants should be derived by applying the linear diffusing function to a unique sequence of values
+    - one, consistent way to implement constants can alleviate suspicions as to the origins of the constants
+    - simplifies implementation, and potentially shrinks code size if an additional constant derivation function was required
+
+- the constants should be applied before the linear function (assuming constants are derived as above)
+    - because of linearity, L(message + constant) == L(message) + L(constant)
+    - generates "good" constants (high hamming distance) 
+    - costs no extra processing time
+    - unclear whether or not constants benefit from "confusion" or higher algebraic degree (there is no clear need to apply the non-linear function to constants)
+    
+- constants serve multiple purposes:
+    - some attacks (i.e. slide attacks) exploit the fact that identical functions are used every round
+        - adding a new constant before the s-box application every round makes each round act differently
+    - constants also break rotational symmetry that would otherwise be present in a bit-sliced design
+        - can also break rotational symmetry by using shifts and not just rotations
+    - LED uses the addition of constants to simulate independent round keys https://eprint.iacr.org/2012/600.pdf
+  
+- the linear function should:
+    - maximize the number of active s-boxes        
+    - ensure an even and optimal distribution of terms (bits)
+        
+- the non-linear function should be a bit sliced s-box
+    - timing attack resistant/constant time operation
+    - total transparency
+        - algebraic structure is present for anyone to scrutinize
+    - very helpful resource: Finding Optimal Bit-sliced Representations of 4x4 S-Boxes
+    - very scalable:
+        - 4 bit s-box on four 8-bit wide words? X instructions per 32 bits of data
+        - 4 bit s-box on 4 32-bit wide words? X instructions per 128 bits of data
+        - 4 bit s-box on 4 4x32-bit words via SIMD? X instructions per 512 bits of data    
+    - wider words = more active s-boxes
+        - 4 32-bit words? 32 s-box applications
+        - 4 64-bit words? 64 s-box applications
+        - Assuming the linear function provides full diffusion:
+          - 4 32-bit words: > 25 active s-boxes (measured via urandom and good diffusing function)
+              - after 2 rounds: 25 ** 2: 625
+          - 4 64-bit words: > 50 active s-boxes
+              - after 2 rounds: 50 ** 2: 2500
+          - 16 8-bit words: max: 16 active s-boxes
+          
+- (Ciphers) the key addition should come before the linear function
+    - linear(m ^ k) diffuses k as well as m;
+    - linear(m) ^ k does not diffuse k
+    
+According to these criteria, the optimal order of operations is: add constant, (optional) add key, linear diffusion layer, non-linear s-box layer   
+
 
             

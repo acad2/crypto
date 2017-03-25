@@ -1,0 +1,67 @@
+\documentclass[preprint]{iacrtrans}
+\usepackage[utf8]{inputenc}
+
+% Select what to do with todonotes: 
+% \usepackage[disable]{todonotes} % notes not showed
+\usepackage[draft,color=orange!20!white,linecolor=orange,textwidth=3cm,colorinlistoftodos]{todonotes}   % notes showed
+\setlength{\marginparwidth}{3cm}
+\usepackage{graphicx}
+\usepackage{soul}
+\graphicspath{{images/}} % end dirs with `/'
+% \usepackage{longtable}
+\usepackage{tikz}
+\usetikzlibrary{arrows}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{positioning}
+\usetikzlibrary{calc}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{arrows}
+\usetikzlibrary{crypto.symbols}
+\tikzset{shadows=no}        % Option: add shadows to XOR, ADD, etc.
+
+\author{Anonymous\inst{1}}
+\institute{City, State \email{address@provider.com}}
+\title[\texttt Design date]{\texttt Design date}
+
+\begin{document}
+
+\maketitle
+
+% use optional argument because the \LaTeX command breaks the PDF keywords
+\keywords[Permutation]{Permutation}\todo{Keywords?}
+
+\begin{abstract}
+  We define a permutation with an N\todo{Block size?}-bit block size. The design is oriented towards PLATFORM TYPE\todo{Constrained Devices? Consumer CPUs? What architecture/native word sizes?}. The design makes use of certain instruction types or gates. \todo{XOR/AND? ADD/XOR? Multiplication? Modular Exponentiation? Lookup Tables?}\\ 
+\end{abstract}
+
+\todototoc
+\listoftodos
+
+\section{Introduction}
+ Psuedorandom permutations are a core building block of modern cryptography. They are utilized to create block ciphers in Substitution-Permutation networks, as well as to create hash functions via the Sponge construction. By separating the design of cipher and hash constructions from the design of permutations, we can simplify the responsibilities of each component. The permutation holds the responsibility to be designed to resist all known generic attack frameworks, such as linear and differential cryptanalysis. 
+
+\todo{Explain the motivation for the design described here}
+
+
+\section{Definitions}
+\todo{Define the notation used in this paper}\\
+\todo{Define how the state is laid out and indexed/addressed}\\
+We use $\oplus$ to denote XOR, $\land$ to denote AND, and $\lll$ to denote bitwise rotation left...
+
+\section{Algorithm}
+\todo{Define the algorithm in detail}\\
+\todo{Describe the layout of the state}\\
+\todo{Define the round function or permutation}
+
+\section{Design\ Rationale}
+\todo{Explain the reasoning for each step of the algorithm}\\
+\todo{Explain how constants are generated and what purpose they serve}\\
+\todo{Describe why the linear and non-linear layers were designed/chosen}\\
+\todo{Justify numerical design decisions, such as word transpositions indices and rotation amounts}\\
+
+\section{Conclusion}
+ We define an N-bit permutation that is oriented towards PLATFORM TYPE. \todo{Fill in values for block size and platform type} 
+\todo{Concisely summarize the rest of the paper in a paragraph or two}
+
+\end{document}
+

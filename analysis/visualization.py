@@ -20,6 +20,22 @@ def _print_state(inputs, bits):
         print("{} ({}/{})".format(bit_string, weight, bits))
     print("{} ({}/{})".format(' ' * bits, weight_total, (bits * len(inputs))))
     
+def print_state_4x4x8(inputs):
+    print_4x4_state(inputs, 8)
+    
+def print_4x4_state(inputs, bits):    
+    weight_total = 0
+    print inputs
+    for words in slide(inputs, 4):    
+        bit_string = weight_string = ''
+        for word in words:
+            weight = hamming_weight(word)
+            weight_total += weight
+            bit_string += ''.join(bit for bit in format(word, 'b').zfill(bits)) + ' '
+            weight_string += "({}/{}) ".format(weight, bits)
+        print("{} {}".format(bit_string, weight_string))
+    print("{} ({}/{})".format(' ' * ((len("({}/{}) ") * 3) + 4 + (bits * 4)), weight_total, (bits * len(inputs))))
+
 def print_state_4x32_128_as_4x32(inputs, message=''):
     if message:
         print message
@@ -44,6 +60,12 @@ def print_state_64x8(inputs):
 def print_state_32x32(inputs):
     _print_state(inputs, 32)
     
+def print_state_4x4(inputs):
+    _print_state(inputs, 4)
+    
+def test_4x4_function(function, inputs, print_function=print_state_4x4):
+    test_function(function, inputs, print_function)        
+        
 def test_8x8_function(function, inputs, print_function=print_state_8x8):
     test_function(function, inputs, print_function)
     
@@ -65,6 +87,9 @@ def test_4x64_function(function, inputs, print_function=print_state_4x64_256_as_
 def test_64x8_function(function, inputs, print_function=print_state_64x8):
     test_function(function, inputs, print_function)
         
+def test_4x4x8_function(function, inputs, print_function=print_state_4x4x8):
+    test_function(function, inputs, print_function)                 
+            
 def test_function(function, inputs, print_function):
     print("Testing {} with inputs: ".format(function))
     print_function(inputs)
