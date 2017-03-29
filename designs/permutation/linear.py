@@ -4,7 +4,13 @@ from crypto.utilities import rotate_left
 PRINT_STRING = "Branch number for 2x {}-bit words: {} (optimum: {})"
 
 def branch8(word):
-    # 0 1 2 3  4 5 6 7    
+    # 0 1 2 3  4 5 6 7   
+    # 3 4 5 6  7 0 1 2
+    # 03 14 25 36 47 05 16 27
+    
+    # 03 14 25 36 47 05 16 27
+    # 16 27 03 14 25 36 47 05 
+    # 0136 1247 0235 1346 0356 1467 0257
     word ^= rotate_left(word, 3)
     word ^= rotate_left(word, 6)
     return word

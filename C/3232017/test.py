@@ -14,8 +14,8 @@ def mix_columns(a, b, c, d):
     # bcd
     # abc
     # abd
-    #a ^= b; c ^= d; b ^= c; d ^= a; a ^= b; c ^= d;            
-    a ^= b; c ^= d; b ^= c; d ^= a; a ^= c; 
+    a ^= b; c ^= d; b ^= c; d ^= a; a ^= b; c ^= d;            
+    #a ^= b; c ^= d; b ^= c; d ^= a; a ^= c; 
     
     return a, b, c, d
     
@@ -27,5 +27,5 @@ def permutation(a, b, c, d):
     b, c, d = shift_rows(b, c, d, 4, 8, 12)
     
     a, b, c, d = mix_columns(a, b, c, d)
-    b, c, d = shift_rows(b, c, d, 8, 12, 16)  
+    b, c, d = shift_rows(b, c, d, 8, 16, 24)  
     return a, b, c, d

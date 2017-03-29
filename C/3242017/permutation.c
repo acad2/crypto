@@ -40,7 +40,7 @@ void permutation(WORDSIZE* state){
     store_register(c, state, 8); store_register(d, state, 12);}
     
 int main(){    
-	WORDSIZE message[16];
+	WORDSIZE message[16] __attribute__((aligned(16))); 
     unsigned long index;
     
     clock_t begin = clock();

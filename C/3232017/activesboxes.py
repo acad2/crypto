@@ -132,14 +132,14 @@ def test_search_minimum_active_sboxes2():
             constant += constant
             # each application of mix slice multiplies the number of influential bits in each bit by at least 2 ** 3
             for round in range(1): 
-                b, c, d, a = mix_columns(a, b, c, d)
+                a, b, c, d = mix_columns(a, b, c, d)
                 b, c, d = shift_rows(b, c, d, 1, 2, 3)
                 
-                b, c, d, a = mix_columns(a, b, c, d)
+                a, b, c, d = mix_columns(a, b, c, d)
                 b, c, d = shift_rows(b, c, d, 4, 8, 12)
             
-                b, c, d, a = mix_columns(a, b, c, d)
-                b, c, d = shift_rows(b, c, d, 8, 12, 16)                                                      
+                a, b, c, d = mix_columns(a, b, c, d)
+                b, c, d = shift_rows(b, c, d, 8, 12, 24)                                                      
             
         #    b, c, d = slide_rows(b, c, d)  
             
@@ -152,13 +152,7 @@ def test_search_minimum_active_sboxes2():
         #    a, b, c, d = mix_columns(a, b, c, d)
         #    b, c, d = shift_rows(b, c, d, 8, 12, 16)        
                         
-            #t = a; a = (a & b) ^ c;  c = (b | c) ^ d; d = (d & a) ^ t; b ^= c & t;
-            
-                
-        #print
-        #print '\n'.join(format(word, 'b').zfill(128) for word in (a, b, c, d))
-        #print '\n'.join(format(word, 'b').zfill(128) for word in (bytes_to_integer(bytearray(urandom(16))) for count in range(4)))
-        #raw_input()
+            #t = a; a = (a & b) ^ c;  c = (b | c) ^ d; d = (d & a) ^ t; b ^= c & t;            
         return a, b, c, d
     search_minimum_active_sboxes(test_function, word_size=32)
 
@@ -172,9 +166,9 @@ def test_mix_columns_stats():
         # d = abd
         # a = ab + bcd == acd
         # c = cd + abd == abc
-        # acd
-        # abc
+        # acd        
         # bcd
+        # abc
         # abd
         
         

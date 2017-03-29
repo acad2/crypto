@@ -102,7 +102,7 @@ Each slice is mixed in parallel according to the following steps:
 This is followed by a sliding of the rows, such that the rows of the slices become mixed:
 
 \begin{algorithmic}
-\Function{$slide\_rows$}{$b, c, d$}
+\Function{$mix\_slices$}{$b, c, d$}
 	\State $b \gets b_1 \Vert b_2 \Vert b_3 \Vert b_0$
 	\State $c \gets c_2 \Vert c_3 \Vert c_0 \Vert c_1$	
 	\State $d \gets d_3 \Vert d_0 \Vert d_1 \Vert d_2$
