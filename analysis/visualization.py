@@ -91,8 +91,8 @@ def test_4x4x8_function(function, inputs, print_function=print_state_4x4x8):
     test_function(function, inputs, print_function)                 
             
 def test_function(function, inputs, print_function):
-    print("Testing {} with inputs: ".format(function))
-    print_function(inputs)
+   # print("Testing {} with inputs: ".format(function))
+   # print_function(inputs)
     while not raw_input("any key+enter to finish, enter to continue: "):
         inputs = function(*inputs)
         print("\n")

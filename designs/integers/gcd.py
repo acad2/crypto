@@ -1,3 +1,5 @@
+# broken by lattice reduction
+
 from os import urandom
 
 from crypto.utilities import gcd, bytes_to_integer, integer_to_bytes

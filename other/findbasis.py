@@ -54,8 +54,7 @@ def break_gcd_cipher():
         recovered_m = find_basis(point_generator(m, k))
         assert recovered_m == m, (recovered_m, m)
         print("Recovered m: {}".format(recovered_m))
-        
-        
+    # conclusion: The error in pq + e should be random/should not be kept fixed            
     
 if __name__ == "__main__":
     test_find_basis()
