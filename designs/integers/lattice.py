@@ -25,9 +25,9 @@ def generate_keypair(size_in_bytes=32):
 def encrypt(message_integer, public_key):
     return public_key + message_integer
     
-def decrypt(ciphertext_integer, private_key):
-    p, e = private_key
-    return (ciphertext_integer % p) - e
+def decrypt(ciphertext_integer, private_key, error_count=1):
+    p, e = private_key    
+    return (ciphertext_integer - (e * error_count)) % p
     
 def test_encrypt_decrypt():
     import pprint
@@ -40,6 +40,12 @@ def test_encrypt_decrypt():
     plaintext = decrypt(ciphertext, private_key)
     print("Generated Plaintext   : {}".format(plaintext))
     assert plaintext == m, (plaintext, m)    
+    
+    m2 = 2
+    ciphertext2 = encrypt(m2, public_key)
+    ciphertext3 = ciphertext + ciphertext2 + ciphertext2
+    plaintext3 = decrypt(ciphertext3, private_key, error_count=3)
+    assert plaintext3 == m + m2 + m2, (plaintext3, m + m2 + m2)
     
 if __name__ == "__main__":
     test_encrypt_decrypt()
