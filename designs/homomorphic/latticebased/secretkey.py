@@ -12,14 +12,11 @@ def generate_key(size_in_bytes=32):
     
 def encrypt(message_integer, secret_key, size_in_bytes=32):
     p1, p2 = secret_key
-    q1 = random_integer(size_in_bytes)
-    q2 = random_integer(size_in_bytes)       
-    point1 = p1 * q1    
-    point2 = p2 * q2
-    while point2 > point1:
-        q2 = random_integer(size_in_bytes)
-        point2 = p2 * q2
-    return point1 + point2 + message_integer    
+    p1 *= random_integer(size_in_bytes)
+    _p2 = p2 * random_integer(size_in_bytes)
+    while _p2 > p1:
+        _p2 = p2 * random_integer(size_in_bytes)
+    return p1 + _p2 + message_integer  
     
 def decrypt(ciphertext_integer, secret_key):
     p1, p2 = secret_key
@@ -37,9 +34,7 @@ def test_encrypt_decrypt():
         ciphertext3 = ciphertext + ciphertext2 + ciphertext2 + 5
         plaintext3 = decrypt(ciphertext3, secret_key)
         assert plaintext3 == m + m2 + m2 + 5, (plaintext3, m + m2 + m2)
-               
-            
-       
+                     
 if __name__ == "__main__":
     test_encrypt_decrypt()
     
