@@ -1,6 +1,6 @@
 from os import urandom
 
-from crypto.utilities import bytes_to_integer, integer_to_bytes
+from crypto.utilities import bytes_to_integer, integer_to_bytes, gcd
 
 def random_integer(size_in_bytes):
     return bytes_to_integer(bytearray(urandom(size_in_bytes)))
@@ -8,6 +8,8 @@ def random_integer(size_in_bytes):
 def generate_key(size_in_bytes=32):
     p1 = random_integer(size_in_bytes * 3)
     p2 = random_integer(size_in_bytes)
+    while gcd(p1, p2) != 1:
+        p2 = random_integer(size_in_bytes)
     return p1, p2
     
 def encrypt(message_integer, secret_key, size_in_bytes=32):

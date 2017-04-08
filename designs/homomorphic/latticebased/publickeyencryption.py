@@ -68,39 +68,57 @@ def encrypt(message, public_key, ciphertext_count=16,
     return ciphertext
     
 def decrypt(ciphertext, private_key, decryption_function=secret_key_decrypt):
-    return decryption_function(ciphertext, private_key)
-    
+    return decryption_function(ciphertext, private_key) 
   
-def encrypt_then_mac(message, *args, **kwargs):
-    """ usage: encrypt_then_mac(message : bytearray, *args, **kwargs) => ciphertext + tag
+def encrypt_then_mac(message, *args, **kwargs):        
+    integrity_key = bytes_to_integer(bytearray(urandom(32)))
+    ciphertext = save_ciphertext(encrypt(message, *args, **kwargs))
+    ciphertext += save_ciphertext(encrypt(integrity_key, *args, **kwargs))
+    tag = hmac(integrity_key, ciphertext)    
+    return ciphertext + tag
     
-        Preserves the confidentiality and integrity of messageW
-        Generates a message integrity key to use with hmac.
-        Appends the message integrity key to the message
-        Encrypts (message || message integrity key) using the public key to produce the ciphertext.
-        Produces a tag = HMAC(message integrity key, ciphertext)
-        Outputs ciphertext || tag. """
-    integrity_key = urandom(32)    
-    message += integrity_key
-    ciphertext = encrypt(message, *args, **kwargs)        
-    tag = hmac(integrity_key, save_ciphertext(ciphertext))
-    ciphertext.extend(tag)
-    return ciphertext
-    
-def decrypt_then_mac(ciphertext, private_key, blocksize=32, tag_size=64, integrity_key_size=32):
-    """ Decrypts a (message || message integrity key) ciphertext to obtain the message and key.
-        Then, calculates the tag via HMAC(message integrity key, ciphertext)
-        Returns message upon successful tag validation. Returns None if tag validation fails. """
+def decrypt_then_mac(ciphertexts, private_key, blocksize=32, tag_size=64, 
+                     integrity_key_size=32, decryption_function=secret_key_decrypt):
     tag = bytearray(ciphertext[-tag_size:])
-    plaintext = decrypt(ciphertext[:-tag_size], private_key, blocksize)    
-    integrity_key = plaintext[-integrity_key_size:]        
-    message = plaintext[:-integrity_key_size]
+    ciphertexts = ciphertext[:-tag_size]
+    _ciphertexts = [load_ciphertext(ciphertext) for ciphertext in slide(ciphertexts, blocksize)] # is this right?    
+    message = decryption_function(_ciphertexts[0], private_key)
+    integrity_key = decryption_function(_ciphertexts[-1], private_key)
     
-    _tag = hmac(integrity_key, save_ciphertext(ciphertext[:-tag_size]))
+    _tag = hmac(integrity_key, ciphertexts)
     if compare_digest(_tag, tag):
         return message
     else:
         return None    
+        
+#-----------serialization
+from utilities import words_to_bytes, bytes_to_words
+
+def save_public_key(public_key):      
+    return ''.join(bytes(words_to_bytes(entry, 2)) for entry in slide(public_key, BLOCKSIZE))
+
+def load_public_key(saved_key):    
+    output = []
+    for entry in slide(bytearray(saved_key), BLOCKSIZE * 2):
+        output.extend(bytes_to_words(entry, 2))
+    return output    
+                
+def save_private_key(private_key):        
+    return words_to_bytes(private_key, 2)
+    
+def load_private_key(saved_private_key):           
+    return bytearray(bytes_to_words(bytearray(saved_private_key), 2))
+    
+def save_ciphertext(ciphertext):
+    return ''.join(bytes(words_to_bytes(entry, 2)) for entry in slide(ciphertext, BLOCKSIZE))
+    
+def load_ciphertext(saved_ciphertext):
+    output = []
+    for entry in slide(bytearray(saved_ciphertext), BLOCKSIZE * 2):
+        output.extend(bytes_to_words(entry, 2))
+    return output  
+    
+#----------Begin unit tests
     
 def test_encrypt_then_mec_decrypt_then_mac():
     message = "Testing!"
@@ -138,33 +156,6 @@ def test_homomorphic_encrypt_decrypt():
     ciphertext = secret_key_encrypt(message, key)    
     plaintext = secret_key_decrypt(ciphertext, key)
     assert plaintext == message, (plaintext, message)
-    
-#-----------serialization
-from utilities import words_to_bytes, bytes_to_words
-
-def save_public_key(public_key):      
-    return ''.join(bytes(words_to_bytes(entry, 2)) for entry in slide(public_key, BLOCKSIZE))
-
-def load_public_key(saved_key):    
-    output = []
-    for entry in slide(bytearray(saved_key), BLOCKSIZE * 2):
-        output.extend(bytes_to_words(entry, 2))
-    return output    
-                
-def save_private_key(private_key):        
-    return words_to_bytes(private_key, 2)
-    
-def load_private_key(saved_private_key):           
-    return bytearray(bytes_to_words(bytearray(saved_private_key), 2))
-    
-def save_ciphertext(ciphertext):
-    return ''.join(bytes(words_to_bytes(entry, 2)) for entry in slide(ciphertext, BLOCKSIZE))
-    
-def load_ciphertext(saved_ciphertext):
-    output = []
-    for entry in slide(bytearray(saved_ciphertext), BLOCKSIZE * 2):
-        output.extend(bytes_to_words(entry, 2))
-    return output  
     
 def test_save_load_ciphertext():
     public_key, private_key = generate_keypair()

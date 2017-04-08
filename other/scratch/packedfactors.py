@@ -59,6 +59,22 @@ def unpack_factors(factor_string):
     return output        
     
 def unpack_exponents(exponent_string):
+    output = []
+    generator = (half_byte for half_byte in slide(exponent_string, 4))    
+    while True:
+        try:
+            half_byte = next(generator)
+        except StopIteration:
+            break
+        else:
+            if not half_byte & 8:
+                output.append(accumulator)                
+            else:
+                accumulator += half_byte & 7
+        
+    for half_byte in slide(exponent_string, 4):
+        if half_byte & 8:
+            
     return [int(half_byte, 2) for half_byte in slide(exponent_string, 4)]
             
 def unpack(factor_string, exponent_string):    

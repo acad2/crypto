@@ -363,3 +363,32 @@ def odd_size_to_bytes(hash_output, word_size):
     bits = ''.join(format(word, 'b').zfill(word_size) for word in hash_output)
     return bytearray(int(_bits, 2) for _bits in slide(bits, 8))
                   
+def integer_to_words(integer, integer_size_bits, word_size_bits):
+    #assert integer_size_bits >= word_size_bits
+    #in_bytes = integer_to_bytes(integer, integer_size_bits / 8)
+    #return bytes_to_words(in_bytes, word_size_bits / 8)
+    output_words, extra = divmod(integer_size_bits, word_size_bits)
+    if extra:
+        output_words += 1    
+    #print output_words, extra, integer_size_bits, word_size_bits
+    output = []    
+    mask = (2 ** word_size_bits) - 1
+    for subsection in range(output_words):
+        output.append((integer >> (word_size_bits * subsection)) & mask)
+    return output
+
+def words_to_integer(words, word_size_bits):    
+   # in_bytes = words_to_bytes(words, word_size_bits / 8)    
+   # return bytes_to_integer(in_bytes)
+    output = 0  
+    for counter, word in enumerate(words):
+        output |= word << (counter * word_size_bits)
+    return output
+        
+def test_integer_to_words_words_to_integer():
+    m = 133791287398124981241724871241217918273046208756138756139513210512305812353571834314311134
+    words = integer_to_words(m, 384, 64)
+    _m = words_to_integer(words, 64)
+    assert m == _m, (m, _m, words)
+        
+                    
