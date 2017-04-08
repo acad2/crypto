@@ -24,7 +24,7 @@ def encrypt(message, public_key, ciphertext_count=16,
     key_material = public_key[:]    
     ciphertext = 0               
     for count in range(ciphertext_count):        
-        secureshuffle.secure_shuffle(key_material, size_in_bytes * 8 * 9, prng) # bit size must be >= log2(public_key[i])  
+        secureshuffle.shuffle(key_material, size_in_bytes * 8 * 9, prng) # bit size must be >= log2(public_key[i])  
         ciphertext += key_material[0] * random_integer(size_in_bytes)
     return ciphertext + message
     

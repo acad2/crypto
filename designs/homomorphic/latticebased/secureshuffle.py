@@ -2,7 +2,7 @@ from os import urandom
 
 from crypto.utilities import rotate_left, integer_to_words, words_to_integer
     
-__all__ == ["shuffle", ]
+__all__ = ["shuffle", ]
     
 def shuffle(container, wordsize, prng=lambda amount: bytearray(urandom(amount))):    
     """ usage: shuffle(container, wordsize, 
@@ -41,8 +41,8 @@ def _choice(a, b, c):
         
 def _choice_swap(k, a, b):
     t = a;
-    a = choice(k, a, b)
-    b = choice(k, b, t)    
+    a = _choice(k, a, b)
+    b = _choice(k, b, t)    
     return a, b            
             
 def _generate_shuffle_key_material(byte_count, prng=lambda amount: bytearray(urandom(amount))):       
