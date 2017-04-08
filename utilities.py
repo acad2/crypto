@@ -364,13 +364,10 @@ def odd_size_to_bytes(hash_output, word_size):
     return bytearray(int(_bits, 2) for _bits in slide(bits, 8))
                   
 def integer_to_words(integer, integer_size_bits, word_size_bits):
-    #assert integer_size_bits >= word_size_bits
-    #in_bytes = integer_to_bytes(integer, integer_size_bits / 8)
-    #return bytes_to_words(in_bytes, word_size_bits / 8)
+    assert integer_size_bits >= word_size_bits
     output_words, extra = divmod(integer_size_bits, word_size_bits)
     if extra:
-        output_words += 1    
-    #print output_words, extra, integer_size_bits, word_size_bits
+        output_words += 1        
     output = []    
     mask = (2 ** word_size_bits) - 1
     for subsection in range(output_words):

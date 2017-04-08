@@ -16,7 +16,7 @@ from os import urandom
 
 from publickeyencryption import generate_keypair, decrypt
 from secretkey import random_integer
-import secureshuffle
+import crypto.designs.secureshuffle as secureshuffle
 
 def encrypt(message, public_key, ciphertext_count=16, 
             prng=lambda amount: bytearray(urandom(amount)),

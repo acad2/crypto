@@ -7,7 +7,9 @@ __all__ = ["shuffle", ]
 def shuffle(container, wordsize, prng=lambda amount: bytearray(urandom(amount))):    
     """ usage: shuffle(container, wordsize, 
                        prng=lambda amount: bytearray(urandom(amount))) => None
-                       
+         
+        container should be a mutable ordered collection of numbers
+        wordsize should be greater then or equal to the length of the largest element of the container in bits
         Shuffle container in-place in a manner that is less prone to side channel leakage of information.
         The standard Fisher-Yates shuffle accesses the array at secret dependent locations
             - an adversary who can monitor the cache may have an advantage at guessing the output
