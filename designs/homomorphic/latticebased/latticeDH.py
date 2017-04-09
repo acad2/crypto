@@ -1,3 +1,6 @@
+# broken
+
+
 #A := g ^ a mod p
 #B := g ^ b mod p
 #O == B ^ a mod p == A ^ b mod p
@@ -10,7 +13,8 @@
 #
 #_A := g * y
 #_B := g * z
-#_O := (g * z) * y mod p == (g * y) * z mod p
+#_O := (g * z) ^ y mod p == (g * y) ^ z mod p
+#      (g * z) ^ y == (g * z) * ((g * z) ^ (y - 1))
 #
 #g * y == (p * qa) + ea 
 #g * z == (p * qb) + eb 
@@ -32,7 +36,7 @@
 
 from crypto.utilities import random_integer, big_prime
 
-DEFAULT_SIZE = 32
+DEFAULT_SIZE = 1
 Q_SIZE = DEFAULT_SIZE
 E_SIZE = DEFAULT_SIZE
 P = big_prime(E_SIZE * 2)
@@ -43,7 +47,7 @@ def random_key(p=P, q_size=Q_SIZE, e_size=E_SIZE):
     e = random_integer(e_size)
     return (p * q) + e
     
-def generate_keypair(g, p, q_size, e_size):
+def generate_keypair(g=G, p=P, q_size=Q_SIZE, e_size=E_SIZE):
     key = random_key(p, q_size, e_size)
     while key % g:
         key = random_key(p, q_size, e_size)
@@ -52,7 +56,7 @@ def generate_keypair(g, p, q_size, e_size):
     return public_key, private_key
         
 def derive_shared_secret(p, others_public_key, private_key):
-    return (others_public_key * private_key) % p
+    return (others_public_key * (others_public_key ** (private_key - 1))) % p
             
 def test_derive_shared_secret():
     g, p = G, P
@@ -64,10 +68,33 @@ def test_derive_shared_secret():
     #print("Public key #2: {}".format(pub2))
     assert _secret1 == _secret2, (_secret1, _secret2)    
     print("test_derive_shared_secret Unit Test pass: {}".format(_secret1))
-    
+ 
+def write_keys():
+    with open("P.bin", "wb") as _file:
+        _file.write(str(P))
+        _file.flush()
+        
+    with open("keypair1.bin", "wb") as _file:
+        pub, priv = generate_keypair()
+        _file.write(str(pub) + "\n")
+        _file.write(str(priv))
+        _file.flush()
+        
+    with open("keypair2.bin", "wb") as _file:
+        pub, priv = generate_keypair()
+        _file.write(str(pub) + "\n")
+        _file.write(str(priv))
+        _file.flush()
+ 
+    with open("keypair3.bin", "wb") as _file:
+        pub, priv = generate_keypair()
+        _file.write(str(pub) + '\n')
+        _file.write(str(priv))
+        _file.flush()        
+        
+        
 if __name__ == "__main__":
     test_derive_shared_secret()
-    
     
     
                 
