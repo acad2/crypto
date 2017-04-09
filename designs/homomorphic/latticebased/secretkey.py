@@ -1,9 +1,6 @@
 from os import urandom
 
-from crypto.utilities import bytes_to_integer, integer_to_bytes, gcd
-
-def random_integer(size_in_bytes):
-    return bytes_to_integer(bytearray(urandom(size_in_bytes)))
+from crypto.utilities import gcd, random_integer
     
 def generate_key(size_in_bytes=32):
     p1 = random_integer(size_in_bytes * 3)

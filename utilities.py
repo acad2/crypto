@@ -388,4 +388,17 @@ def test_integer_to_words_words_to_integer():
     _m = words_to_integer(words, 64)
     assert m == _m, (m, _m, words)
         
-                    
+def random_integer(size_in_bytes):
+    return bytes_to_integer(bytearray(os.urandom(size_in_bytes)))
+    
+def big_prime(size_in_bytes, test_count=256):    
+    while True:
+        candidate = random_integer(size_in_bytes)
+        for test_number in (random_integer(size_in_bytes) for count in range(test_count)):
+            if gcd(candidate, test_number) != 1:
+                candidate = random_integer(size_in_bytes)
+                break
+        else:
+            return candidate
+        
+        
