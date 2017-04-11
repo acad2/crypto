@@ -1,4 +1,6 @@
 import itertools
+import collections
+import random
 from math import log
 
 from crypto.utilities import integer_to_bytes, bytes_to_integer, slide, rotate_left
@@ -38,7 +40,9 @@ def count_active_bits(function_input, output, last_input, last_output, active_bi
     #if number_different_bits: # hack; get rid of duplicate inputs   
     input_difference = sum(hamming_weight(word) for word in (last_input[index] ^ _input for index, _input in enumerate(function_input)))
     active_bits.append(number_different_bits + input_difference)
-        
+    if active_bits[-1] < min(active_bits[:-1] or [0]):
+        print "New minimum: ", active_bits[-1], function_input, last_input, output, last_output
+            
 def display_active_bits_progress(active_bits, weights):            
     print("Minimum # active bits: {}".format(min(active_bits)))
     print("Median  # active bits: {}".format(sorted(active_bits)[len(active_bits) / 2]))
@@ -130,7 +134,44 @@ def search_minimum_active_bits(permutation, argument_function, output_function, 
     print("\nSearch complete" + ('-' * (80 - len("\nSearch complete"))))
     print("Search space: 2 ** {}".format(log(count ** 3, 2)))
     display_progress_function(active_bits, weights)
-        
+  
+def search_minimum_active_bits2(test_function, display_progress=True, 
+                               test_inputs=QUICK_TEST, count_active_word_function=count_active_bits, 
+                               display_progress_function=display_active_bits_progress):
+    active_bits = list()
+    weights = list()    
+                              
+    last_x = 0    
+    last_input = (1, 0, 0, 0)
+    last_output = test_function(*last_input)
+    _inputs = set()    
+    _outputs = collections.deque(maxlen=1024)    
+    _outputs.append(last_output)
+    for x, y in itertools.product(test_inputs(), test_inputs()):        
+        for count, z in enumerate(test_inputs()):                                   
+            output = test_function(1, x, y, z)
+            
+            output_hamming_weight = sum(hamming_weight(word) for word in output)           
+            weights.append(output_hamming_weight)
+            _outputs.append(output)
+            random_output = random.choice(_outputs)
+            while random_output == output:
+                random_output = random.choice(_outputs)
+            count_active_word_function((1, x, y, z), output, last_input, random_output, active_bits)            
+            last_input = (1, x, y, z)                        
+            
+        if display_progress and x != last_x:
+            last_x = x            
+            print("\n" + ('-' * 79))
+            print("Displaying progress: {}".format(len(active_bits)))
+            display_progress_function(active_bits, weights)
+            
+    weights.pop(-1) # remove the 0, 0, 0 entries
+    active_bits.pop(-1)
+    print("\nSearch complete" + ('-' * (80 - len("\nSearch complete"))))
+    print("Search space: 2 ** {}".format(log(count ** 3, 2)))
+    display_progress_function(active_bits, weights)
+    
 def test_8x64_function(function, arguments):
     search_minimum_active_bits(lambda args: function(args), lambda *args: args, lambda args: args)            
             
