@@ -2,6 +2,7 @@
 # encryption: generate two random r and do (pb1 * r1) + (pb2 * r2) + m
 # decryption: homomorphic decrypt
 
+# p1q1 + p2q2 + e
 import secretkey
 
 def generate_private_key(key_generation_function=secretkey.generate_key):
