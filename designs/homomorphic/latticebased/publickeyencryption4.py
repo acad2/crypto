@@ -25,13 +25,18 @@ def encrypt(m, public_key, r_size=16):
 def decrypt(ciphertext, private_key, decryption_function=secretkey.decrypt):
     return decryption_function(ciphertext, private_key)
     
-def test_encrypt_decrypt():
+def test_encrypt_decrypt():    
     public_key, private_key = generate_keypair()
     message = 1
     ciphertext = encrypt(message, public_key)    
     plaintext = decrypt(ciphertext, private_key)
     assert plaintext == message, (plaintext, message)
+    
+    hamming_weight = lambda number: format(number, 'b').count('1')
     print("publickeyencryption4 encrypt/decrypt unit test passed")
+    print("Public key size : {}".format(sum(hamming_weight(item) for item in public_key)))
+    print("Private key size: {}".format(sum(hamming_weight(item) for item in private_key)))
+    print("Ciphertext size : {}".format(hamming_weight(ciphertext)))
     
 if __name__ == "__main__":
     test_encrypt_decrypt()
