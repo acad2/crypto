@@ -20,4 +20,6 @@ as well as various designs for/related to:
     - computationally asymmetric encryption/decryption
     
 The analysis tools are written in python, as well the designs. A few designs have variants written in C to get a better understanding of algorithm performance on the CPU.
-Most of the designs are my own and are not intended for use to protect data in the real world. The code is for research purposes. 
+Most of the designs are my own and are not intended for use to protect data in the real world. 
+
+The code is for research purposes. Much of it is effectively scratch paper - the contents of any file are not guaranteed to contain accurate or complete reasoning.

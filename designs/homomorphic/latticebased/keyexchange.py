@@ -1,8 +1,3 @@
-# public key: 2 homomorphic encryptions of 0
-# encryption: generate two random r and do (pb1 * r1) + (pb2 * r2) + m
-# decryption: homomorphic decrypt
-
-# same p1q1 + p2q2 + m pattern as secretkey.encrypt
 import secretkey
 
 def generate_private_key(key_generation_function=secretkey.generate_key):
@@ -18,28 +13,29 @@ def generate_keypair():
     public_key = generate_public_key(private_key)
     return public_key, private_key
     
-def encrypt(m, public_key, r_size=16):
+def exchange_key(random_secret, public_key, r_size=24):
     pb1, pb2 = public_key
     r1, r2 = secretkey.random_integer(r_size), secretkey.random_integer(r_size)
-    return (pb1 * r1) + (pb2 * r2) + m
+    return (pb1 * r1) + (pb2 * r2) + random_secret
     
-def decrypt(ciphertext, private_key, decryption_function=secretkey.decrypt):
+def recover_key(ciphertext, private_key, decryption_function=secretkey.decrypt):
     return decryption_function(ciphertext, private_key)
     
-def test_encrypt_decrypt():    
+def test_exchange_key_recover_key():    
     public_key, private_key = generate_keypair()
     message = 1
-    ciphertext = encrypt(message, public_key)    
-    plaintext = decrypt(ciphertext, private_key)
-    assert plaintext == message, (plaintext, message)
+    for message in range(256):
+        ciphertext = exchange_key(message, public_key)    
+        plaintext = recover_key(ciphertext, private_key)
+        assert plaintext == message, (plaintext, message)
     
     hamming_weight = lambda number: format(number, 'b').count('1')
-    print("publickeyencryption4 encrypt/decrypt unit test passed")
+    print("key exchange exchange_key/recover_key unit test passed")
     print("Public key size : {}".format(sum(hamming_weight(item) for item in public_key)))
     print("Private key size: {}".format(sum(hamming_weight(item) for item in private_key)))
-    print("Ciphertext size : {}".format(hamming_weight(ciphertext)))
+    print("Secret size : {}".format(hamming_weight(ciphertext)))
     
-def test_encrypt_time():
+def test_exchange_key_time():
     from timeit import default_timer as timer
     print "Calculating time to generate keypair... "    
     before = timer()
@@ -48,16 +44,16 @@ def test_encrypt_time():
     after = timer()
     print("Time taken to generate keypair: {}".format((after - before) / number))
     before = timer()
-    
-    #public_key = randomize_public_key(public_key, encrypt)
+        
     message = 1
-    for number in range(1024 * 20):                
-        ciphertext = encrypt(message, public_key)        
+    for number in range(1024 * 16):                
+        ciphertext = exchange_key(message, public_key)
+        key = recover_key(ciphertext, private_key)
     after = timer()
     ciphertext_size = len(format(ciphertext, 'b'))
-    print("Time taken to encrypt {} x {} bit messages ({}KB): {}".format(number + 1, ciphertext_size, ((ciphertext_size / 8) * (number * 1)) / 1024, after - before))
+    print("Time taken to exchange {} keys: {}".format(number + 1, after - before))
         
 if __name__ == "__main__":
-    test_encrypt_decrypt()
-    test_encrypt_time()
+    test_exchange_key_recover_key()
+    test_exchange_key_time()
     

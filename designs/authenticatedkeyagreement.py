@@ -2,10 +2,7 @@ from os import urandom
 import hmac
 import hashlib
 
-from publickeyencryption import encrypt_then_mac as encrypt
-from publickeyencryption import decrypt_then_mac as decrypt
-from publickeyencryption import generate_keypair, save_public_key, load_public_key
-from utilities import addition_subroutine
+from crypto.utilities import addition_subroutine
 
 def generate_random_value(size=32):
     return bytearray(urandom(size))
@@ -16,10 +13,11 @@ def _derive_shared_secret(random_value1, random_value2):
     addition_subroutine(key1, key2, 256)    
     return key1
     
-def generate_request(identifier, bobs_public_key, random_value_size=32, encrypt=encrypt):
+def generate_request(identifier, bobs_public_key, encrypt, random_value_size=32):
     """ usage: generate_request(initiator_identifier : bytearray,
                                 bobs_public_key : bytearray,
-                                random_value_size=32, encrypt=encrypt) => ciphertext, random_value
+                                encrypt : function,
+                                random_value_size=32) => ciphertext, random_value
                                 
         Generates a request for the initiating party to send to the receiving party using the receiving party's public key.
         Returns (identifier || random_value), encrypted under the receiver's public key, as well as the plaintext random value.
@@ -29,17 +27,19 @@ def generate_request(identifier, bobs_public_key, random_value_size=32, encrypt=
         identifier should either be the initiators public key
         - or - 
         some means to indicate which public key to respond with i.e. a hash of the public key and a table with the hash:key in it receiver side. """
+    assert isinstance(identifier, bytearray)
+    assert isinstance(bobs_public_key, bytearray)
     random_value = generate_random_value(random_value_size)
     return encrypt(identifier + random_value, bobs_public_key), random_value
     
 def sign_request(initial_ciphertext, bobs_private_key, bobs_identifier, 
-                 random_value_size=32, encrypt=encrypt, decrypt=decrypt,
+                 encrypt, decrypt, random_value_size=32, 
                  identifier_resolver=lambda identifier: identifier): # default resolver assumes identifier is just the public key
     """ usage: sign_request(initiation_ciphertext : bytearray, 
                             bobs_private_key : bytearray,
-                            bobs_identifier : bytearray,
+                            bobs_identifier : bytearray,                            
+                            encrypt : function, decrypt : function
                             random_value_size=32, 
-                            encrypt=encrypt, decrypt=decrypt,
                             identifier_resolver=lambda identifier: identifier) => ciphertext, shared_secret
                             
         Generates a response to the initiation request.
@@ -54,11 +54,12 @@ def sign_request(initial_ciphertext, bobs_private_key, bobs_identifier,
     ciphertext = encrypt(message, alices_public_key)    
     return ciphertext, _derive_shared_secret(random_value1, random_value2)
     
-def verify_signature(second_ciphertext, alices_private_key, random_value1, random_value_size=32, decrypt=decrypt):
+def verify_signature(second_ciphertext, alices_private_key, random_value1, decrypt, random_value_size=32):
     """ usage: verify_signature(response_ciphertext : bytearray, 
                                 alices_private_key : bytearray,
                                 random_value1 : bytearray,
-                                random_value_size=32, decrypt=decrypt) => shared secret
+                                decrypt : function, 
+                                random_value_size=32) => shared secret
                                 
         Verifies a signature request. Returns a shared secret. """                
     plaintext = decrypt(second_ciphertext, alices_private_key)
@@ -73,17 +74,20 @@ def verify_signature(second_ciphertext, alices_private_key, random_value1, rando
     return output
     
 def test_protocol():    
+    from crypto.designs.homomorphic.latticebased.publickeyencryption4 import encrypt
+    from crypto.designs.homomorphic.latticebased.publickeyencryption4 import decrypt
+    from crypto.designs.homomorphic.latticebased.publickeyencryption4 import generate_keypair
     alices_public, alices_private = generate_keypair()
     bobs_public, bobs_private = generate_keypair()    
         
     # alice does this and sends the initiation message to bob
-    signature_request, alices_random1 = generate_request(alices_public, bobs_public)    
+    signature_request, alices_random1 = generate_request(alices_public, bobs_public, encrypt)    
         
     # bob does this and sends the response to alice
-    signature, bobs_secret = sign_request(signature_request, bobs_private, bobs_public)    
+    signature, bobs_secret = sign_request(signature_request, bobs_private, bobs_public, encrypt, decrypt)    
         
     # alice does this and then both alice and bob have a mutual secret. alice has also authenticated bob
-    alices_secret = verify_signature(signature, alices_private, alices_random1)        
+    alices_secret = verify_signature(signature, alices_private, alices_random1, decrypt)        
     assert alices_secret == bobs_secret    
             
 if __name__ == "__main__":

@@ -1,5 +1,7 @@
 from os import urandom
 from fractions import gcd
+
+__all__ = ["generate_keypair", "encrypt", "decrypt"]
     
 # utilities
 def bytes_to_integer(data):
@@ -22,11 +24,12 @@ def generate_private_key(size_in_bytes=32):
     
 def _secretkey_encrypt(message_integer, secret_key, size_in_bytes=32):
     p1, p2 = secret_key
-    p1 *= random_integer(size_in_bytes)
+    r1, r2 = random_integer(size_in_bytes), random_integer(size_in_bytes)    
+    p1 *= r1
     _p2 = p2 * random_integer(size_in_bytes)
     while _p2 > p1:
         _p2 = p2 * random_integer(size_in_bytes)
-    return p1 + _p2 + message_integer  
+    return p1 + _p2 + message_integer  # p1r1 + p2r2 + m
     
 def _secretkey_decrypt(ciphertext_integer, secret_key):
     p1, p2 = secret_key
@@ -47,7 +50,7 @@ def generate_keypair():
 def encrypt(m, public_key, r_size=16):
     pb1, pb2 = public_key
     r1, r2 = random_integer(r_size), random_integer(r_size)
-    return (pb1 * r1) + (pb2 * r2) + m
+    return (pb1 * r1) + (pb2 * r2) + m # p1r1 + p2r2 + m 
     
 def decrypt(ciphertext, private_key, decryption_function=_secretkey_decrypt):
     return decryption_function(ciphertext, private_key)
