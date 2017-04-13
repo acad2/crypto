@@ -1,5 +1,7 @@
 import secretkey
 
+SECRET_SIZE = 32
+
 def generate_private_key(key_generation_function=secretkey.generate_key):
     return key_generation_function()
     
@@ -13,18 +15,18 @@ def generate_keypair():
     public_key = generate_public_key(private_key)
     return public_key, private_key
     
-def exchange_key(random_secret, public_key, r_size=24):
+def exchange_key(random_secret, public_key, r_size=SECRET_SIZE):    
     pb1, pb2 = public_key
     r1, r2 = secretkey.random_integer(r_size), secretkey.random_integer(r_size)
     return (pb1 * r1) + (pb2 * r2) + random_secret
     
-def recover_key(ciphertext, private_key, decryption_function=secretkey.decrypt):
+def recover_key(ciphertext, private_key, decryption_function=secretkey.decrypt):    
     return decryption_function(ciphertext, private_key)
     
 def test_exchange_key_recover_key():    
-    public_key, private_key = generate_keypair()
-    message = 1
-    for message in range(256):
+    public_key, private_key = generate_keypair()    
+    for counter in range(65536):
+        message = secretkey.random_integer(32)
         ciphertext = exchange_key(message, public_key)    
         plaintext = recover_key(ciphertext, private_key)
         assert plaintext == message, (plaintext, message)
@@ -46,7 +48,7 @@ def test_exchange_key_time():
     before = timer()
         
     message = 1
-    for number in range(1024 * 16):                
+    for number in range(1024 * 8):                
         ciphertext = exchange_key(message, public_key)
         key = recover_key(ciphertext, private_key)
     after = timer()

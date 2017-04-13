@@ -2,19 +2,23 @@ from os import urandom
 
 from crypto.utilities import gcd, random_integer
     
-def generate_key(size_in_bytes=32):
-    p1 = random_integer(size_in_bytes * 3)
-    p2 = random_integer(size_in_bytes)
+P1_SIZE = 110
+P2_SIZE = 36
+R_SIZE = 32
+  
+def generate_key(p1_size=P1_SIZE, p2_size=P2_SIZE):
+    p1 = random_integer(p1_size)
+    p2 = random_integer(p2_size)
     while gcd(p1, p2) != 1:
-        p2 = random_integer(size_in_bytes)
+        p2 = random_integer(p2_size)
     return p1, p2
     
-def encrypt(message_integer, secret_key, size_in_bytes=32):
+def encrypt(message_integer, secret_key, r_size=R_SIZE):
     p1, p2 = secret_key
-    p1 *= random_integer(size_in_bytes)
-    _p2 = p2 * random_integer(size_in_bytes)
+    p1 *= random_integer(r_size)
+    _p2 = p2 * random_integer(r_size)
     while _p2 > p1:
-        _p2 = p2 * random_integer(size_in_bytes)
+        _p2 = p2 * random_integer(r_size)
     return p1 + _p2 + message_integer  
     
 def decrypt(ciphertext_integer, secret_key):
