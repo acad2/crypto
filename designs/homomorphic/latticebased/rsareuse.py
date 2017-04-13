@@ -1,3 +1,6 @@
+""" You can use an unmodified RSA keypair to do a lattice based key exchange.
+    Does not modify keys; Still vulnerable to factorization.
+    But it is much faster. """
 from crypto.utilities import big_prime, modular_inverse, random_integer
 
 def random_rsa_key(size):
@@ -38,6 +41,16 @@ def test_rsa_encrypt_decrypt():
     _m = rsa_decrypt(c, d, n)
     assert _m == m, (_m, m)
     
+    from timeit import default_timer as timer
+    message = 1
+    before = timer()
+    for number in range(1024):                
+        ciphertext = rsa_encrypt(message, n)
+        key = rsa_decrypt(ciphertext, d, n)
+    after = timer()
+    ciphertext_size = len(format(ciphertext, 'b'))
+    print("Time taken to exchange {} keys using RSA: {}".format(number + 1, after - before))
+    
 def test_rsa_lattice_exchange_recover():
     n, d, p = generate_rsa_keypair()
     r = random_integer(32)
@@ -45,7 +58,16 @@ def test_rsa_lattice_exchange_recover():
     #print c
     s = rsa_lattice_recover(c, p)
     assert s == r, (s, r)
-    #print s
+
+    from timeit import default_timer as timer    
+    message = 1
+    before = timer()
+    for number in range(1024):                
+        ciphertext = rsa_lattice_exchange(message, n)
+        key = rsa_lattice_recover(ciphertext, p)
+    after = timer()
+    ciphertext_size = len(format(ciphertext, 'b'))
+    print("Time taken to exchange {} keys using RSA-Lattice: {}".format(number + 1, after - before))
     
 if __name__ == "__main__":
     test_rsa_encrypt_decrypt()
