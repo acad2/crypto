@@ -10,7 +10,7 @@ def random_rsa_key(size):
     d = modular_inverse(3, totient)
     return n, d, p
     
-def generate_rsa_keypair(size=4096 / 8):
+def generate_rsa_keypair(size=2048 / 8):
     while True: # big_prime doesn't always return a big prime 
         try:
             n, d, p = random_rsa_key(size)
