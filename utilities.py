@@ -391,14 +391,26 @@ def test_integer_to_words_words_to_integer():
 def random_integer(size_in_bytes):
     return bytes_to_integer(bytearray(os.urandom(size_in_bytes)))
     
-def big_prime(size_in_bytes, test_count=256):    
+def _generate_prime_test_n(amount):    
+    prime_test_n = 1    
+    generator = prime_generator()
+    for item in (next(generator) for count in range(amount)):
+        prime_test_n *= item
+    return prime_test_n
+    
+def big_prime(size_in_bytes, test_count=1024, prime_test_n=[None]):
+    if prime_test_n[0] is None:
+        prime_test_n[0] = _generate_prime_test_n(test_count)
+    test_number = prime_test_n[0]        
     while True:
-        candidate = random_integer(size_in_bytes)
-        for test_number in (random_integer(size_in_bytes) for count in range(test_count)):
-            if gcd(candidate, test_number) != 1:
-                candidate = random_integer(size_in_bytes)
-                break
-        else:
+        candidate = random_integer(size_in_bytes)        
+        if gcd(candidate, test_number) == 1 and candidate != 1:
             return candidate
+        #for test_number in (random_integer(size_in_bytes) for count in range(test_count)):
+        #    if gcd(candidate, test_number) != 1:
+        #        candidate = random_integer(size_in_bytes)
+        #        break
+        #else:
+        #    return candidate
         
         

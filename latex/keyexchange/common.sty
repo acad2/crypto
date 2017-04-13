@@ -1,0 +1,220 @@
+%% common.sty -- LaTeX2e common commands and environments
+%
+% Copyright (C) 2016 Benoit Viguier
+
+%* --[ Identification --------------------------------------------------------
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{common}[2016/01/13 v1.0 Common stuff between documents and presentations]
+
+
+%* --[ References --------------------------------------------------------------
+
+\usepackage{rotating}
+
+\RequirePackage{tikz}
+\usetikzlibrary{arrows}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{positioning}
+\usetikzlibrary{calc}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{arrows}
+\usetikzlibrary{crypto.symbols}
+\usetikzlibrary{keccaktree}
+\tikzset{shadows=no}        % Option: add shadows to XOR, ADD, etc.
+
+\RequirePackage{amsfonts}
+\RequirePackage{amsmath}
+\RequirePackage{zed-csp}
+\RequirePackage{mathrsfs}
+
+%* --[ Listings --------------------------------------------------------------
+
+% typeset source code listings
+\RequirePackage{listings}
+\RequirePackage{textcomp}
+
+\RequirePackage{xcolor}
+\definecolor{doc@lstidentifier}{HTML}{000000} % black
+\definecolor{doc@lstcomment}{HTML}{008200} % green
+\definecolor{doc@lststring}{HTML}{FF5500} % orange
+\definecolor{doc@lstkeyword}{HTML}{0000FF} % blue
+\definecolor{doc@lstbackground}{HTML}{FFFFCC} % light yellow
+\definecolor{doc@lstframe}{HTML}{FFEE88} % dark yellow
+
+\usepackage[framemethod=TikZ]{mdframed}
+
+\mdfdefinestyle{Note}{%
+    linecolor=notefg,
+    outerlinewidth=0pt,
+    roundcorner=0pt,
+    topline=false,
+    leftline=false,
+    rightline=false,
+    bottomline=false,
+    innertopmargin=5pt,
+    innerbottommargin=5pt,
+    innerrightmargin=20pt,
+    innerleftmargin=5pt,
+    backgroundcolor=doc@lstbackground,
+    footnoteinside=false,
+    }
+
+
+\newcommand{\ybg}[1]{%
+  \colorbox{doc@lstbackground}{#1}%
+}
+
+\lstalias{shell}{sh}
+
+\lstdefinelanguage{latex}{%
+  morekeywords=[1]{},
+  morekeywords=[2]{begin,
+    end,
+    draw,
+    documentclass,
+    usepackage,
+    title,
+    texttt,
+    textit,
+    textbf,
+    texts f,
+    emph,
+    maketitle,
+    chapter,
+    section,
+    subsection,
+    subsubsection,
+    tableofcontents,
+    newpage,
+    label,
+    multicolumn,
+    centering,
+    fontsize,
+    lstinputlisting
+    },
+  morekeywords=[3]{tikzpicture, scope, utf8, figure, itemize, verbatim, article, hline, cline},
+  morekeywords=[4]{color, xshift, yshift, step, item},
+  sensitive=true,
+  otherkeywords={[, ], \{, \}, =},
+  %
+  morestring=[b]",
+  %
+  %morecomment=[l]{\#},
+  %
+  identifierstyle=\color[rgb]{0,0,0},
+  stringstyle=\color[rgb]{0.133,0.545,0.133},
+  keywordstyle=\color[rgb]{1.0,0,0},
+  keywordstyle=[1]\color{cyan},
+  keywordstyle=[2]\color[rgb]{0,0,0.75},
+  keywordstyle=[3]\color[rgb]{0.127,0.427,0.514},
+  keywordstyle=[4]\color[rgb]{1,0.4,0},
+}
+
+
+% a new language must be defined before being loaded: hence, put
+% `lstloadlanguages' after having defined languages that should be loaded
+\lstloadlanguages{% check documentation for other languages...
+  C,
+  C++,
+  Java,
+  Python
+}
+
+\lstset{%
+  lineskip=-0.1em,
+  %
+%  basicstyle=\ttfamily\scriptsize, % font that is used for the code
+  basicstyle=\ttfamily\small, % font that is used for the code
+  identifierstyle=\color{doc@lstidentifier},
+  commentstyle=\color{doc@lstcomment}\itshape,
+  stringstyle=\color{doc@lststring},
+  keywordstyle=\color{doc@lstkeyword},
+  %
+  extendedchars=true,
+  inputencoding=utf8,
+  upquote=true, %
+  tabsize=2, % set default tabsize to 4 spaces
+  showtabs=false, % show tabs within strings adding particular underscores
+  %  tab=$\to$,
+  showspaces=false, % show spaces adding particular underscores
+  showstringspaces=false, % underline spaces within strings
+  %
+  numbers=left, % where to put the line numbers
+  stepnumber=0, % step between two line numbers
+  numberstyle=\small, % line number font size
+  %
+  captionpos=b, % set the caption position to `bottom'
+  %
+  xleftmargin=0.4em, % text to the right
+  xrightmargin=0.4em, % text to the left
+  breaklines=false, % don't break long lines of code
+  %
+  frame=single, % add a frame around the code
+  framexleftmargin=0pt, % frame back to the left
+  framexrightmargin=0pt, % frame back to the right
+  backgroundcolor=\color{doc@lstbackground}, % set the background color
+  rulecolor=\color{doc@lstframe}, % frame color
+  %
+  columns=flexible, % try not to ruin the spacing intended by the font designer
+  keepspaces=true, % don't drop spaces to fix column alignment
+  %
+  % mathescape, % allow escaping to (La)TeX mode within $..$
+  escapechar=², % allow escaping to (La)TeX mode within ²..²
+  % The backquote was NOT judicious: in some code (comments), I wrap vars
+  % between such a backquote (`var')
+  %
+  % conversion of UTF-8 chars to latin1
+  literate=
+  { }{{~}}1
+  {á}{{\'a}}1
+  {à}{{\`a}}1
+  {â}{{\^a}}1
+  {ä}{{\"a}}1
+  {ç}{{\c{c}}}1
+  {é}{{\'e}}1
+  {è}{{\`e}}1
+  {ê}{{\^e}}1
+  {ë}{{\"e}}1
+  {í}{{\'i}}1
+  {ì}{{\`i}}1
+  {î}{{\^i}}1
+  {ï}{{\"i}}1
+  {ó}{{\'o}}1
+  {ò}{{\`o}}1
+  {ô}{{\^o}}1
+  {ö}{{\"o}}1
+  {ú}{{\'u}}1
+  {ù}{{\`u}}1
+  {û}{{\^u}}1
+  {ü}{{\"u}}1
+  {Á}{{\'A}}1
+  {À}{{\`A}}1
+  {Â}{{\^A}}1
+  {Ä}{{\"A}}1
+  {Ç}{{\c{C}}}1
+  {É}{{\'E}}1
+  {È}{{\`E}}1
+  {Ê}{{\^E}}1
+  {Ë}{{\"E}}1
+  {Í}{{\'I}}1
+  {Ì}{{\`I}}1
+  {Î}{{\^I}}1
+  {Ï}{{\"I}}1
+  {Ó}{{\'O}}1
+  {Ò}{{\`O}}1
+  {Ô}{{\^O}}1
+  {Ö}{{\"O}}1
+  {Ú}{{\'U}}1
+  {Ù}{{\`U}}1
+  {Û}{{\^U}}1
+  {Ü}{{\"U}}1
+}
+
+\renewcommand{\lstlistingname}{Code}
+
+\renewcommand*{\lstlistlistingname}{List of Code Samples}
+
+
+%% End of package
+\endinput % very last line
