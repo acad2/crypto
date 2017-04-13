@@ -57,6 +57,8 @@ def test_rsa_lattice_exchange_recover():
     c = rsa_lattice_exchange(r, n)
     #print c
     s = rsa_lattice_recover(c, p)
+    _s = c % n
+    assert _s != s
     assert s == r, (s, r)
 
     from timeit import default_timer as timer    

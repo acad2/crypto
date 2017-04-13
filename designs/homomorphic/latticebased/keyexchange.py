@@ -19,8 +19,8 @@ def generate_keypair():
     
 def exchange_key(random_secret, public_key, r_size=SECRET_SIZE):    
     pb1, pb2 = public_key
-    r1, r2 = secretkey.random_integer(r_size), secretkey.random_integer(r_size - 8)
-    return ((pb1 * r1) - (pb2 * r2)) + random_secret
+    r1, r2 = secretkey.random_integer(r_size), secretkey.random_integer(r_size)
+    return ((pb1 * r1) + (pb2 * r2)) + random_secret
     
 def recover_key(ciphertext, private_key, decryption_function=secretkey.decrypt):    
     return decryption_function(ciphertext, private_key)
@@ -44,12 +44,15 @@ def test_exchange_key_recover_key():
     hamming_weight = lambda number: format(number, 'b').count('1')
     print("Public key size : {} + {} = {}".format(hamming_weight(public_key[0]), hamming_weight(public_key[1]), sum(hamming_weight(item) for item in public_key)))
     print("Private key size: {}".format(sum(hamming_weight(item) for item in private_key)))        
+    ciphertext_size = []
     for counter in range(65536):
         message = secretkey.random_integer(32)
         ciphertext = exchange_key(message, public_key)    
         plaintext = recover_key(ciphertext, private_key)
         assert plaintext == message, (counter, plaintext, message)
-    print("Transported secret size : {}".format(hamming_weight(ciphertext)))        
+        ciphertext_size.append(hamming_weight(ciphertext))
+        
+    print("Transported secret size : {}".format(sum(ciphertext_size) / float(len(ciphertext_size))))
     print("key exchange exchange_key/recover_key unit test passed")
     
 def test_exchange_key_time():
