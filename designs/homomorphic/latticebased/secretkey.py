@@ -1,12 +1,14 @@
 from os import urandom
 from fractions import gcd
 
+__all__ = ["generate_key", "encrypt", "decrypt"]
+
 P1_SIZE = 110
 P2_SIZE = 36
 R_SIZE = 32
 
 # utilities
-def bytes_to_integer(data):
+def _bytes_to_integer(data):
     output = 0    
     size = len(data)
     for index in range(size):
@@ -14,17 +16,29 @@ def bytes_to_integer(data):
     return output
     
 def random_integer(size_in_bytes):
-    return bytes_to_integer(bytearray(urandom(size_in_bytes)))
+    """ usage: random_integer(size_in_bytes) => random integer
+    
+        Returns a random integer of the size specified, in bytes. """
+    return _bytes_to_integer(bytearray(urandom(size_in_bytes)))
     
 # algorithm    
 def generate_key(p1_size=P1_SIZE, p2_size=P2_SIZE):
-    p1 = random_integer(p1_size)
-    p2 = random_integer(p2_size)
+    """ usage: generate_key(p1_size=P1_SIZE,    
+                            p2_size=P2_SIZE) => secret_key
+                            
+        Returns two random integers, suitable for use as a secret key for the cipher. """
+    p1, p2 = random_integer(p1_size), random_ineger(p2_size)    
     while gcd(p1, p2) != 1:
         p2 = random_integer(p2_size)
     return p1, p2
     
 def encrypt(message_integer, secret_key, r_size=R_SIZE):
+    """ usage: encrypt(message_integer, secret_key,
+                       r_size=R_SIZE) => ciphertext
+                       
+        Returns ciphertext of message_integer, encrypted under secret_key.
+        Ciphertexts are of the form p1q1 + p2q2 + m
+        Ciphertexts are homomorphic with respect to integer addition. """
     p1, p2 = secret_key
     p1 *= random_integer(r_size)
     _p2 = p2 * random_integer(r_size)
@@ -33,6 +47,9 @@ def encrypt(message_integer, secret_key, r_size=R_SIZE):
     return p1 + _p2 + message_integer  
     
 def decrypt(ciphertext_integer, secret_key):
+    """ usage: decrypt(ciphertext_integer, secret_key) => plaintext
+    
+        Returns plaintext integer. """
     p1, p2 = secret_key
     return (ciphertext_integer % p1) % p2    
     

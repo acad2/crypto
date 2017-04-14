@@ -60,8 +60,7 @@ def randomize_public_key(public_key):
     """ usage: randomize_public_key(public_key) => randomized public_key
     
         Returns a randomized public key. 
-        The resultant public key is still linked with the same private key, but it should not be possible to associate the new public key with the original one. """
-    #raise NotImplementedError()
+        The resultant public key is still linked with the same private key, but it should not be possible to associate the new public key with the original one. """    
     pub1, pub2 = public_key
     _pub1 = pub1
     pub1 = _randomize_key(pub1 + pub2)
