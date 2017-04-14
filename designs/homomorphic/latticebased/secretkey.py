@@ -1,11 +1,22 @@
 from os import urandom
+from fractions import gcd
 
-from crypto.utilities import gcd, random_integer
-    
 P1_SIZE = 110
 P2_SIZE = 36
 R_SIZE = 32
-  
+
+# utilities
+def bytes_to_integer(data):
+    output = 0    
+    size = len(data)
+    for index in range(size):
+        output |= data[index] << (8 * (size - 1 - index))
+    return output
+    
+def random_integer(size_in_bytes):
+    return bytes_to_integer(bytearray(urandom(size_in_bytes)))
+    
+# algorithm    
 def generate_key(p1_size=P1_SIZE, p2_size=P2_SIZE):
     p1 = random_integer(p1_size)
     p2 = random_integer(p2_size)
@@ -25,6 +36,7 @@ def decrypt(ciphertext_integer, secret_key):
     p1, p2 = secret_key
     return (ciphertext_integer % p1) % p2    
     
+# unit test    
 def test_encrypt_decrypt():    
     secret_key = generate_key()           
     for m in range(256):                    
