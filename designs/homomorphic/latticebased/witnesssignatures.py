@@ -34,6 +34,7 @@
             - The more proofs that are broadcasted, the fewer 1-to-1 proofs that need to occur
             - If a signature is witnessed by a peer that happens to be trusted, then we do not need to obtain our own direct proof"""          
 from os import urandom
+from math import log
 
 import keyexchange
 from hashing import hmac, hash_function
@@ -41,61 +42,101 @@ from hashing import hmac, hash_function
 from crypto.utilities import integer_to_bytes, bytes_to_integer, xor_subroutine
 
 def generate_keypair():
+    """ usage: generate_keypair() => public_key, private_key
+    
+        Returns a public key and a private key, suitable for use with signing. """
     return keyexchange.generate_keypair()
     
-def generate_validation_key(signers_public_key, signature_key_size=32):
-    signing_key = keyexchange.generate_random_secret(signature_key_size)
-    return keyexchange.exchange_key(signing_key, signers_public_key), signing_key
+def generate_signature_request(signers_public_key, signature_key_size=32):
+    """ usage: generate_signature_request(signers_public_key,
+                                          signature_key_size=32) => signature_request, validation_key
+                                       
+        Returns a signing request and signature validation key.
+        The signing request is bound to the owner of the supplied public key - only the owner will be able to produce a signature
+        The validation key is bound to the party that generates the signature request - nobody else may use it to verify Bob's signature. """                
+    validation_key = deserialize_key(bytearray(urandom(signature_key_size)))
+    signature_request = keyexchange.exchange_key(validation_key, signers_public_key)    
+    return serialize_key(signature_request), serialize_key(validation_key)
     
-def retrieve_validation_key(encrypted_signing_key, signers_private_key):
+def _retrieve_validation_key(encrypted_signing_key, signers_private_key):    
     return keyexchange.recover_key(encrypted_signing_key, signers_private_key)
    
-def sign(data, validation_key, signature_size=32, already_hashed=False, hash_function=hash_function):        
-    if not already_hashed:        
-        data = hash_function(data)
-        
+def sign(data, signature_request, private_key, signature_size=32):   
+    """ usage: sign(data, signature_request, private_key,
+                    signature_size=32) => signature, signing_key
+                    
+        Returns a signature and signing key.
+        The two items should be returned to the requester of the signature for verification. """
     signing_key = bytearray(urandom(signature_size))
-    _signing_key = signing_key[:]
+    _signing_key = signing_key[:] 
     
-    xor_subroutine(signing_key, validation_key)
-    signature = hmac(data, signing_key)        
+    validation_key = _retrieve_validation_key(deserialize_key(signature_request), private_key)        
+    xor_subroutine(signing_key, serialize_key(validation_key))               
+    signature = hmac(data, signing_key)            
+    return signature, _signing_key   
     
-    return data, signature, _signing_key   
+def verify(data, signature, signing_key, validation_key):   
+    """ usage: verify(data, signature, signing_key, validation_key) => True or False
     
-def verify(data, signature, signing_key, validation_key):            
-    xor_subroutine(validation_key, signing_key)
-    
-    if hmac(data, validation_key) == signature:
+        Returns True if the signature on data is valid.
+        Returns False if the signature on data is invalid. """        
+    xor_subroutine(signing_key, validation_key)        
+    if hmac(data, signing_key) == signature:
         return True
     else:
         return False
 
-def serialize_key(signing_key):
-    return integer_to_bytes(signing_key, 32)
-
+def serialize_key(validation_key):
+    """ usage: serialize_key(validation_key) => serialized key
+    
+        Converts a big integer into a byte stream, suitable for transportation. """  
+    key_size = log(validation_key, 2)
+    key_size_bytes = (key_size / 8) + 1
+    return integer_to_bytes(validation_key, int(key_size / 8) + 1)    
+    
 def deserialize_key(serialized_key):
+    """ usage: deserialize_key(serialized_key) => key
+    
+        Converts a byte stream into a big integer. """
     return bytes_to_integer(serialized_key)               
             
 def unit_test():
     pub1, priv1 = generate_keypair()
     pub2, priv2 = generate_keypair()
-    data = "Test data" 
+    data = serialize_key(hash("Test data"))
     
-    encrypted_signature_key, validation_key = generate_validation_key(pub2)    
-    # broadcast proof of/commitment to validation key
-    signing_key = retrieve_validation_key(encrypted_signature_key, priv2)     
-    
-    saved_key = serialize_key(signing_key)  
-    loaded_key = deserialize_key(saved_key)
-    assert loaded_key == signing_key     
-        
-    print("Signing: {}".format(data))
-    _data, signature, _signing_key = sign(data, serialize_key(signing_key))
-    print("Validating signature: {}".format(signature))
-    print("On data: {}".format(_data))
+    signature_request, validation_key = generate_signature_request(pub2)    
+    # broadcast proof of/commitment to validation key                 
+    signature, _signing_key = sign(data, signature_request, priv2)
+    # release signature
     # release validation key
-    assert verify(_data, signature, _signing_key, serialize_key(validation_key))          
+    assert verify(data, signature, _signing_key, validation_key)
     
+def test_sign_verify_time():
+    from timeit import default_timer as timer
+    print "Calculating time to generate keypair... "    
+    before = timer()
+    for number in range(1024):
+        public_key, private_key = generate_keypair()
+    after = timer()
+    print("Time taken to generate 1 keypair: {}".format((after - before) / number))
+    print("Time taken to generate {} keypairs: {}".format(number + 1, after - before))
+    before = timer()
+        
+    message = serialize_key(hash(bytes(bytearray(range(32)))))
+    pub1, priv1 = generate_keypair()
+    pub2, priv2 = generate_keypair()    
+    for number in range(1024):                
+        #pub1, priv1 = generate_keypair()
+        #pub2, priv2 = generate_keypair()    
+        signature_request, validation_key = generate_signature_request(pub2)        
+        signature, signing_key = sign(message, signature_request, priv2)
+        assert verify(message, signature, signing_key, validation_key), number
+    after = timer()    
+    print("Time taken to sign {} {} byte message: {}".format(1, len(message), (after - before) / (number + 1)))
+    print("Time taken to sign {} {} byte message: {}".format(number + 1, len(message), after - before))
     
 if __name__ == "__main__":
     unit_test()
+    test_sign_verify_time()
+    

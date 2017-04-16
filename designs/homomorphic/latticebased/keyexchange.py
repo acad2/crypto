@@ -73,7 +73,7 @@ def randomize_public_key(public_key):
     assert not _pub2 % pub2 or pub2 % _pub2
     assert pub1 > 0 and pub2 > 0, (pub1, pub2)
     return pub1, pub2        
-        
+                
 def test_exchange_key_recover_key():    
     public_key, private_key = generate_keypair()   
     hamming_weight = lambda number: format(number, 'b').count('1')
