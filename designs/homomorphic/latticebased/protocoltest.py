@@ -1,19 +1,11 @@
-import hashlib
-
 import keyexchange
-import hmac as _hmac
+from hashing import hmac, hash_function
 
 from crypto.utilities import integer_to_bytes, xor_subroutine
 
-STAGES = ["initiating exchange", "establishing shared secret", "waiting for confirmation code"]
-
-def hash_function(data, algorithm="sha256"):
-    return getattr(hashlib, algorithm.lower())(data).digest()
-    
-def hmac(data, key, algorithm="sha256"):
-    return _hmac.HMAC(key, data, getattr(hashlib, algorithm.lower())).digest()
-
 class Key_Exchange_Protocol(object):
+
+    STAGES = ["initiating exchange", "establishing shared secret", "waiting for confirmation code"]
     
     def __init__(self, public_key, private_key, hash_function=hash_function, secret_size=32):
         self.public_key = public_key
@@ -21,7 +13,7 @@ class Key_Exchange_Protocol(object):
         self.hash_function = hash_function
         self.secret_size = secret_size
         self.confirm_connection_string = "Good happy success :)"
-        self.stages = iter(STAGES)
+        self.stages = iter(Key_Exchange_Protocol.STAGES)
         
     def retrieve_public_key(self, identifier):
         raise NotImplementedError()
@@ -119,7 +111,7 @@ class Replay_Attack_Countermeasure(object):
     @classmethod
     def unit_test(cls):        
         messages_a = [str(item) for item in range(16)]
-        messages_b = iter([str(hex(item)) for item in range(16)])
+        messages_b = iter([str(hex(item)) * 200 for item in range(16)])
         
         peer_a = cls()
         peer_b = cls()
@@ -148,6 +140,44 @@ class Replay_Attack_Countermeasure(object):
             else:
                 raise ValueError("Accepted invalid nonce; Unit test failed") 
             
+            
+class Authenticated_Protocol(object):
+     
+    def __init__(self, signature_size):
+        self.signature_size = signature_size
+        
+    def generate_keypair(self):
+        raise NotImplementedError()
+        
+    def load_signing_key(self, data):
+        raise NotImplementedError()
+                
+    def sign(self, data):
+        raise NotImplementedError()
+        
+    def verify(self, signature, data, public_key):
+        raise NotImplementedError()
+        
+    def send(self, data):
+        signature = self.sign(data)
+        return signature + data
+        
+    def receive(self, data, public_key):
+        signature = data[:self.signature_size]
+        data = data[self.signature_size:]
+        if self.verify(signature, data, public_key):
+            return data
+        else:
+            return ValueError
+        
+    @classmethod
+    def unit_test(cls):
+        peer_a = cls()
+        peer_b = cls()
+        
+        
+    
+                
 if __name__ == "__main__":
     Key_Exchange_Protocol.unit_test()   
     Replay_Attack_Countermeasure.unit_test()
