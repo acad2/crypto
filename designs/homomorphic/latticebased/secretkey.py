@@ -27,7 +27,7 @@ def generate_key(p1_size=P1_SIZE, p2_size=P2_SIZE):
                             p2_size=P2_SIZE) => secret_key
                             
         Returns two random integers, suitable for use as a secret key for the cipher. """
-    p1, p2 = random_integer(p1_size), random_ineger(p2_size)    
+    p1, p2 = random_integer(p1_size), random_integer(p2_size)    
     while gcd(p1, p2) != 1:
         p2 = random_integer(p2_size)
     return p1, p2

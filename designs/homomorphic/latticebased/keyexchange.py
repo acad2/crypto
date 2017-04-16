@@ -2,11 +2,14 @@ from math import log
 
 import secretkey
 
-__all__ = ["generate_keypair", "randomize_public_key", "exchange_key", "recover_key",
-           "generate_private_key", "generate_public_key"]
+__all__ = ["generate_random_secret", "generate_keypair", "randomize_public_key", "generate_private_key", "generate_public_key",
+           "exchange_key", "recover_key",]
            
 SECRET_SIZE = 32
 
+def generate_random_secret(size_in_bytes=SECRET_SIZE):
+    return secretkey.random_integer(size_in_bytes)    
+    
 def generate_private_key(key_generation_function=secretkey.generate_key):
     """ usage: generate_private_key(key_generation_function=secretkey.generate_key) => private_key
     
