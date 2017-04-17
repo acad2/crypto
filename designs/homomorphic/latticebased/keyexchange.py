@@ -33,9 +33,9 @@ def generate_keypair():
         The nature of the private key depends on the secret key cipher that is used to instantiate the scheme. """
     private_key = generate_private_key()    
     public_key = generate_public_key(private_key)
-    _public_key = randomize_public_key(public_key)
-    assert _public_key != public_key
-    return _public_key, private_key
+   # _public_key = randomize_public_key(public_key)
+   # assert _public_key != public_key
+    return public_key, private_key
     
 def exchange_key(random_secret, public_key, r_size=SECRET_SIZE): 
     """ usage: exchange_key(random_secret, public_key,
@@ -63,7 +63,8 @@ def randomize_public_key(public_key):
     """ usage: randomize_public_key(public_key) => randomized public_key
     
         Returns a randomized public key. 
-        The resultant public key is still linked with the same private key, but it should not be possible to associate the new public key with the original one. """    
+        The resultant public key is still linked with the same private key, but it should not be possible to associate the new public key with the original one. """ 
+    raise NotImplementedError()
     pub1, pub2 = public_key
     _pub1 = pub1
     pub1 = _randomize_key(pub1 + pub2)
@@ -73,7 +74,27 @@ def randomize_public_key(public_key):
     assert not _pub2 % pub2 or pub2 % _pub2
     assert pub1 > 0 and pub2 > 0, (pub1, pub2)
     return pub1, pub2        
-                
+  
+# serialization  
+def serialize_public_key(public_key):
+    p1, p2 = public_key
+    p1, p2 = str(p1), str(p2)
+    return str(len(p1)) + ' ' + str(len(p2)) + ' ' + p1 + p2
+    
+def deserialize_public_key(serialized_public_key):
+    print serialized_public_key
+    p1_size, p2_size, keys = serialized_public_key.split(' ', 2)
+    p1_size, p2_size = int(p1_size), int(p2_size)
+    p1 = keys[:p1_size]
+    p2 = keys[-p2_size:]
+    return int(p1), int(p2)
+    
+def test_serialized_public_key_deserialize_public_key():
+    public_key, _ = generate_keypair()
+    serialized = serialize_public_key(public_key)
+    _public_key = deserialize_public_key(serialized)
+    assert _public_key == public_key, (_public_key, public_key)
+    
 def test_exchange_key_recover_key():    
     public_key, private_key = generate_keypair()   
     hamming_weight = lambda number: format(number, 'b').count('1')
@@ -109,6 +130,7 @@ def test_exchange_key_time():
     print("Time taken to exchange {} keys: {}".format(number + 1, after - before))
         
 if __name__ == "__main__":
+    test_serialized_public_key_deserialize_public_key()
     test_exchange_key_recover_key()
     test_exchange_key_time()
     

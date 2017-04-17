@@ -1,7 +1,7 @@
 import keyexchange
 from hashing import hmac, hash_function
 
-from crypto.utilities import integer_to_bytes, xor_subroutine
+from crypto.utilities import integer_to_bytes, xor_subroutine, serialize_int, deserialize_int
 
 class Key_Exchange_Protocol(object):
 
@@ -13,16 +13,9 @@ class Key_Exchange_Protocol(object):
         self.hash_function = hash_function
         self.secret_size = secret_size
         self.confirm_connection_string = "Good happy success :)"
+        self.confirmation_code_size = len(hmac('', ''))
         self.stages = iter(Key_Exchange_Protocol.STAGES)
-        
-    def retrieve_public_key(self, identifier):
-        raise NotImplementedError()
-        
-    def validate_public_key(self, identifier, others_public_key):
-        raise NotImplementedError()
-        
-    def store_public_key(self, identifier, public_key):
-        raise NotImplementedError
+        self.stage = None
         
     def initiate_exchange(self, others_public_key):
         self.stage = next(self.stages)
@@ -41,7 +34,7 @@ class Key_Exchange_Protocol(object):
         return self.confirmation_code
         
     def confirm_connection(self, confirmation_code):
-        return confirmation_code == self.confirmation_code
+        return confirmation_code == self.confirmation_code # change to constant time comparison
     
     @classmethod
     def generate_keypair(cls):
@@ -140,45 +133,101 @@ class Replay_Attack_Countermeasure(object):
             else:
                 raise ValueError("Accepted invalid nonce; Unit test failed") 
             
-            
-class Authenticated_Protocol(object):
-     
-    def __init__(self, signature_size):
-        self.signature_size = signature_size
-        
-    def generate_keypair(self):
-        raise NotImplementedError()
-        
-    def load_signing_key(self, data):
-        raise NotImplementedError()
+
+class Basic_Connection(object):
                 
-    def sign(self, data):
-        raise NotImplementedError()
-        
-    def verify(self, signature, data, public_key):
-        raise NotImplementedError()
+    def __init__(self):        
+        self.replay_attack_countermeasure = Replay_Attack_Countermeasure()                 
         
     def send(self, data):
-        signature = self.sign(data)
-        return signature + data
+        return self.replay_attack_countermeasure.send(data)
         
-    def receive(self, data, public_key):
-        signature = data[:self.signature_size]
-        data = data[self.signature_size:]
-        if self.verify(signature, data, public_key):
-            return data
-        else:
-            return ValueError
+    def receive(self, data):
+        return self.replay_attack_countermeasure.receive(data)
+        
+     
+class Secure_Connection(Basic_Connection):
+        
+    def __init__(self, public_key, private_key, hash_function=hash_function, secret_size=32):
+        super(Secure_Connection, self).__init__()
+        self.key_exchange_protocol = Key_Exchange_Protocol(public_key, private_key, hash_function, secret_size)
+        self.connection_confirmed = False
+        
+    def connect(self, peer_public_key):
+        protocol = self.key_exchange_protocol
+        public_key = keyexchange.serialize_public_key(protocol.public_key)
+        
+        packet = ' '.join([str(len(public_key)), public_key]) + serialize_int(protocol.initiate_exchange(peer_public_key))
+        return self.send(packet)
+        
+    def accept(self, packet):                
+        packet = super(Secure_Connection, self).receive(packet)
+        key_size, packet = packet.split(' ', 1)
+        key_size = int(key_size)
+        
+        peer_public_key = keyexchange.deserialize_public_key(packet[:key_size])
+                
+        protocol = self.key_exchange_protocol
+        response = serialize_int(protocol.initiate_exchange(peer_public_key))
+        protocol.establish_secret(deserialize_int(packet[key_size:]))
+        code = protocol.generate_confirmation_code()
+        
+        return self.send(code + response)
+    
+    def initiator_confirm_connection(self, response):   
+        response = super(Secure_Connection, self).receive(response)
+        protocol = self.key_exchange_protocol
+        code_size = protocol.confirmation_code_size
+        code = response[:code_size]
+        response = response[code_size:]
+        
+        protocol.establish_secret(deserialize_int(response))
+        self_code = protocol.generate_confirmation_code()
+        if protocol.confirm_connection(code):
+            self.connection_confirmed = True
+            return self.send(self_code)
+                   
+    def responder_confirm_connection(self, confirmation_code):  
+        confirmation_code = super(Secure_Connection, self).receive(confirmation_code)
+        if self.key_exchange_protocol.confirm_connection(confirmation_code):
+            self.connection_confirmed = True
+        
+    def send(self, data):
+        if self.connection_confirmed:
+            data = self.secure_data(data)
+        return super(Secure_Connection, self).send(data)
+        
+    def receive(self, data):
+        data = super(Secure_Connection, self).receive(data)
+        if self.connection_confirmed:
+            data = self.access_secured_data(data)
+        return data
+        
+    def secure_data(self, data): 
+        raise NotImplementedError()        
+        
+    def access_secured_data(self, data):
+        raise NotImplementedError()
         
     @classmethod
     def unit_test(cls):
-        peer_a = cls()
-        peer_b = cls()
+        puba, priva = keyexchange.generate_keypair()
+        pubb, privb = keyexchange.generate_keypair()
         
+        peer_a = cls(puba, priva)
+        peer_b = cls(pubb, privb)
         
+        packet = peer_a.connect(pubb)
+        response = peer_b.accept(packet)
+        confirmation_code = peer_a.initiator_confirm_connection(response)
+        peer_b.responder_confirm_connection(confirmation_code)
+        
+        assert peer_a.key_exchange_protocol.shared_secret == peer_b.key_exchange_protocol.shared_secret
+        
+       
     
-                
 if __name__ == "__main__":
     Key_Exchange_Protocol.unit_test()   
     Replay_Attack_Countermeasure.unit_test()
+    Secure_Connection.unit_test()
     
