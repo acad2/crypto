@@ -104,7 +104,7 @@ class Replay_Attack_Countermeasure(object):
         if nonce <= self.last_received_none:
             raise ValueError("Invalid nonce")
         else:            
-            self.last_received_none = nonce
+            self.last_received_none += 1
             
         hash_size = self.hash_size
         _hash = data[:hash_size]        

@@ -40,7 +40,7 @@
 import hashlib
               
 from crypto.utilities import slide, xor_subroutine, bytes_to_integer 
-from arxcalibur512 import permutation, invert_permutation
+import arxcalibur512 
 
 ROUNDS = 2
 
@@ -49,40 +49,66 @@ def bytes_to_word32(data):
     
 def hash_function(data):
     return bytes_to_word32(hashlib.sha256(data).digest())
+        
+def pad_data_to_blocksize(data, blocksize):  # pad_data{data}_to_blocksize{blocksize}
+    datasize = len(data)
+    padding_amount = (blocksize - (datasize % blocksize))         
+    if not padding_amount:        
+        padding_characters = chr(0) * blocksize
+    elif padding_amount == blocksize:
+        padding_characters = chr(0) * blocksize
+    else:                        
+        padding_characters = chr(padding_amount) * padding_amount
+    return data + padding_characters
+        
+def remove_padding(data, blocksize):
+    padding_amount = data[-1]                  
+    return bytes(data)[:-(padding_amount or blocksize)]
+        
+def store_block(data, block_count, _data):        
+    assert len(_data) == 8
+    data[block_count * 8:(block_count + 1) * 8] = _data
     
-def encrypt(data, iv, key, associated_data='', hash_function=hash_function):
-    block_key = key              
+def encrypt(data, iv, key, associated_data='', 
+            hash_function=hash_function, permutation=arxcalibur512.permutation,
+            rounds=ROUNDS):
+    block_key = key         
+    
     assert len(block_key) == 8    
     assert len(iv) == 8
     assert not len(data) % 8
-    ciphertexts = []
-    for block in slide(hash_function(associated_data) + iv + data, 8):
+    
+    blocks = (block for block in slide(hash_function(associated_data) + iv + data, 8))
+    for block_count, block in enumerate(blocks):
         state = block + block_key        
-        for round in range(ROUNDS):                   
+        for round in range(rounds):                   
             state = permutation(*[round, ] + state)           
-        ciphertexts.extend(state[:8])
+        store_block(data, block_count, state[:8])        
         block_key = list(state[8:])
-        
-    xor_subroutine(block_key, key)
-    return ciphertexts + block_key
     
-def decrypt(data_and_tag, iv, key, associated_data='', hash_function=hash_function):
-    block_key = data_and_tag[-8:]
+    assert len(block_key) == len(key)
     xor_subroutine(block_key, key)
+    return block_key # block_key is the tag
     
-    ciphertexts = data_and_tag[:-8]
-    plaintexts = []
-    for ciphertext in reversed(list(slide(ciphertexts, 8))):
+def decrypt(data, tag, iv, key, associated_data='', 
+            hash_function=hash_function, invert_permutation=arxcalibur512.invert_permutation,
+            rounds=ROUNDS):
+    block_key = tag[:]
+    xor_subroutine(block_key, key)
+            
+    blocks = (block for block in reversed(list(slide(data, 8))))
+    for block_count, ciphertext in enumerate(blocks):
         state = ciphertext + block_key
-        for round in reversed(range(ROUNDS)):        
+        for round in reversed(range(rounds)):        
             state = invert_permutation(*[round, ] + state)
-        plaintexts.extend(state[:8])
+        store_block(data, block_count, state[:8])        
         block_key = list(state[8:])   
-    
-    if list(plaintexts[-16:-8]) == iv and hash_function(associated_data) == plaintexts[-8:]:    
-        return plaintexts[:-16]
+
+    if list(data[8:16]) == iv and hash_function(associated_data) == data[-8:]:  
+        remove_padding(data, 32)
+        return True
     else:
-        return None
+        return False
         
 def test_encrypt_decrypt():
     data    = [0, 0, 0, 0, 0, 0, 0, 1]
@@ -91,16 +117,16 @@ def test_encrypt_decrypt():
     key     = [0, 0, 0, 0, 0, 0, 0, 1]
     data_e  = "Wonderful, wonderful test data!"
     
-    ciphertext = encrypt(data, iv, key, data_e)    
-    plaintext = decrypt(ciphertext, iv, key, data_e)
-    assert plaintext == data, (plaintext, data)
+    tag = encrypt(data, iv, key, data_e)    
+    valid = decrypt(data, tag, iv, key, data_e)
+    assert valid #plaintext == data, (plaintext, data)
     
-    ciphertext2 = encrypt(data2, iv, key, data_e + '1')
-    plaintext2 = decrypt(ciphertext2, iv, key, data_e)
-    assert plaintext2 is None
+    tag2 = encrypt(data2, iv, key, data_e + '1')
+    valid = decrypt(data2, tag2, iv, key, data_e)
+    assert not valid #plaintext2 is None
     
-    ciphertext3 = encrypt(data, data2, key, data_e)
-    plaintext3 = decrypt(ciphertext3, data2, key, data_e + '!')
+    #tag3 = encrypt(data, data2, key, data_e)
+    #valid = decrypt(data3, tag3, data2, key, data_e + '!')
     #print ciphertext
     #print
     #print ciphertext2
