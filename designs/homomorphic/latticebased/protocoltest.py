@@ -1,8 +1,22 @@
 import keyexchange
 from hashing import hmac, hash_function
 
-from crypto.utilities import integer_to_bytes, xor_subroutine, serialize_int, deserialize_int
+# utilities
+def integer_to_bytes(integer, _bytes):
+    return bytearray((integer >> (8 * (_bytes - 1 - byte))) & 255 for byte in range(_bytes))
+    
+def serialize_int(number):
+    return str(number)
 
+def deserialize_int(serialized_int):
+    return int(serialized_int)
+    
+def xor_subroutine(bytearray1, bytearray2): 
+    size = min(len(bytearray1), len(bytearray2))    
+    for index in range(size):
+        bytearray1[index] ^= bytearray2[index]
+# end utilities        
+        
 class Key_Exchange_Protocol(object):
 
     STAGES = ["initiating exchange", "establishing shared secret", "waiting for confirmation code"]
@@ -204,9 +218,11 @@ class Secure_Connection(Basic_Connection):
         return data
         
     def secure_data(self, data): 
+        return data
         raise NotImplementedError()        
         
     def access_secured_data(self, data):
+        return data
         raise NotImplementedError()
         
     @classmethod
@@ -218,10 +234,12 @@ class Secure_Connection(Basic_Connection):
         peer_b = cls(pubb, privb)
         
         packet = peer_a.connect(pubb)
+        print("peer_a -> peer_b: {}".format(packet))
         response = peer_b.accept(packet)
+        print("\npeer_b -> peer_a: {}".format(response))
         confirmation_code = peer_a.initiator_confirm_connection(response)
-        peer_b.responder_confirm_connection(confirmation_code)
-        
+        print("\npeer_a -> peer_b: (confirmation_code) {}".format(confirmation_code))
+        peer_b.responder_confirm_connection(confirmation_code)        
         assert peer_a.key_exchange_protocol.shared_secret == peer_b.key_exchange_protocol.shared_secret
         
        

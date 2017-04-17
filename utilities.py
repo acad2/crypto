@@ -51,9 +51,6 @@ def shift_right(byte, amount, bit_width=8):
         
 def xor_subroutine(bytearray1, bytearray2): 
     size = min(len(bytearray1), len(bytearray2))    
-    #print size
-    #print bytearray1
-    #print bytearray2
     for index in range(size):
         bytearray1[index] ^= bytearray2[index]
                
@@ -414,14 +411,8 @@ def big_prime(size_in_bytes, test_count=1024, prime_test_n=[None]):
         #    return candidate
         
 def serialize_int(number):
-    """ usage: serialize_int(number) => serialized number
-    
-        Converts a big integer into a byte stream, suitable for transportation. """ 
     return str(number)
-    #size_in_bits = log(number, 2)
-    #key_size_bytes = (size_in_bits / 8) + 1
-    #return integer_to_bytes(number, int(size_in_bits / 8) + 1)            
-    
+
 def deserialize_int(serialized_int):
     return int(serialized_int)
             
