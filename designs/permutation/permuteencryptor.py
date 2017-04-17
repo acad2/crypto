@@ -37,51 +37,50 @@
                  the iv is actually the authentication tag
                  could encrypt IV with yet another key"""           
               
-from crypto.utilities import slide, xor_subroutine  
+import hashlib
+              
+from crypto.utilities import slide, xor_subroutine, bytes_to_integer 
 from arxcalibur512 import permutation, invert_permutation
 
-ROUNDS = 1
+ROUNDS = 2
 
-def encrypt(data, iv, key, mac_key):
-    # state_0, state_k0 = permute(iv || key)
-    # state_1, state_k1 = permute(data_0 || state_k0)
-    # state_2, state_k2 = permute(data_1 || state_k1)
-    # ...
-    # state_n, state_kn = permute(data_n - 1 || state_kn - 1)
-    # output state_0 ... state_n as ciphertext; 
-    # output state_kn XOR mac_key as tag;
-    block_key = key
-    assert len(block_key) == 8
-    assert len(mac_key) == 8
+def bytes_to_word32(data):
+    return [bytes_to_integer(bytearray(block)) for block in slide(data, 4)]
+    
+def hash_function(data):
+    return bytes_to_word32(hashlib.sha256(data).digest())
+    
+def encrypt(data, iv, key, associated_data='', hash_function=hash_function):
+    block_key = key              
+    assert len(block_key) == 8    
     assert len(iv) == 8
     assert not len(data) % 8
     ciphertexts = []
-    for block in slide(iv + data, 8):
+    for block in slide(hash_function(associated_data) + iv + data, 8):
         state = block + block_key        
-        for round in range(ROUNDS):
+        for round in range(ROUNDS):                   
             state = permutation(*[round, ] + state)           
         ciphertexts.extend(state[:8])
         block_key = list(state[8:])
-    
-    #del ciphertexts[:8] # remove the encryption of the IV 
-    xor_subroutine(block_key, mac_key)
+        
+    xor_subroutine(block_key, key)
     return ciphertexts + block_key
     
-def decrypt(data_and_tag, iv, key, mac_key):
+def decrypt(data_and_tag, iv, key, associated_data='', hash_function=hash_function):
     block_key = data_and_tag[-8:]
-    xor_subroutine(block_key, mac_key)
+    xor_subroutine(block_key, key)
     
     ciphertexts = data_and_tag[:-8]
     plaintexts = []
     for ciphertext in reversed(list(slide(ciphertexts, 8))):
         state = ciphertext + block_key
-        for round in range(ROUNDS):
+        for round in reversed(range(ROUNDS)):        
             state = invert_permutation(*[round, ] + state)
         plaintexts.extend(state[:8])
         block_key = list(state[8:])   
     
-    if list(plaintexts[-8:]) == iv:    
-        return plaintexts[:-8]
+    if list(plaintexts[-16:-8]) == iv and hash_function(associated_data) == plaintexts[-8:]:    
+        return plaintexts[:-16]
     else:
         return None
         
@@ -90,15 +89,23 @@ def test_encrypt_decrypt():
     data2   = [0, 0, 0, 0, 0, 0, 0, 2]
     iv      = [0, 0, 0, 0, 0, 0, 0, 4]
     key     = [0, 0, 0, 0, 0, 0, 0, 1]
-    mac_key = [0, 0, 0, 0, 0, 0, 0, 1]    
-    ciphertext = encrypt(data, iv, key, mac_key)    
-    plaintext = decrypt(ciphertext, iv, key, mac_key)
+    data_e  = "Wonderful, wonderful test data!"
+    
+    ciphertext = encrypt(data, iv, key, data_e)    
+    plaintext = decrypt(ciphertext, iv, key, data_e)
     assert plaintext == data, (plaintext, data)
     
-    ciphertext2 = encrypt(data2, iv, key, mac_key)
-    print
-    print ciphertext[8:]
-    print ciphertext2[8:]
+    ciphertext2 = encrypt(data2, iv, key, data_e + '1')
+    plaintext2 = decrypt(ciphertext2, iv, key, data_e)
+    assert plaintext2 is None
+    
+    ciphertext3 = encrypt(data, data2, key, data_e)
+    plaintext3 = decrypt(ciphertext3, data2, key, data_e + '!')
+    #print ciphertext
+    #print
+    #print ciphertext2
+    #print 
+    #print ciphertext3
     
 if __name__ == "__main__":
     test_encrypt_decrypt()
