@@ -1,6 +1,8 @@
 import keyexchange
 from hashing import hmac, hash_function
 
+from aead import encrypt, decrypt
+
 # utilities
 def integer_to_bytes(integer, _bytes):
     return bytearray((integer >> (8 * (_bytes - 1 - byte))) & 255 for byte in range(_bytes))
@@ -197,15 +199,18 @@ class Secure_Connection(Basic_Connection):
         
         protocol.establish_secret(deserialize_int(response))
         self_code = protocol.generate_confirmation_code()
-        if protocol.confirm_connection(code):
+        if protocol.confirm_connection(code):            
+            _response = self.send(self_code)
             self.connection_confirmed = True
-            return self.send(self_code)
-                   
+            return _response
+            
     def responder_confirm_connection(self, confirmation_code):  
         confirmation_code = super(Secure_Connection, self).receive(confirmation_code)
         if self.key_exchange_protocol.confirm_connection(confirmation_code):
             self.connection_confirmed = True
-        
+        else:
+            raise ValueError("Connection failed")
+            
     def send(self, data):
         if self.connection_confirmed:
             data = self.secure_data(data)
@@ -218,12 +223,10 @@ class Secure_Connection(Basic_Connection):
         return data
         
     def secure_data(self, data): 
-        return data
-        raise NotImplementedError()        
-        
+        return encrypt(data, self.key_exchange_protocol.shared_secret, self.key_exchange_protocol.shared_secret)
+                  
     def access_secured_data(self, data):
-        return data
-        raise NotImplementedError()
+        return decrypt(data, self.key_exchange_protocol.shared_secret, self.key_exchange_protocol.shared_secret)        
         
     @classmethod
     def unit_test(cls):
@@ -242,7 +245,9 @@ class Secure_Connection(Basic_Connection):
         peer_b.responder_confirm_connection(confirmation_code)        
         assert peer_a.key_exchange_protocol.shared_secret == peer_b.key_exchange_protocol.shared_secret
         
-       
+        packet = peer_a.send("Hi!!")
+        print("\npeer_a -> peer_b: {}".format(packet))
+        assert peer_b.receive(packet) == "Hi!!"
     
 if __name__ == "__main__":
     Key_Exchange_Protocol.unit_test()   

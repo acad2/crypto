@@ -65,7 +65,7 @@ def remove_padding(data, blocksize):
     padding_amount = data[-1]                  
     return bytes(data)[:-(padding_amount or blocksize)]
         
-def store_block(data, block_count, _data):        
+def _store_block(data, block_count, _data):        
     assert len(_data) == 8
     data[block_count * 8:(block_count + 1) * 8] = _data
     
@@ -83,7 +83,7 @@ def encrypt(data, iv, key, associated_data='',
         state = block + block_key        
         for round in range(rounds):                   
             state = permutation(*[round, ] + state)           
-        store_block(data, block_count, state[:8])        
+        _store_block(data, block_count, state[:8])        
         block_key = list(state[8:])
     
     assert len(block_key) == len(key)
@@ -101,7 +101,7 @@ def decrypt(data, tag, iv, key, associated_data='',
         state = ciphertext + block_key
         for round in reversed(range(rounds)):        
             state = invert_permutation(*[round, ] + state)
-        store_block(data, block_count, state[:8])        
+        _store_block(data, block_count, state[:8])        
         block_key = list(state[8:])   
 
     if list(data[8:16]) == iv and hash_function(associated_data) == data[-8:]:  
@@ -125,6 +125,10 @@ def test_encrypt_decrypt():
     valid = decrypt(data2, tag2, iv, key, data_e)
     assert not valid #plaintext2 is None
     
+    data3 = pad_data_to_blocksize(data_e, 32)
+    tag3 = encrypt(data3, iv, key, data_e)
+    valid = decrypt(data3, tag3, iv, key, data_e)
+    assert valid
     #tag3 = encrypt(data, data2, key, data_e)
     #valid = decrypt(data3, tag3, data2, key, data_e + '!')
     #print ciphertext

@@ -81,8 +81,7 @@ def serialize_public_key(public_key):
     p1, p2 = str(p1), str(p2)
     return str(len(p1)) + ' ' + str(len(p2)) + ' ' + p1 + p2
     
-def deserialize_public_key(serialized_public_key):
-    print serialized_public_key
+def deserialize_public_key(serialized_public_key):    
     p1_size, p2_size, keys = serialized_public_key.split(' ', 2)
     p1_size, p2_size = int(p1_size), int(p2_size)
     p1 = keys[:p1_size]
