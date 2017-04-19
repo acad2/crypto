@@ -1,6 +1,6 @@
 import keyexchange
-from hashing import hmac, hash_function
 import witnesssignatures
+from hashing import hmac, hash_function
 from aead import encrypt, decrypt
 from persistence import save_data, load_data
 
