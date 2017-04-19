@@ -1,7 +1,8 @@
 import keyexchange
 from hashing import hmac, hash_function
-
+import witnesssignatures
 from aead import encrypt, decrypt
+from persistence import save_data, load_data
 
 # utilities
 def integer_to_bytes(integer, _bytes):
@@ -91,26 +92,20 @@ class Replay_Attack_Countermeasure(object):
         self.state = bytearray(self.hash_size)
         
     def send(self, data):
-        self.nonce += 1        
-        nonce = str(self.nonce)                
-        
-        _hash = self.hash_function(nonce + self.state + data)        
-        xor_subroutine(self.state, bytearray(_hash))                
-        
-        data = ' '.join((nonce, _hash, data))                
-        return data
+        self.nonce += 1                     
+        nonce = self.nonce
+        _hash = self.hash_function(str(nonce) + self.state + data)        
+        xor_subroutine(self.state, bytearray(_hash))                                
+        return save_data((nonce, _hash, data))
         
     def receive(self, data):
-        nonce, data = data.split(' ', 1)
-        nonce = int(nonce)                  
+        nonce, _hash, data = load_data(data)
+        assert isinstance(nonce, int)                     
         if nonce <= self.last_received_none:
             raise ValueError("Invalid nonce")
         else:            
             self.last_received_none += 1
-            
-        hash_size = self.hash_size
-        _hash = data[:hash_size]        
-        data = data[hash_size + 1:] # + 1 for the space         
+                
         if self.hash_function(str(nonce) + self.state + data) != _hash:
             raise ValueError("Invalid hash")
             
@@ -167,7 +162,9 @@ class Secure_Connection(Basic_Connection):
     def __init__(self, public_key, private_key, hash_function=hash_function, secret_size=32):
         super(Secure_Connection, self).__init__()
         self.key_exchange_protocol = Key_Exchange_Protocol(public_key, private_key, hash_function, secret_size)
+        self.signature_public_key, self.signature_private_key = witnesssignatures.generate_keypair()
         self.connection_confirmed = False
+        self.pending_signature_requests = {}
         
     def connect(self, peer_public_key):
         protocol = self.key_exchange_protocol
@@ -211,23 +208,42 @@ class Secure_Connection(Basic_Connection):
         else:
             raise ValueError("Connection failed")
             
-    def send(self, data):
+    def send(self, data):        
         if self.connection_confirmed:
             data = self.secure_data(data)
         return super(Secure_Connection, self).send(data)
         
-    def receive(self, data):
+    def receive(self, data):       
         data = super(Secure_Connection, self).receive(data)
-        if self.connection_confirmed:
-            data = self.access_secured_data(data)
+        if self.connection_confirmed:            
+            data = self.access_secured_data(data)                    
         return data
         
-    def secure_data(self, data): 
+    def secure_data(self, data):         
         return encrypt(data, self.key_exchange_protocol.shared_secret, self.key_exchange_protocol.shared_secret)
                   
-    def access_secured_data(self, data):
+    def access_secured_data(self, data):    
         return decrypt(data, self.key_exchange_protocol.shared_secret, self.key_exchange_protocol.shared_secret)        
+
+    def request_signature(self, signers_public_key, data, callback):
+        signature_request, validation_key, tag = witnesssignatures.generate_signature_request(signers_public_key, data)
+        packet = save_data(signature_request, tag, data)        
+        self.pending_signature_requests[tag] = (data, validation_key, callback)
+        return self.send(packet)   
+                
+    def sign_requested_data(self, packet):                        
+        packet = self.receive(packet)
+        signature_request, tag, data = load_data(packet)
+        signature, signing_key = witnesssignatures.sign(data, signature_request, self.signature_private_key, tag)
+        packet = save_data(signature, signing_key, tag)
+        return self.send(packet)
         
+    def validate_signature(self, packet):
+        packet = self.receive(packet)
+        signature, signing_key, tag = load_data(packet)
+        data, validation_key, callback = self.pending_signature_requests.pop(tag)
+        return callback(witnesssignatures.verify(data, signature, signing_key, validation_key))
+                                    
     @classmethod
     def unit_test(cls):
         puba, priva = keyexchange.generate_keypair()
@@ -237,18 +253,24 @@ class Secure_Connection(Basic_Connection):
         peer_b = cls(pubb, privb)
         
         packet = peer_a.connect(pubb)
-        print("peer_a -> peer_b: {}".format(packet))
+        #print("peer_a -> peer_b: {}".format(packet))
         response = peer_b.accept(packet)
-        print("\npeer_b -> peer_a: {}".format(response))
+        #print("\npeer_b -> peer_a: {}".format(response))
         confirmation_code = peer_a.initiator_confirm_connection(response)
-        print("\npeer_a -> peer_b: (confirmation_code) {}".format(confirmation_code))
+        #print("\npeer_a -> peer_b: (confirmation_code) {}".format(confirmation_code))
         peer_b.responder_confirm_connection(confirmation_code)        
         assert peer_a.key_exchange_protocol.shared_secret == peer_b.key_exchange_protocol.shared_secret
         
         packet = peer_a.send("Hi!!")
-        print("\npeer_a -> peer_b: {}".format(packet))
+        #print("\npeer_a -> peer_b: {}".format(packet))
         assert peer_b.receive(packet) == "Hi!!"
-    
+        def _result(result):
+            assert result
+        
+        packet = peer_a.request_signature(peer_b.signature_public_key, confirmation_code, _result)
+        response = peer_b.sign_requested_data(packet)
+        peer_a.validate_signature(response)
+        
 if __name__ == "__main__":
     Key_Exchange_Protocol.unit_test()   
     Replay_Attack_Countermeasure.unit_test()
