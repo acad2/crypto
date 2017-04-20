@@ -3,8 +3,6 @@ from os import urandom
 import keyexchange
 from hashing import hmac, hash_function
 
-from crypto.utilities import integer_to_bytes, bytes_to_integer, xor_subroutine
-
 def generate_keypair():
     return keyexchange.generate_keypair()
     

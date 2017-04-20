@@ -1,25 +1,10 @@
 import keyexchange
 import witnesssignatures
+import utilities
 from hashing import hmac, hash_function
 from aead import encrypt, decrypt
 from persistence import save_data, load_data
 
-# utilities
-def integer_to_bytes(integer, _bytes):
-    return bytearray((integer >> (8 * (_bytes - 1 - byte))) & 255 for byte in range(_bytes))
-    
-def serialize_int(number):
-    return str(number)
-
-def deserialize_int(serialized_int):
-    return int(serialized_int)
-    
-def xor_subroutine(bytearray1, bytearray2): 
-    size = min(len(bytearray1), len(bytearray2))    
-    for index in range(size):
-        bytearray1[index] ^= bytearray2[index]
-# end utilities        
-        
 class Key_Exchange_Protocol(object):
 
     STAGES = ["initiating exchange", "establishing shared secret", "waiting for confirmation code"]
@@ -42,7 +27,7 @@ class Key_Exchange_Protocol(object):
     def establish_secret(self, ciphertext):        
         self.stage = next(self.stages)
         secret_b = keyexchange.recover_key(ciphertext, self.private_key)
-        self.shared_secret = self.hash_function(integer_to_bytes(self.secret_a ^ secret_b, self.secret_size))
+        self.shared_secret = self.hash_function(utilities.integer_to_bytes(self.secret_a ^ secret_b, self.secret_size))
         del self.secret_a
         
     def generate_confirmation_code(self):
@@ -95,7 +80,7 @@ class Replay_Attack_Countermeasure(object):
         self.nonce += 1                     
         nonce = self.nonce
         _hash = self.hash_function(str(nonce) + self.state + data)        
-        xor_subroutine(self.state, bytearray(_hash))                                
+        utilities.xor_subroutine(self.state, bytearray(_hash))                                
         return save_data((nonce, _hash, data))
         
     def receive(self, data):
@@ -109,7 +94,7 @@ class Replay_Attack_Countermeasure(object):
         if self.hash_function(str(nonce) + self.state + data) != _hash:
             raise ValueError("Invalid hash")
             
-        xor_subroutine(self.state, bytearray(_hash))   
+        utilities.xor_subroutine(self.state, bytearray(_hash))   
         return data
         
     @classmethod
@@ -170,39 +155,37 @@ class Secure_Connection(Basic_Connection):
         protocol = self.key_exchange_protocol
         public_key = keyexchange.serialize_public_key(protocol.public_key)
         
-        packet = ' '.join([str(len(public_key)), public_key]) + serialize_int(protocol.initiate_exchange(peer_public_key))
+        packet = save_data(public_key, protocol.initiate_exchange(peer_public_key))
+        #packet = ' '.join([str(len(public_key)), public_key]) + serialize_int(protocol.initiate_exchange(peer_public_key))
         return self.send(packet)
         
     def accept(self, packet):                
-        packet = super(Secure_Connection, self).receive(packet)
-        key_size, packet = packet.split(' ', 1)
-        key_size = int(key_size)
-        
-        peer_public_key = keyexchange.deserialize_public_key(packet[:key_size])
+        packet = self.receive(packet)#
+        serialized_key, challenge = load_data(packet)        
+        peer_public_key = keyexchange.deserialize_public_key(serialized_key)
                 
         protocol = self.key_exchange_protocol
-        response = serialize_int(protocol.initiate_exchange(peer_public_key))
-        protocol.establish_secret(deserialize_int(packet[key_size:]))
+        _challenge = protocol.initiate_exchange(peer_public_key)
+        protocol.establish_secret(challenge)
         code = protocol.generate_confirmation_code()
         
-        return self.send(code + response)
+        response = save_data(code, _challenge)
+        return self.send(response)
     
-    def initiator_confirm_connection(self, response):   
-        response = super(Secure_Connection, self).receive(response)
+    def initiator_confirm_connection(self, packet):   
+        packet = self.receive(packet)
         protocol = self.key_exchange_protocol
-        code_size = protocol.confirmation_code_size
-        code = response[:code_size]
-        response = response[code_size:]
+        code, _challenge = load_data(packet)
         
-        protocol.establish_secret(deserialize_int(response))
+        protocol.establish_secret(_challenge)
         self_code = protocol.generate_confirmation_code()
         if protocol.confirm_connection(code):            
             _response = self.send(self_code)
             self.connection_confirmed = True
             return _response
             
-    def responder_confirm_connection(self, confirmation_code):  
-        confirmation_code = super(Secure_Connection, self).receive(confirmation_code)
+    def responder_confirm_connection(self, packet):  
+        confirmation_code = self.receive(packet)
         if self.key_exchange_protocol.confirm_connection(confirmation_code):
             self.connection_confirmed = True
         else:
@@ -225,16 +208,19 @@ class Secure_Connection(Basic_Connection):
     def access_secured_data(self, data):    
         return decrypt(data, self.key_exchange_protocol.shared_secret, self.key_exchange_protocol.shared_secret)        
 
-    def request_signature(self, signers_public_key, data, callback):
-        signature_request, validation_key, tag = witnesssignatures.generate_signature_request(signers_public_key, data)
+    def request_signature_on_data(self, signers_public_key, data, callback):
+        signature_request, validation_key, tag = witnesssignatures.generate_signature_request_on_data(signers_public_key, data)
         packet = save_data(signature_request, tag, data)        
         self.pending_signature_requests[tag] = (data, validation_key, callback)
         return self.send(packet)   
                 
-    def sign_requested_data(self, packet):                        
+    def sign_requested_data(self, packet, decision_function):                        
         packet = self.receive(packet)
-        signature_request, tag, data = load_data(packet)
-        signature, signing_key = witnesssignatures.sign(data, signature_request, self.signature_private_key, tag)
+        signature_request, tag, data = load_data(packet)   
+        if decision_function(data):
+            signature, signing_key = witnesssignatures.sign_requested_data(data, signature_request, self.signature_private_key, tag)
+        else:
+            signature, signing_key = '', ''
         packet = save_data(signature, signing_key, tag)
         return self.send(packet)
         
@@ -264,11 +250,11 @@ class Secure_Connection(Basic_Connection):
         packet = peer_a.send("Hi!!")
         #print("\npeer_a -> peer_b: {}".format(packet))
         assert peer_b.receive(packet) == "Hi!!"
-        def _result(result):
+        def callback(result):
             assert result
         
-        packet = peer_a.request_signature(peer_b.signature_public_key, confirmation_code, _result)
-        response = peer_b.sign_requested_data(packet)
+        packet = peer_a.request_signature_on_data(peer_b.signature_public_key, "peer_b", callback)
+        response = peer_b.sign_requested_data(packet, lambda packet: True)
         peer_a.validate_signature(response)
         
 if __name__ == "__main__":
