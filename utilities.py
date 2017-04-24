@@ -1,9 +1,10 @@
-import os
 import struct
 import itertools
-from operator import xor as _operator_xor
+import random
 import binascii
+from operator import xor as _operator_xor
 from fractions import gcd
+from os import urandom
 
 def slide(iterable, x=16):
     """ Yields x bytes at a time from iterable """
@@ -180,11 +181,11 @@ def random_oracle_hash_function(input_data, memo={}):
     try:
         return memo[input_data]
     except KeyError:
-        result = memo[input_data] = os.urandom(32)
+        result = memo[input_data] = urandom(32)
         return result
         
 def generate_key(size, wordsize=8):
-    key_material = binary_form(os.urandom(size))
+    key_material = binary_form(urandom(size))
     if wordsize == 8:
         result = key_material
     else:
@@ -386,33 +387,54 @@ def test_integer_to_words_words_to_integer():
     assert m == _m, (m, _m, words)
         
 def random_integer(size_in_bytes):
-    return bytes_to_integer(bytearray(os.urandom(size_in_bytes)))
-    
-def _generate_prime_test_n(amount):    
-    prime_test_n = 1    
-    generator = prime_generator()
-    for item in (next(generator) for count in range(amount)):
-        prime_test_n *= item
-    return prime_test_n
-    
-def big_prime(size_in_bytes, test_count=1024, prime_test_n=[None]):
-    if prime_test_n[0] is None:
-        prime_test_n[0] = _generate_prime_test_n(test_count)
-    test_number = prime_test_n[0]        
-    while True:
-        candidate = random_integer(size_in_bytes)        
-        if gcd(candidate, test_number) == 1 and candidate != 1:
-            return candidate
-        #for test_number in (random_integer(size_in_bytes) for count in range(test_count)):
-        #    if gcd(candidate, test_number) != 1:
-        #        candidate = random_integer(size_in_bytes)
-        #        break
-        #else:
-        #    return candidate
+    return bytes_to_integer(bytearray(urandom(size_in_bytes)))
         
+def big_prime(size_in_bytes):           
+    while True:
+        candidate = random_integer(size_in_bytes)
+        if is_prime(candidate):
+            return candidate
+            
 def serialize_int(number):
     return str(number)
 
 def deserialize_int(serialized_int):
-    return int(serialized_int)
-            
+    return int(serialized_int)            
+ 
+def is_prime(n, _mrpt_num_trials=10): # from https://rosettacode.org/wiki/Miller%E2%80%93Rabin_primality_test#Python
+    assert n >= 2
+    # special case 2
+    if n == 2:
+        return True
+    # ensure n is odd
+    if n % 2 == 0:
+        return False
+    # write n-1 as 2**s * d
+    # repeatedly try to divide n-1 by 2
+    s = 0
+    d = n-1
+    while True:
+        quotient, remainder = divmod(d, 2)
+        if remainder == 1:
+            break
+        s += 1
+        d = quotient
+    assert(2**s * d == n-1)
+ 
+    # test the base a to see whether it is a witness for the compositeness of n
+    def try_composite(a):
+        if pow(a, d, n) == 1:
+            return False
+        for i in range(s):
+            if pow(a, 2**i * d, n) == n-1:
+                return False
+        return True # n is definitely composite
+    
+    random.seed(urandom(32))
+    for i in range(_mrpt_num_trials):
+        a = random.randrange(2, n)
+        if try_composite(a):
+            return False
+ 
+    return True # no base tested showed n as composite
+    
