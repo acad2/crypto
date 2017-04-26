@@ -6,7 +6,7 @@
 #define REGISTER __m128i
 #define ROUNDS 12
 
-#define load_register(name, state_array, offset) __m128i name = _mm_loadu_si128((void *) (state_array + offset))
+#define load_register(name, state_array, offset) name = _mm_loadu_si128((void *) (state_array + offset))
 #define store_register(name, state_array, offset) _mm_storeu_si128((void *) (state_array + offset), name)  
 
 #define sub_bytes(a, b, c, d) {t = a; a = (a & b) ^ c; c = (b | c) ^ d; d = (d & a) ^ t; b ^= c & t;}
@@ -21,26 +21,35 @@
 #define add_constant(a) ({load_register(t, round_constants, 0);\
                           round_constants[0] += 1;\
                           a ^= t;})
-                           
-void permutation(WORDSIZE* state){    
-    WORDSIZE round_constants[4] = {1, 0, 0, 0};    
-    REGISTER t;
-    int index;            
+
+#define unshift_sections(b, c, d) {b = _mm_shuffle_epi32(b, 0b11000110); c = _mm_shuffle_epi32(c, 0b10110001); d = _mm_shuffle_epi32(d, 0b01101100);}
+#define unsub_bytes(a, b, c, d)({b ^= c; d ^= t;})
+#define unmix_slice(a, b, c, d)({unsub_bytes(a, b, c, d); shift_rows(b, c, d, 32 - 8, 32 - 12, 32 - 3); unmix_columns(a, b, c, d);\
+                                 unsub_bytes(a, b, c, d); shift_rows(b, c, d, 32 - 4, 32 - 8, 32 - 12); unmix_columns(a, b, c, d);\
+                                 unsub_bytes(a, b, c, d); shift_rows(b, c, d, 32 - 1, 32 - 2, 32 - 16); unmix_columns(a, b, c, d);})
+
+                          
+void permutation(WORDSIZE* state){        
+    REGISTER t, a, b, c, d;    
     load_register(a, state, 0); load_register(b, state, 4); 
     load_register(c, state, 8); load_register(d, state, 12);           
     
-    for (index = 0; index < ROUNDS; index++){                     
-        add_constant(a);                
-        mix_slice(a, b, c, d);                        
-        shift_sections(b, c, d);}
+    int index;                
+    WORDSIZE round_constants[4] = {1, 0, 0, 0};    
+    
+    for (index = 1; index < ROUNDS + 1; index++){
+        add_constant(a);
+        mix_slice(a, b, c, d);
+        shift_sections(b, c, d);}    
         
     store_register(a, state, 0); store_register(b, state, 4);
-    store_register(c, state, 8); store_register(d, state, 12);}
-         
+    store_register(c, state, 8); store_register(d, state, 12);}                
+
 void test_permutation(){    
 	WORDSIZE message[16] __attribute__((aligned(16))); 
     unsigned long index;
-    
+    for (index = 0; index < 16; index++){
+        message[index] = 1;}
     clock_t begin = clock();
     for (index = 0; index < 3000000; index++){
         permutation(message);}
@@ -48,9 +57,9 @@ void test_permutation(){
     
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;    
     printf("Time required: %.2fs\n", time_spent);
-    printf("%lu: (ignore; just here to make the compiler happy)\n", message[0]);}
+    printf("%lu%lu%lu%lu%lu%lu%lu%lu\n", message[0], message[1], message[2], message[3], message[4], message[5], message[6], message[7]);}
 
-/*int main(){
-    test_permutation();    
-    return 0;}*/
+int main(){
+    test_permutation();   
+    return 0;}
     

@@ -38,10 +38,39 @@
 # accept the smallest produced result      
 from crypto.utilities import modular_inverse
 
-def discrete_logarithm(factor, number, generator, modulus):   
-    test_count = modulus / factor
+# g * g * g * g * g * g * g
+#(g * g * g) * (g * g * g)
+
+# g * g * g
+# g * g
+
+# g * g * g * g * g * g
+# g * g
+
+def calculate_factors(n, g, modulus, test_factors=(2, 3, 5, 7, 11, 13, 17, 19)):
+    factors = []
+    for factor in test_factors:
+        print n, factor, g ** factor, (n / (g ** factor))
+        if (n / (g ** factor)) == 1:
+            return factor
+        elif (n / (g ** factor)) % (g ** factor) == g ** factor:
+            # factor is a factor of the exponent
+            factors.append(factor)
+            break
+    if not factors:
+        factors.append(1)
+    print "Exponent factors: ", factors
+    _exponent = 1
+    for item in factors:
+        _exponent *= item
+    return _exponent
+    
+def discrete_logarithm(number, generator, modulus):   
+    factor = calculate_factors(number, generator, modulus)
+    test_count = 65537#modulus / factor
     inverse = modular_inverse(generator ** factor, modulus)
-    exponent = 0        
+    exponent = 0  
+    print "dl: ", number, factor, inverse
     for _count in range(test_count):
         number *= inverse
         number %= modulus
@@ -56,7 +85,8 @@ def test_discrete_logarithm():
     p = 65537
     for exponent in range(3, 65537, 3):        
         output = pow(g, exponent, p)           
-        _exponent = discrete_logarithm(3, output, g, p)
+        print "Exponent: ", exponent
+        _exponent = discrete_logarithm(output, g, p)
         assert _exponent == exponent, (_exponent, exponent)        
         
         
