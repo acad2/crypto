@@ -1,6 +1,10 @@
 #include "permutation.c"
 
 #define zero_out(array, size)({for (index = 0; index < size; index++){array[index] = 0;}})
+#define absorb(state, hash_input, offset, modifier)({\
+    for (index = 0; index < 8; index++){\
+        state[index] ^= hash_input[(block_number * 8) + index] ^ block_number;}\
+    permutation(state);})
     
 void hash_function(WORDSIZE* hash_input, WORDSIZE input_length, WORDSIZE* output){
     WORDSIZE state[16] __attribute__((aligned(16)));
@@ -10,18 +14,12 @@ void hash_function(WORDSIZE* hash_input, WORDSIZE input_length, WORDSIZE* output
                 
     number_of_blocks = input_length / 8;      
     for (block_number = 0; block_number < number_of_blocks; block_number++){
-        for (index = 0; index < 8; index++){
-            state[index] ^= hash_input[(block_number * 8) + index] ^ block_number;}
-        permutation(state);}
+        absorb(state, hash_input, (block_number * 8), block_number);}
     
     block_number += 1;    
-    for (index = 0; index < input_length % 8; index++){
-        state[index] ^= hash_input[(block_number * 8) + index] ^ 0xFFFFFFFF ^ block_number;}
-    permutation(state);        
-        
-    for (index = 0; index < 8; index++){
-        output[index] = state[index];}}
-                
+    absorb(state, hash_input, (block_number * 8), (0xFFFFFFFF ^ block_number));
+    copy(output, state, 8, 0, 0);}
+                    
 void test_hash(){    
     #define message_size 32
 	WORDSIZE message[message_size];

@@ -6,13 +6,6 @@
         state[index] ^= iv[index];\
         state[index + 8] = key[index];}\
     permutation(state);})
-
-#define load_state(state, data, offset)({\
-    for (index = 0; index < 8; index++){\
-        state[index] = data[offset + index];}})
-#define store_state(data, state, offset)({\
-    for (index = 0; index < 8; index++){\
-        data[offset + index] = state[index];}})
         
 #define constant_time_comparison(flag, array1, array2, array_size, offset1, offset2)({\
     for (index = 0; index < array_size; index++){\
@@ -26,10 +19,10 @@ void encrypt(WORDSIZE* data, WORDSIZE* key, WORDSIZE* iv, WORDSIZE* extra_data, 
         
     unsigned long block_number;    
     for (block_number = 0; block_number < data_size / 8; block_number++){        
-        load_state(state, data, (block_number * 8));
+        copy(state, data, 8, 0, (block_number * 8));
         permutation(state);
-        store_state(data, state, (block_number * 8));}       
-            
+        copy(data, state, 8, (block_number * 8), 0);}       
+         
     for (index = 0; index < 8; index++){
         tag[index] = state[index + 8] ^ key[index];}}
         
@@ -42,11 +35,11 @@ int decrypt(WORDSIZE* data, WORDSIZE* key, WORDSIZE* iv, WORDSIZE* extra_data, W
     
     unsigned long block_number = data_size / 8;    
     while (block_number-- > 0){        
-        load_state(state, data, (block_number * 8));        
+        copy(state, data, 8, 0, (block_number * 8));               
         invert_permutation(state);
-        store_state(data, state, (block_number * 8));}        
+        copy(data, state, 8, (block_number * 8), 0);}        
             
-    load_state(tag, state, 8);        
+    copy(tag, state, 8, 0, 8);          
     initialize_state(state, iv, key, extra_data, extra_data_size);  
     
     int valid = 1;
@@ -76,7 +69,23 @@ void test_encrypt_decrypt(){
     else{
         printf("Decryption failed\n");}}
     
+void test_encrypt_time(){    
+	WORDSIZE message[8], key[8], iv[8], extra_data[8], tag[8];
+    unsigned long index;
+    for (index = 0; index < 8; index++){
+        message[index] = 1;}
+    printf("Encrypting and authenticating 3,000,000 256-bit blocks (~91MB)\n");
+    clock_t begin = clock();
+    for (index = 0; index < 3000000; index++){
+        encrypt(message, key, iv, extra_data, tag, 8, 8);}
+    clock_t end = clock();
+    
+    double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;    
+    printf("Time required: %.2fs\n", time_spent);
+    printf("%lu%lu%lu%lu%lu%lu%lu%lu\n", message[0], message[1], message[2], message[3], message[4], message[5], message[6], message[7]);}
+    
 int main(){
     test_encrypt_decrypt();
+    test_encrypt_time();
     return 0;}
     

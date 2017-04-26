@@ -14,25 +14,27 @@
 #define shift_rows(b, c, d, r1, r2, r3)({b = rotate_left(b, r1); c = rotate_left(c, r2); d = rotate_left(d, r3);})
 #define mix_slice(a, b, c, d)({mix_columns(a, b, c, d); shift_rows(b, c, d, 1, 2 ,  3);\
                                mix_columns(a, b, c, d); shift_rows(b, c, d, 4, 8 , 12);\
-                               mix_columns(a, b, c, d); shift_rows(b, c, d, 8, 12, 16);})
-                               
+                               mix_columns(a, b, c, d); shift_rows(b, c, d, 8, 12, 16);})                               
 #define shift_sections(b, c, d) {b = _mm_shuffle_epi32(b, 0b01101100); c = _mm_shuffle_epi32(c, 0b10110001); d = _mm_shuffle_epi32(d, 0b11000110);}
 #define add_constant(a) ({load_register(t, round_constants, 0);\
                           round_constants[0] += 1;\
                           a ^= t;})
 
-#define unshift_sections(b, c, d) shift_sections(b, c, d)
 #define unmix_columns(a, b, c, d)({d ^= a; b ^= c; c -= d; a -= b;})
 #define rotate_right(word, bits) _mm_srli_epi32(word, bits) | _mm_slli_epi32(word, 32 - bits)
 #define unshift_rows(b, c, d, r1, r2, r3)({b = rotate_right(b, r1); c = rotate_right(c, r2); d = rotate_right(d, r3);})
 #define unmix_slice(a, b, c, d)({unshift_rows(b, c, d, 8, 12, 16); unmix_columns(a, b, c, d);\
                                  unshift_rows(b, c, d, 4,  8, 12); unmix_columns(a, b, c, d);\
-                                 unshift_rows(b, c, d, 1,  2,  3); unmix_columns(a, b, c, d);})
-                                 
+                                 unshift_rows(b, c, d, 1,  2,  3); unmix_columns(a, b, c, d);})                                 
+#define unshift_sections(b, c, d) shift_sections(b, c, d)                                 
 #define remove_constant(a) ({load_register(t, round_constants, 0);\
                              round_constants[0] -= 1;\
                              a ^= t;})
-                          
+  
+#define copy(array1, array2, amount, offset1, offset2)({\
+    for (index = 0; index < amount; index++){\
+        array1[offset1 + index] = array2[offset2 + index];}})
+        
 void permutation(WORDSIZE* state){        
     REGISTER t, a, b, c, d;    
     load_register(a, state, 0); load_register(b, state, 4); 
