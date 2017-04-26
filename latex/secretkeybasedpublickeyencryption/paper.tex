@@ -31,7 +31,7 @@
 \keywords[Key Exchange]{Key Exchange}\todo{Keywords?}
 
 \begin{abstract}
-  We define an algorithm for performing a key exchange between two parties utilizing lattice based ideas. The algorithm makes use of a small number of bignum multiplications and additions and is conceptually simple.\\ 
+  We define algorithms for performing public key encryption and key exchange based on secret key ciphers that offer a homomorphic property. The nature of the design(s) allows for instantiation with any secure homomorphic cipher. The public keys in the presented schemes are amenable to being randomized, which offers the prospect of encrypted/anonymous public keys.
 \end{abstract}
 
 \todototoc
@@ -40,9 +40,11 @@
 \section{Introduction}
  The ability to exchange cryptographic keys over insecure channels is of vital importance to the function of the internet; Without algorithms for arranging secure communication online, much of every day life in the modern world would cease to be possible.\\
 
-The introduction of Quantum Computing and post-quantum cryptography has lead to the development of lattice based cryptographic schemes that are believed to be secure even when faced with quantum parallelism. Simply put, RSA and DH will need replacement at some point, and lattices seem like a promising alternative.
+Two of the most important topics in cryptography right now are: replacing RSA and DH in practice, and exploring the potential of homomorphic encryption. In this work we examine the application of homomorphic encryption towards the creation of simple public key encryption and key exchange algorithms.
 
-Lattices are also very attractive because they offer homomorphic properties, which is another of the most important topics in cryptography at the moment. This property is also extremely important because it allows for the construction of simple public key encryption schemes and key exchange shemes from secret key ciphers. We present such a scheme in this paper, as well as a homomorphic cipher suitable for instantiating the scheme.
+Some of the algorithms are not necessarily novel, but are more explicit and general descriptions of previous public key encryption algorithms; For example, the original Merkle-Hellman Knapsack Cryptosystem is effectively an example of a secret key homorphic cipher being used to create a public key, while inverting the public key encryption function is equivalent to performing a subset sum problem. We generalize the method and encodings for these techniques in this work.
+
+We will examine these systems from several perspectives: As the subset sum problem, and as a lattice problem.
 
 \section{Definitions}
 We use $+$ to denote addition, $ab$ to denote multiplication, and $\mod p$ to denote the modulo operation.
