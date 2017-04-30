@@ -50,7 +50,7 @@ void permutation(WORDSIZE* state){
         
     store_register(a, state, 0); store_register(b, state, 4);
     store_register(c, state, 8); store_register(d, state, 12);}                
-
+    
 void invert_permutation(WORDSIZE* state){
     REGISTER t, a, b, c, d;    
     load_register(a, state, 0); load_register(b, state, 4); 

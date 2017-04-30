@@ -9,7 +9,7 @@
         
 #define constant_time_comparison(flag, array1, array2, array_size, offset1, offset2)({\
     for (index = 0; index < array_size; index++){\
-        flag = (state[index + offset1] ^ tag[index + offset2] ^ 1) & flag;}})        
+        flag = (state[index + offset1] ^ tag[index + offset2] ^ 0xFFFFFFFF) & flag;}})        
             
 void encrypt(WORDSIZE* data, WORDSIZE* key, WORDSIZE* iv, WORDSIZE* extra_data, WORDSIZE* tag,
              unsigned long data_size, unsigned long extra_data_size){
@@ -18,10 +18,10 @@ void encrypt(WORDSIZE* data, WORDSIZE* key, WORDSIZE* iv, WORDSIZE* extra_data, 
     initialize_state(state, iv, key, extra_data, extra_data_size);
         
     unsigned long block_number;    
-    for (block_number = 0; block_number < data_size / 8; block_number++){        
-        copy(state, data, 8, 0, (block_number * 8));
+    for (block_number = 0; block_number < data_size / 8; block_number++){    
+        copy(state, data, 8, 0, (block_number * 8));                       
         permutation(state);
-        copy(data, state, 8, (block_number * 8), 0);}       
+        copy(data, state, 8, (block_number * 8), 0);}        
          
     for (index = 0; index < 8; index++){
         tag[index] = state[index + 8] ^ key[index];}}
@@ -42,7 +42,7 @@ int decrypt(WORDSIZE* data, WORDSIZE* key, WORDSIZE* iv, WORDSIZE* extra_data, W
     copy(tag, state, 8, 0, 8);          
     initialize_state(state, iv, key, extra_data, extra_data_size);  
     
-    int valid = 1;
+    int valid = 0xFFFFFFFF;
     constant_time_comparison(valid, state, tag, 8, 8, 0);
     return valid;}    
         
@@ -64,7 +64,7 @@ void test_encrypt_decrypt(){
     //iv[0] = 0;    
     //tag[0] = 0;
     //extra_data[0] = 0;
-    if (decrypt(data, key, iv, extra_data, tag, 8, 8) == 1){
+    if (decrypt(data, key, iv, extra_data, tag, 8, 8) == 0xFFFFFFFF){
         printf("%lu%lu%lu%lu%lu%lu%lu%lu\n", data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);}
     else{
         printf("Decryption failed\n");}}

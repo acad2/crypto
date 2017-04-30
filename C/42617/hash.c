@@ -1,32 +1,47 @@
 #include "permutation.c"
 
+#define HASHING_ROUNDS 24
+
 #define zero_out(array, size)({for (index = 0; index < size; index++){array[index] = 0;}})
-#define absorb(state, hash_input, amount, offset, modifier)({\
-    state[0] ^= hash_input[offset] ^ modifier;\
-    for (index = 1; index < amount; index++){\
-        state[index] ^= hash_input[offset + index];}\
-    permutation(state);})
+#define absorb(a, b, c, d, t, hash_input, block_number)({\
+    load_register(t, hash_input, (block_number * 8));\
+    a ^= t;\
+    load_register(t, hash_input, ((block_number * 8) + 4));\
+    b ^= t;\
+    a[0] ^= block_number;\
+    permutation(a, b, c, d, t, HASHING_ROUNDS);})
     
 void hash_function(WORDSIZE* hash_input, WORDSIZE input_length, WORDSIZE* output){
-    WORDSIZE state[16] __attribute__((aligned(16)));
+    REGISTER a, b, c, d, t;
     unsigned long index, block_number = 0, number_of_blocks;
     
-    zero_out(state, 16);
-                
     number_of_blocks = input_length / 8;      
     if (input_length % 8 == 0){
         if (number_of_blocks >= 1){
             number_of_blocks -= 1;}}
-    if (number_of_blocks > 0){        
-        for (block_number = 0; block_number < number_of_blocks; block_number++){                                   
-            absorb(state, hash_input, 8, (block_number * 8), block_number);}}
-        
-    int amount = input_length % 8;
-    if (amount == 0){
-        amount = 8;}
     
-    absorb(state, hash_input, amount, (block_number * 8), (0xFFFFFFFF ^ block_number));    
-    copy(output, state, 8, 0, 0);}
+    a ^= a; b ^= b; c ^= c; d ^= d;
+    if (number_of_blocks > 0){        
+        for (block_number = 0; block_number < number_of_blocks; block_number++){      
+            absorb(a, b, c, d, t, hash_input, block_number);}}
+        
+    int amount = input_length % 8;    
+    if (amount == 0){
+        amount = 8;}    
+        
+    if (amount < 5){
+        load_register(t, hash_input, (block_number * 8));
+        a ^= t;}
+    else{
+        load_register(t, hash_input, (block_number * 8));
+        a ^= t;
+        load_register(t, hash_input, (block_number * 8) + 4);
+        b ^= t;}       
+    a[0] ^= 0xFFFFFFFF ^ block_number;
+    permutation(a, b, c, d, t, HASHING_ROUNDS);
+    
+    store_register(a, output, 0);
+    store_register(b, output, 4);}
                     
 void test_hash(){    
     #define message_size 8
@@ -44,7 +59,7 @@ void test_hash(){
     printf("Time required: %.2fs\n", time_spent);
     printf("%lu%lu%lu%lu%lu%lu%lu%lu\n", hash_result[0], hash_result[1], hash_result[2], hash_result[3], hash_result[4], hash_result[5], hash_result[6], hash_result[7]);}
     
-int main(){
+/*int main(){
     test_hash();
-    return 0;}
+    return 0;}*/
     
