@@ -1,0 +1,125 @@
+two problems: routing data to a peer, and choosing which peers store data long term
+routing data to a peer:
+request consists of: repeat_counter || request
+peer1 broadcasts request
+                         +--- request --- peer2 ---+
+                         |
+                  peer1 -+--- request --- peer3 ---+
+                         |
+                         +----request --- peer4 ---  
+
+
+network stores key:data pairs
+
+request types
+
+type 1: storage/convergent data
+stores content (encrypted) on the network (to no particular recipient - any node(s) with storage)
+ideal for relatively persistent content, accessed by many
+  - client must remember key1 and hash(data)
+      - content does not have to be encrypted; if not, then hash(data) == key1
+  - client can upload encrypt(data_key, client_public_key) 
+    - client must store an additional DHT key, but the DHT key is not directly usable to decrypt the data held by the other key, unlike the hash(data) it would otherwise store
+request_data := request_type_1 || (symmetric_encryption(data, hash(data)) if encrypted else data)
+request_key := hash(request_data)
+request := request_key || request_data
+
+type 2: transient/non-convergent data
+provides transmission of (encrypted) data to a specified recipient
+request is addressed to the hash of the recipients public key
+    - the request and data may be associated with recipient
+        - in order to fix, encrypt the hash with the public key
+request_data := request_type_2 || hash(public_key) || data
+request := request_data
+
+type 3: confidential transmission
+provides transmission of encrypted information to a particular but unspecified recipient
+request is addressed with an encryption of the hash of the recipients public key
+upon receiving a type 3 request, each node should attempt to decrypt the identifier and check for a match with hash(public_key)
+on a successful match, the data is decrypted
+the request should be forwarded as usual - before checking anything
+the used public key should be/include an ephemeral one     
+    - even if the long term key becomes compromised, pfs guarantees that past requests recipient/data will remain confidential
+        - as long as the asymmetric crypto itself does not fail, anyways
+request_data := request_type3 || encrypt(hash(recipient_public_key), recipient_public_key) || encrypt(data, recipient_public_key)  
+request3 := request_data
+
+
+
+to store data:
+broadcast key:data pair to DHT network
+to retrieve data:
+broadcast key:None pair into DHT network
+listen for incoming key:data pair
+
+when a key:None request is received, lookup the key in the local store
+if it is found, then broadcast a key:data message in response
+if it is not, then decrement the hop counter and forward the request onward
+
+to avoid being seen broadcasting a key:None request:
+  - bundle the desired key up into a type 1 request
+  - relay the request by sending it via type 3 requests to a peer
+
+
+
+
+dht based messaging
+to send:
+broadcast type2/3 requests to network
+
+to receive:
+if request_type == 3:
+    decrement the repeat counter on the request and forward the request as usual
+check the fingerprint for the intended recipient, decrypting it first if necessary (type 3 requests)
+if so, decrypt the data
+
+two options for identifier fields:
+  - no encryption (type 2 request)
+      - perfectly fine for performing key exchange
+      - downside: peers can see that key was sent to hash(public_key)
+          - if peers know the public key, they can validate the fingerprint          
+  - public key encryption (type 3 request)
+    - recommended to do key exchange first and obtain ephemeral key for PFS
+        - even if long term keys are compromised, users past network history will still remain confidential
+
+        
+witness signatures + unforgeable DHT
+  - "send" = "broadcast to DHT"
+challenger generates challenge/signature request and validation key
+challenger publishes commitment to validation key to network
+send challenge/signature request via public key to possessor of private key
+signer sends back signed challenge and signing key
+challenger reveals validation key
+peers may validate signature
+peers may request their own signature and repeat the above process
+challenge-responses will be on record in the DHT
+  - frequently accessed records will remain in the DHT
+  - disused records may be pruned
+
+
+
+  
+  
+  
+  
+  
+  
+  
+hash(data):data
+store key_data:data in network
+ 
+hash(header): header := recipient_identifier||key_data
+transmit key_header:header across network
+
+if recipient is online:
+    listen for transmissions where the body begins appropriate recipient identifier
+if recipient is offline during the transmission:
+    when recipient comes back online, it can transmit a query for key:data pairs where data begins with the correct identifier
+    the network will re-broadcast the data
+if recipient (somehow) does not receive original broadcast:
+    the sender does not need to re-send either the key_data:data or key_header:header packets
+    the recipient will automatically receive any missed packet when it queries for missed packets
+        - assuming that there exists a viable delivery route between the nodes at all
+        
+    
+    

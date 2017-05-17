@@ -1,0 +1,111 @@
+% !TEX TS-program = pdflatex
+% !TEX encoding = UTF-8 Unicode
+
+% This is a simple template for a LaTeX document using the "article" class.
+% See "book", "report", "letter" for other types of document.
+
+\documentclass[11pt]{article} % use larger type; default would be 10pt
+
+\usepackage[utf8]{inputenc} % set input encoding (not needed with XeLaTeX)
+
+%%% Examples of Article customizations
+% These packages are optional, depending whether you want the features they provide.
+% See the LaTeX Companion or other references for full information.
+
+%%% PAGE DIMENSIONS
+\usepackage{geometry} % to change the page dimensions
+\geometry{a4paper} % or letterpaper (US) or a5paper or....
+% \geometry{margin=2in} % for example, change the margins to 2 inches all round
+% \geometry{landscape} % set up the page for landscape
+%   read geometry.pdf for detailed page layout information
+
+\usepackage{graphicx} % support the \includegraphics command and options
+
+% \usepackage[parfill]{parskip} % Activate to begin paragraphs with an empty line rather than an indent
+
+%%% PACKAGES
+\usepackage{booktabs} % for much better looking tables
+\usepackage{array} % for better arrays (eg matrices) in maths
+\usepackage{paralist} % very flexible & customisable lists (eg. enumerate/itemize, etc.)
+\usepackage{verbatim} % adds environment for commenting out blocks of text & for better verbatim
+\usepackage{subfig} % make it possible to include more than one captioned figure/table in a single float
+% These packages are all incorporated in the memoir class to one degree or another...
+
+%%% HEADERS & FOOTERS
+\usepackage{fancyhdr} % This should be set AFTER setting up the page geometry
+\pagestyle{fancy} % options: empty , plain , fancy
+\renewcommand{\headrulewidth}{0pt} % customise the layout...
+\lhead{}\chead{}\rhead{}
+\lfoot{}\cfoot{\thepage}\rfoot{}
+
+%%% SECTION TITLE APPEARANCE
+\usepackage{sectsty}
+\allsectionsfont{\sffamily\mdseries\upshape} % (See the fntguide.pdf for font help)
+% (This matches ConTeXt defaults)
+
+%%% ToC (table of contents) APPEARANCE
+\usepackage[nottoc,notlof,notlot]{tocbibind} % Put the bibliography in the ToC
+\usepackage[titles,subfigure]{tocloft} % Alter the style of the Table of Contents
+\renewcommand{\cftsecfont}{\rmfamily\mdseries\upshape}
+\renewcommand{\cftsecpagefont}{\rmfamily\mdseries\upshape} % No bold!
+
+%%% END Article customizations
+
+%%% The "real" document content comes below...
+
+\title{Alternative Perspective of the RSA Cipher}
+\author{Ella Rose}
+%\date{} % Activate to display a given date or no date (if empty),
+         % otherwise the current date is printed 
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+ We provide an alternative description of the RSA cipher by breaking it up into a few discrete, separate pieces. We hope that by understanding RSA as part of a more generalized cipher framework, we  might come up with alternative instantiations of the cipher that utilize different hardness assumptions. We do not suggest such a design here.
+
+\section{Introduction to RSA}
+This section will outline the RSA algorithm - for the history of the design, we encourage the reader to look elsewhere. \todo{RSA history is where?}
+
+The RSA cryptosystem utilizes three core functions:
+
+ The key generation algorithm, which generates a private key and corresponding public key
+ The encryption algorithm, which replaces the supplied number with a psuedorandom number
+ The decryption algorithm, which recovers the number that was supplied to the encryption algorithm, when given the output of the encryption algorithm and the private key.
+
+The key generation algorithm is typically described by something like the following:
+
+Select two large, random prime numbers of approximately equal size $p, q \gets bigPrime(size) bigPrime(size)$
+Calculate the totient via $totient \gets (p -1)(q - 1)$
+Set e to the usual/safe value (i.e. 65537); Select the decryption exponent via $modularInverse(e, totient)
+Multiply p and q to produce the modulus n $n \gets pq$
+Output n, e as the public key; Output d as the public key;
+
+While the encryption/decryption algorithms are simplier and are described by something like:
+
+Produce a ciphertext of message by computing $message ^ e \mod n$
+Produce a plaintext from ciphertext by computing $ciphertext ^ d mod n$
+
+While this is enough information to produce a working implementation of the "textbook" RSA algorithm, it is does not really fit well into a generic cipher framework. 
+
+\section{An Alternative Introduction to RSA}
+First, we shall describe a simple secret key cipher that is homomorphic with respect to multiplication of ciphertexts:
+
+Select a random prime number of sufficient size $p \gets bigPrime(size)$
+Select an encryption exponent of appropriate size (>2 and <size of p)
+Calculate the decryption exponent by computing $d \gets modularInverse(e, p - 1)$
+Encrypt a number by computing $m^e mod n$ and decrypt by computing $c^d mod n$
+
+The only difference so far is that we are using a single prime number as the modulus. Despite the fact that encryption and decryption are asymmetric operations, this cipher is not secure as a public key cipher, as anyone who knows $p$ and $e$ may compute $d$.
+
+RSA typically computes the decryption exponent by computing $modularInverse(e, totient(n))$, but it works equally well to use $modularInverse(e, totient(p))$ or $modularInverse(e, totient(q))$ - as long as the message is smaller then p or q, respectively.
+
+So the modulus $n \gets np$ that is typically released as part of the public key is effectively an encrypted modulus.
+
+As long as we encrypt messages of size smaller then p (the basis), then we do not need to know the totient of n - we only need to know the totient of p (or at least, one factor of n).
+
+# the purpose of q is to encrypt p so that others cannot obtain d
+# mk is a secure cipher if m and k are large primes and no "fast" classical algorithm for factoring exists
+
+
+\end{document}

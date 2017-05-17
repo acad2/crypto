@@ -1,5 +1,6 @@
 """ Provides authenticated encryption and decryption functions using only the python standard library and the persistence module.
     Used when the cryptography module cannot be installed.  """
+raise NotImplementedError() # todo: copy aead from epqcrypto
     
 import itertools
 import hashlib

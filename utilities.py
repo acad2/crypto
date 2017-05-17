@@ -4,7 +4,7 @@ import random
 import binascii
 from operator import xor as _operator_xor
 from fractions import gcd
-from os import urandom
+from os import urandom as random_bytes
 
 def slide(iterable, x=16):
     """ Yields x bytes at a time from iterable """
@@ -181,11 +181,11 @@ def random_oracle_hash_function(input_data, memo={}):
     try:
         return memo[input_data]
     except KeyError:
-        result = memo[input_data] = urandom(32)
+        result = memo[input_data] = random_bytes(32)
         return result
         
 def generate_key(size, wordsize=8):
-    key_material = binary_form(urandom(size))
+    key_material = binary_form(random_bytes(size))
     if wordsize == 8:
         result = key_material
     else:
@@ -387,12 +387,12 @@ def test_integer_to_words_words_to_integer():
     assert m == _m, (m, _m, words)
         
 def random_integer(size_in_bytes):
-    return bytes_to_integer(bytearray(urandom(size_in_bytes)))
+    return bytes_to_integer(bytearray(random_bytes(size_in_bytes)))
         
 def big_prime(size_in_bytes):           
     while True:
         candidate = random_integer(size_in_bytes)
-        if is_prime(candidate):
+        if candidate > 1 and is_prime(candidate):
             return candidate
             
 def serialize_int(number):
@@ -430,11 +430,30 @@ def is_prime(n, _mrpt_num_trials=10): # from https://rosettacode.org/wiki/Miller
                 return False
         return True # n is definitely composite
     
-    random.seed(urandom(32))
+    random.seed(random_bytes(32))
     for i in range(_mrpt_num_trials):
         a = random.randrange(2, n)
         if try_composite(a):
             return False
  
     return True # no base tested showed n as composite
+    
+def random_bits(bit_count):
+    blocks, extra = divmod(bit_count, 8)
+    if extra:
+        blocks += 1
+    bit_string = ''.join(format(item, 'b').zfill(8) for item in bytearray(random_bytes(blocks)))    
+    return [int(item) for item in bit_string[:bit_count]]
+    
+def quicksum_range(p):
+    """ usage: quicksum_range(p) => int
+    
+        Sums range(p) significantly faster then sum(range(p)). """
+    q, e = divmod(p, 2)
+    if not e:
+        q -= 1   
+        e = q     
+    else:
+        e -= 1
+    return (p * q) + e
     

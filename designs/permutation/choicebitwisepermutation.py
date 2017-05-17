@@ -20,8 +20,8 @@ def bit_permutation(a, b, c, d, k0, k1, k2, k3, size=32):
     # low weight keys are weak       
     # data does not cause avalanche effect
     for round in range(4):              
-        a ^= 0xFFFFFFFF
-        d ^= 0xFFFFFFFF
+        #a ^= 0xFFFFFFFF
+        #d ^= 0xFFFFFFFF
             
         a, b, c, d = shuffle_columns(a, b, c, d, k0, k1, k2, k3)                
         b = rotate_left(b, 1, size)
@@ -43,7 +43,7 @@ def bit_permutation(a, b, c, d, k0, k1, k2, k3, size=32):
         
         a, b, c, d = shuffle_columns(a, b, c, d, k0, k1, k2, k3)
         a, b, c, d = b, c, d, a 
-        a, b, c, d, k0, k1, k2, k3 = k0, k1, k2, k3, a, b, c, d
+#        a, b, c, d, k0, k1, k2, k3 = k0, k1, k2, k3, a, b, c, d
    # print
    # print '\n'.join(format(word, 'b').zfill(32) for word in (a, b, c, d))
     return a, b, c, d, k0, k1, k2, k3

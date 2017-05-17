@@ -58,6 +58,6 @@ def visualize_choice_transposition32():
     test_32x32_function(choice_transposition32,  [int('1' * 32, 2)] + [0 for count in range(31)])
         
 if __name__ == "__main__":
-    #visualize_choice_transposition()  
+    visualize_choice_transposition()  
     visualize_choice_transposition32()
     
