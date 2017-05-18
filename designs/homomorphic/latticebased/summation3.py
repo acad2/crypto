@@ -45,17 +45,21 @@ def decrypt(c, N, private_key):
     p, d = private_key
     return pow(c, d, N) % p
     
-def test_encrypt_decrypt():    
+def test_encrypt_decrypt():
+    from math import log
+    
     public_key, private_key = generate_keypair()
     for message in range(2, 256):                
         ciphertext = encrypt(message, public_key)
         plaintext = decrypt(ciphertext, public_key[0], private_key)
         assert message == plaintext, (message, plaintext)
+        
     size = lambda integer: int(log(integer, 2)) + 1
     print "summation3 encrypt/decrypt unit test complete"
-    print("Modulus size: {}".format(size(public_key[0]))
+    print("Modulus size: {}".format(size(public_key[0])))
     print("Private key size: p: {}; d: {}".format(size(private_key[0]), size(private_key[1])))
     print("Ciphertext size: {}".format(size(ciphertext)))
+    print("(sizes are in bits)")
     
 if __name__ == "__main__":
     test_encrypt_decrypt()
