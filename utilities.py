@@ -445,15 +445,17 @@ def random_bits(bit_count):
     bit_string = ''.join(format(item, 'b').zfill(8) for item in bytearray(random_bytes(blocks)))    
     return [int(item) for item in bit_string[:bit_count]]
     
-def quicksum_range(p):
-    """ usage: quicksum_range(p) => int
+def quicksum(p):
+    """ usage: quicksum(p) => int
     
-        Sums range(p) significantly faster then sum(range(p)). """
-    q, e = divmod(p, 2)
-    if not e:
-        q -= 1   
-        e = q     
+        Sums range(p) significantly faster then sum(range(p)). """    
+    e = p & 1
+    q = p >> 1
+    if not p & 1:
+        e = q
+        q -= 1           
     else:
-        e -= 1
+        e = 0   
+        q -= 0
     return (p * q) + e
     

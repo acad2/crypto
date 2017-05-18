@@ -9,16 +9,18 @@
 def quicksum_range(p):
     """ usage: quicksum_range(p) => int
     
-        Sums range(p) significantly faster then sum(range(p)). """
-    q, e = divmod(p, 2)
-    if not e:
-        q -= 1   
-        e = q + 1   
+        Sums range(p) significantly faster then sum(range(p)). """    
+    e = p & 1
+    q = p >> 1
+    if not p & 1:
+        e = q
+        q -= 1           
     else:
-        e -= 1
+        e = 0   
+        q -= 0
     return (p * q) + e
 
-def quicksum_ordered_set(numbers):
+def quicksum_ordered_set(numbers):    
     """ usage: quicksum_ordered_set(iterable: numbers) => int
         
         Sums the supplied numbers.

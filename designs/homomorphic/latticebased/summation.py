@@ -22,33 +22,18 @@ from crypto.utilities import random_integer, big_prime
 def quicksum(p):
     """ usage: quicksum(p) => int
     
-        Sums range(p) significantly faster then sum(range(p)) and with significantly less memory. """
-    q, e = divmod(p, 2)
-    if not e:
-        q -= 1   
-        e = q + 1   
+        Sums range(p) significantly faster then sum(range(p)) and with significantly less memory."""    
+    e = p & 1
+    q = p >> 1
+    if not p & 1:
+        e = q
+        q -= 1           
     else:
-        e = 0    
-    print "\nP: {}".format(p)
-    print "Q: {}".format(q)
-    print "E: {}".format(e)
+        raise ValueError("Invalid p (error term would be 0)")
+        e = 0   
+        q -= 0
     return (p * q) + e
-    
-def quicksum2(p):
-    """ usage: quicksum(p) => int
-    
-        Sums range(p) significantly faster then sum(range(p)) and with significantly less memory. """
-    q, e = divmod(p, 2)
-    if not e:
-        q -= 1   
-        e = q + 1   
-    else:
-        raise ValueError("Invalid e") 
-    #print "\nP: {}".format(p)
-    #print "Q: {}".format(q)
-    #print "E: {}".format(e + p)        
-    return (p * q) + e
-    
+        
 def generate_secret_key(size=33):
     return big_prime(size)
     
@@ -57,7 +42,7 @@ def encrypt(m, p, q_size=32):
         q = random_integer(q_size)
         n = p * q
         try:
-            ciphertext = quicksum2(n)
+            ciphertext = quicksum(n) #+ p
         except ValueError:
             pass
         else:
