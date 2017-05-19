@@ -6,7 +6,7 @@ def quicksum(p):
         Sums range(p) significantly faster then sum(range(p)). """    
     e = p & 1
     q = p >> 1
-    if not p & 1:
+    if not e:
         e = q
         q -= 1           
     else:

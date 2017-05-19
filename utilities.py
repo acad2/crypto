@@ -5,6 +5,7 @@ import binascii
 from operator import xor as _operator_xor
 from fractions import gcd
 from os import urandom as random_bytes
+from math import log
 
 def slide(iterable, x=16):
     """ Yields x bytes at a time from iterable """
@@ -458,4 +459,7 @@ def quicksum(p):
         e = 0   
         q -= 0
     return (p * q) + e
+    
+def size_in_bits(integer):
+    return int(log(integer, 2)) + 1
     
