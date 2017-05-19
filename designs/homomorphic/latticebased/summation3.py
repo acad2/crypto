@@ -10,9 +10,7 @@ def quicksum(p):
         e = q
         q -= 1           
     else:
-        raise ValueError()
-        e = 0   
-        q -= 0
+        raise ValueError() # can't accept e == 0 here
     return (p * q) + e
     
 def generate_private_key(p_size=32, e=65537):
@@ -34,32 +32,61 @@ def generate_public_key(p, q_size=32, e=65537):
         
 def generate_keypair(p_size=32, q_size=32, e=65537):
     p, d = generate_private_key(p_size, e)
-    N, e = generate_public_key(p, q_size, e)
+    N, e = generate_public_key(p, q_size, e)    
     return (N, e), (p, d)
     
-def encrypt(m, public_key):
-    N, e = public_key
-    return pow(m, e, N)
+def randomize_modulus(modulus, public_key, r_size=32):
+    return encrypt(modulus, public_key)
     
-def decrypt(c, N, private_key):
+def encrypt(m, public_key, r_size=32):
+    N, e = public_key
+    return pow(m, e, N * random_integer(r_size))
+    
+def decrypt(c, private_key):
     p, d = private_key
-    return pow(c, d, N) % p
+    return pow(c, d, p)
     
 def test_encrypt_decrypt():
     from math import log
     
     public_key, private_key = generate_keypair()
-    for message in range(2, 256):                
-        ciphertext = encrypt(message, public_key)
-        plaintext = decrypt(ciphertext, public_key[0], private_key)
-        assert message == plaintext, (message, plaintext)
+    public_key = (public_key[0] * random_integer(32), public_key[1])
+    
+    for message in range(2, 256): 
+        print message
+        message = random_integer(31)
         
-    size = lambda integer: int(log(integer, 2)) + 1
-    print "summation3 encrypt/decrypt unit test complete"
-    print("Modulus size: {}".format(size(public_key[0])))
-    print("Private key size: p: {}; d: {}".format(size(private_key[0]), size(private_key[1])))
+        #public_key = (randomize_modulus(public_key[0], public_key), public_key[1])
+        ciphertext = encrypt(message, public_key)
+        plaintext = decrypt(ciphertext, private_key)
+        assert message == plaintext, (message, plaintext)              
+        
+    size = lambda integer: int(log(integer, 2)) + 1                  
+    from pride.functions.timingcomparison import timing_comparison
+    public_key, private_key = generate_keypair(p_size=256 / 8, q_size=256 / 8)
+    print "Generating RSA modulus for comparison..."
+    _p =  big_prime(512 / 8)
+    print "Generating second factor..."
+    _q =  big_prime(512 / 8)
+    d = modular_inverse(65537, (_p - 1) * (_q - 1))    
+    rsa_pub_key = (_p * _q, 65537)
+    rsa_priv_key = (rsa_pub_key[0], d)
+    print "Beginning timing comparison"
+    print "Encryption time: (RSA top; summation3 bottom)"
+    print("Modulus sizes: RSA: {}; summation3: {}".format(size(rsa_pub_key[0]), size(public_key[0])))
+    timing_comparison((encrypt, (3, rsa_pub_key, ), {}),
+                      (encrypt, (3, public_key, ), {}), iterations=100)
+                      
+    print "Decryption time: (RSA top; summation3 bottom)"
+    print("Private key size: RSA: d: {}; summation3: p: {}; d: {}".format(size(rsa_priv_key[1]), size(private_key[0]), size(private_key[1])))
+    timing_comparison((decrypt, (ciphertext, rsa_priv_key), {}),
+                      (decrypt, (ciphertext, private_key), {}), iterations=100)
+    
+          
     print("Ciphertext size: {}".format(size(ciphertext)))
-    print("(sizes are in bits)")
+    print("(sizes are in bits)") 
+    
+    print "summation3 encrypt/decrypt unit test complete"   
     
 if __name__ == "__main__":
     test_encrypt_decrypt()
