@@ -463,3 +463,18 @@ def quicksum(p):
 def size_in_bits(integer):
     return int(log(integer, 2)) + 1
     
+def factor_integer(integer):
+    factorization = dict()    
+    for prime in prime_generator():
+        _integer, remainder = divmod(integer, prime)
+        if not remainder:  
+            integer = _integer
+            exponent = 1
+            while not integer % prime:
+                exponent += 1
+                integer /= prime
+            factorization[prime] = exponent
+        if integer == 1:
+            break
+    return factorization
+        

@@ -2,8 +2,13 @@
 # 1 2 3 4 5 6 7 = 28
 # q1 = 6; q2 = 8;
 
+# g ^ x == g * r   mod p
+# (g ^ a) ^ b == (g ^ b) ^ a   mod p
 
-
+# pick a random m
+# store it in the exponent
+# exponentiate to multiply exponents
+raise NotImplementedError()
 from crypto.utilities import big_prime, random_integer, quicksum
 
 G = 3
