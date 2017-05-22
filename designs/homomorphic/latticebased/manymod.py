@@ -7,20 +7,28 @@
 #    m1 = p1m1 / p1
 #    
 #    ...
-from math import sqrt
-
 from crypto.utilities import random_integer
    
-def generate_key(dimension=8):
-    size = 1
+def generate_key(dimension=8, size=1, _attempts=16):    
     points = [random_integer(size)]
-    size *= 2
+    size *= 2    
+    minimum_size = points[-1] ** 2    
     for count in range(dimension - 1):
-        point = random_integer(size)
-        while points[-1] > sqrt(point):
-            point = random_integer(size)
-        points.append(point)
-        size *= 2
+        searching = True        
+        attempts = 0        
+        while searching:
+            point = random_integer(size + 1)
+            if point > minimum_size:
+                size *= 2
+                points.append(point)
+                searching = False
+            else:
+                attempts += 1
+                if attempts == _attempts:                    
+                    del points[-1]
+                    size /= 2
+                    points.append(random_integer(size))
+                    minimum_size = points[-1] ** 2        
     return points
         
 def encrypt(message_points, key_points, r_size=32):

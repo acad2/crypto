@@ -14,34 +14,38 @@
 import crypto.designs.homomorphic.latticebased.manymod as manymod
 from crypto.utilities import random_integer
 
-def generate_private_key(m_size=33, r_size=66, ra_size=134):
-    p_m = random_integer(m_size)
-    p_r = random_integer(r_size)
-    p_ra = random_integer(ra_size)    
-    return (p_m, p_r, p_ra)
+def generate_private_key(dimension=4, m_size=33):
+    return manymod.generate_key(dimension=dimension, size=m_size)
     
-def generate_public_key(private_key):
-    k_m = manymod.encrypt((1, 0, ), private_key)
-    k_r = manymod.encrypt((0, 1, ), private_key)
-    return (k_m, k_r)
+def generate_public_key(private_key):   
+    key_size = len(private_key)
+    level = [1] + ([0] * (key_size - 2))
+    return [manymod.encrypt(level[count:] + level[:count], private_key) for count in range(key_size - 1)]
+    #p_m = manymod.encrypt((1, 0, 0, ), private_key) # this is more readable, but the above scales automatically
+    #p_r = manymod.encrypt((0, 1, 0, ), private_key)
+    #p_x = manymod.encrypt((0, 0, 1, ), private_key)
+    #return (p_m, p_r, p_x)
     
-def generate_keypair(m_size=33, r_size=66, ra_size=134):
-    private_key = generate_private_key(m_size, r_size, ra_size)
+def generate_keypair(dimension=4, m_size=33):
+    private_key = generate_private_key(dimension, m_size)
     public_key = generate_public_key(private_key)
     return public_key, private_key
         
-def encrypt(m, public_key, r_size=64):
-    k_m, k_r = public_key
-    return (k_m * m) + (k_r * random_integer(r_size))
+def encrypt(m, public_key, r_size=64):    
+    k_m = public_key[0]    
+    ciphertext = (k_m * m) + sum(p_i * random_integer(r_size) for p_i in public_key[1:])
+    return ciphertext    
     
 def decrypt(ciphertext, private_key):
-    p_m, p_r, p_ra = private_key
-    pm_plus_pr = ciphertext % p_ra
-    pm = pm_plus_pr % p_r
-    return pm / p_m
+    k_m, k_r, k_x, k_ra = private_key
+    ciphertext %= k_ra
+    ciphertext %= k_x
+    ciphertext %= k_r
+    return ciphertext / k_m    
 
 def test_encrypt_decrypt():
     public_key, private_key = generate_keypair()
+    print("Beginning manymodpublickey unit test...")
     for counter in range(65536):
         message = random_integer(32)
         ciphertext = encrypt(message, public_key)
@@ -55,6 +59,7 @@ def test_encrypt_decrypt():
     print("Public key size : p_m: {}; p_r: {}; Total: {}".format(*public_key_sizes + [sum(public_key_sizes)]))    
     print("Private key size: k_m: {}; k_r: {}; k_ra: {}; Total: {}".format(*private_key_sizes + [sum(private_key_sizes)]))
     print("Ciphertext size: {}".format(size(ciphertext)))
+    print("(Sizes are in bits)")
     
 if __name__ == "__main__":
     test_encrypt_decrypt()
