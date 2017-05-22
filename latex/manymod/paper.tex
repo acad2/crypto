@@ -1,0 +1,116 @@
+\documentclass[preprint]{iacrtrans}
+\usepackage[utf8]{inputenc}
+
+% Select what to do with todonotes: 
+% \usepackage[disable]{todonotes} % notes not showed
+\usepackage[draft,color=orange!20!white,linecolor=orange,textwidth=3cm,colorinlistoftodos]{todonotes}   % notes showed
+\setlength{\marginparwidth}{3cm}
+\usepackage{graphicx}
+\usepackage{soul}
+\graphicspath{{images/}} % end dirs with `/'
+% \usepackage{longtable}
+\usepackage{tikz}
+\usetikzlibrary{arrows}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{positioning}
+\usetikzlibrary{calc}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{arrows}
+\usetikzlibrary{crypto.symbols}
+\tikzset{shadows=no}        % Option: add shadows to XOR, ADD, etc.
+
+\author{Ella Rose\inst{1}}
+\institute{Paso Robles, CA\email{python_pride@protonmail.com}}
+\title[Manymod Cipher]{Manymod Cipher}
+
+\begin{document}
+
+\maketitle
+
+% use optional argument because the \LaTeX command breaks the PDF keywords
+\keywords[Key Exchange]{Key Exchange}\todo{Keywords?}
+
+\begin{abstract}
+ We define a secret key cipher with homomorphic properties. The goal of the design was to improve the ratio of plaintext information contained in a ciphertext. The algorithm utilizes bignum addition and multiplication, as well as division and modular reduction. 
+\end{abstract}
+
+\todototoc
+\listoftodos
+
+\section{Introduction}
+ Ciphers that support homomorphic operations on ciphertexts are very attractive because they tend to make the creation of public key encryption schemes straightforward and relatively simple. Lattices are attractive because they tend to facilitate such operations. Unfortunately, some of the lattice based ciphers suffer from a practical problem: Prohibitively large ciphertexts are required to encrypt even small amounts of plaintext. For example, the DoubleMod construction requires approximately 22.5Kb of ciphertext to encrypt a single plaintext bit, and that is with a rather small security level of about 80 bits.
+
+In this paper, we define an algorithm that appears to make more efficient use of a given amount of ciphertext space. 
+
+\section{Definitions}
+We use $+$ to denote addition, $ab$ to denote multiplication, $a / b$ to denote division, and $\mod p$ to denote the modulo operation. 
+
+\section{Algorithm}
+\subsection{Basic Concept}
+\subsubsection{Encryption}
+\begin{align}
+a := k_1 m_1\\
+b := k_2 m_2\\
+ciphertext  := a + b
+\end{align}
+
+\subsubsection{Decryption}
+Assuming that k2 is significantly larger then k1, then given $z$ and $k1, k2$, it is possible to recover $m1, m2$. This can be done via the following:
+
+\begin{align}
+a := ciphertext \mod k_2\\
+b := ciphertext - a\\
+m_1 := a / k_1\\
+m_2 := b / k_2
+\end{align}
+
+\subsection{Randomization}
+Any homomorphic cipher requires randomization in order to be secure. The presented design is very simple to randomize; Continuing with the previous example, we would simply generate an additional $k_3$ and a random $r_0$ and include that in the sum as well:
+
+\begin{align}
+a := k_1 m_1\\
+b := k_2 m_2\\
+c := k_3 r_0\\
+ciphertext := a + b + c
+\end{align}
+
+Decryption proceeds as before, with the exception that the randomized outter-most message need not be output by the decryption procedure.
+
+\subsection{Key Generation}
+For decryption to function correctly, the size of the successive keys must grow larger. Each successive key must be greater then the square of the size of previous element. 
+
+For simplicity, we begin by generating an 8-bit random number, and setting $k_1$ to that. Then, to generate the next key, we generate a 16-bit random number, and check to ensure that the previous key is smaller then the square root of the candidate next key. If it is not of appropriate size, the sample is rejected and another obtained until the test passes. Once a key of appropriate size is obtained, then we proceed to generate a 32-bit key and repeat the process again and again until a sufficient amount of security can be obtained.
+
+\subsection{Note}
+We note that this encryption algorithm scales well in terms of security and plaintext/ciphertext ratio: Increasing the dimension (the number of key/message points) will tend to increase the hardness of any associated lattice problem, as well as the amount of plaintext that can be stored in the ciphertext. 
+
+\subsection{Orthoganlity of Points}
+The final ciphertext consists of a linear superposition of orthogonal $k_n m_n$ pairs. The orthognality feature allows us to manipulate each individual $k_n m_n$ pair independently of any others wiithout having to remove it from the superposition.
+
+ Put in other words, the entire ciphertext constitutes a kind of encrypted array, where each entry is a ciphertext (in the form of $k_n m_n$). The elements of the array are not stored successively, as in a traditional array, but are instead stored in a superposition, on top of one another. 
+
+Accessing elements of the array is not done via indexing, but instead via the lattice basis point $k_n$. For example, consider:
+
+\begin{align}
+m_1 := 1\\
+m_2 := 2\\
+m_3 := 3\\
+m_4 := 4\\
+ciphertext_1 := k_1 m_1 + k_2 m_2\\
+ciphertext_2 := k_1 m_3 + k_2 m_4\\
+ciphertext_3 := ciphertext_1 + ciphertext_2\\
+ciphertext_3 := ciphertext_3 - k_1\\
+ciphertext_3 := ciphertext_3 + ( k_2 * 10)
+\end{align}
+
+In the example, two "arrays" of ciphertexts are created. The $ciphertext_1$ "array" contains the values 1 and 2, while the $ciphertext_2$ "array" holds the values 3 and 4. Then, these two arrays are summed element-wise, and the resulting $ciphertext_3$ now holds the values $1 + 3 = 4$ and $2 + 4 = 6$. After that, $1$ is subtracted from the first element of the array, then 10 is added to the second element of the array.
+
+While this write access requires the key to perform, an encryption of the key will also work. It is possible to provide explicit write access on individual, particular elements without providing read access to any elements.
+
+\subsection{Decryption Order}
+Ciphertexts must be decrypted in order of largest to smallest basis. If the larger "outer" ciphertexts have a sufficient security margin, then knowledge of the smaller, "inner" basis does not provide read access on the data, but it does provide write access on the data.
+
+\section{Conclusion}
+
+\end{document}
+

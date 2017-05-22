@@ -20,6 +20,12 @@ else:
     raise ValueError("No such combination of 2 items found")
 assert y > x
             
+            
+# p2q2 + p3q3 + p5q5 + p7q7
+# % p2q2 == p3q3 + p5q5 + p7q7
+
+
+            
 factorization = {}            
 for element in range(2, y):
     factors = factor_integer(element)

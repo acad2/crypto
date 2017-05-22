@@ -6,6 +6,15 @@
 #             7
 from crypto.utilities import prime_generator
 
+def prime_generator():
+    filter = dict()
+    prime = 2
+    filter[2] = 4    
+    for number in itertools.count(3):
+        if number not in filter:
+            filter.appen
+    
+    
 def generate_primes_until(n):    
     for prime in prime_generator():
         if prime < n:
@@ -18,6 +27,7 @@ def print_numbers_up_to(n=30):
     for index, p in enumerate(generate_primes_until(n)):
         spacing = ' ' * len(' '.join(str(item) for item in range(p)))
         print(spacing.join(str(item) for item in range(0, n, p)))
+        
         
 if __name__ == "__main__":
     import sys
