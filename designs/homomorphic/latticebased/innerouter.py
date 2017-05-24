@@ -11,9 +11,12 @@
 
 
 
+# k0((k1 * r1) + m) + r2
+# (k0k1 * k0r1) + k0m + r2
+# k0k0k1r1 + k0m + r2
+# k0q1 + k0m + r2
+# k0q2 + r2
 
-# pm + e is no good because m = 0, but even without m = 0:
-# encrypt m with another pr + m
 from crypto.utilities import random_integer
 
 def generate_key(size=33):

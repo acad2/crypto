@@ -9,6 +9,11 @@
 #    ...
 from crypto.utilities import random_integer
    
+# compress key?
+# autogen key from seed?
+#   - n = random_integer(size)
+#   - next_n = (n + k) ** 2
+  
 def generate_key(dimension=8, size=1, _attempts=16):    
     points = [random_integer(size)]
     size *= 2    

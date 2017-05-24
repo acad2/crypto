@@ -21,11 +21,11 @@
 # encrypt message to randomize it before it using as q
 from crypto.utilities import big_prime, random_integer, modular_inverse, size_in_bits
 
-def generate_key(p_size=33, k_size=33, n_size=66):
-    p = random_integer(p_size)
+def generate_key(p_size=33, k_size=33, n_size=67):
+    p = big_prime(p_size)
     k = random_integer(k_size)
-    n = big_prime(n_size)
-    assert size_in_bits(p) + size_in_bits(k) < size_in_bits(n)
+    n = random_integer(n_size)
+   # assert size_in_bits(p) + size_in_bits(k) < size_in_bits(n)
     return p, k, n
     
 def encrypt(m, key, q_size=32):

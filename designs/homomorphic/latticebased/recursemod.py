@@ -37,6 +37,9 @@ def decrypt_item(ciphertext, key):
     return ciphertext / key
     return (ciphertext - (ciphertext % key)) / key
         
+def encrypt_array(message_points, item_keys, array_keys):
+    
+    
 def test_encrypt_decrypt_item():
     key = generate_item_key(2)
     m = 10    
