@@ -44,22 +44,8 @@ def decrypt(ciphertext, private_key):
     return ciphertext / k_m    
 
 def test_encrypt_decrypt():
-    public_key, private_key = generate_keypair()
-    print("Beginning manymodpublickey unit test...")
-    for counter in range(65536):
-        message = random_integer(32)
-        ciphertext = encrypt(message, public_key)
-        plaintext = decrypt(ciphertext, private_key)
-        assert plaintext == message, (plaintext, message)
-    print "manymodpublickey encrypt/decrypt unit test passed"
-    
-    from crypto.utilities import size_in_bits as size
-    public_key_sizes = [size(public_key[0]), size(public_key[1])]
-    private_key_sizes = [size(item) for item in private_key]
-    print("Public key size : p_m: {}; p_r: {}; Total: {}".format(*public_key_sizes + [sum(public_key_sizes)]))    
-    print("Private key size: k_m: {}; k_r: {}; k_ra: {}; Total: {}".format(*private_key_sizes + [sum(private_key_sizes)]))
-    print("Ciphertext size: {}".format(size(ciphertext)))
-    print("(Sizes are in bits)")
+    from unittesting import test_asymmetric_encrypt_decrypt
+    test_asymmetric_encrypt_decrypt("manymodpublickey", generate_keypair, encrypt, decrypt)
     
 if __name__ == "__main__":
     test_encrypt_decrypt()

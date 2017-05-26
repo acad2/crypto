@@ -1,0 +1,86 @@
+\documentclass[preprint]{iacrtrans}
+\usepackage[utf8]{inputenc}
+
+% Select what to do with todonotes: 
+% \usepackage[disable]{todonotes} % notes not showed
+\usepackage[draft,color=orange!20!white,linecolor=orange,textwidth=3cm,colorinlistoftodos]{todonotes}   % notes showed
+\setlength{\marginparwidth}{3cm}
+\usepackage{graphicx}
+\usepackage{soul}
+\graphicspath{{images/}} % end dirs with `/'
+% \usepackage{longtable}
+\usepackage{tikz}
+\usetikzlibrary{arrows}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{positioning}
+\usetikzlibrary{calc}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{arrows}
+\usetikzlibrary{crypto.symbols}
+\tikzset{shadows=no}        % Option: add shadows to XOR, ADD, etc.
+
+\author{Anonymous\inst{1}}
+\institute{City, State \email{address@provider.com}}
+\title[\texttt Design date]{\texttt Design date}
+
+\begin{document}
+
+\maketitle
+
+% use optional argument because the \LaTeX command breaks the PDF keywords
+\keywords[Key Exchange]{Key Exchange}\todo{Keywords?}
+
+\begin{abstract}
+  We define algorithms for performing public key encryption and key exchange based on secret key ciphers that offer a homomorphic property. The nature of the design(s) allows for instantiation with any secure homomorphic cipher. The public keys in the presented schemes are amenable to being randomized, which offers the prospect of encrypted/anonymous public keys.
+\end{abstract}
+
+\todototoc
+\listoftodos
+
+\section{Introduction}
+ The ability to exchange cryptographic keys over insecure channels is of vital importance to the function of the internet; Without algorithms for arranging secure communication online, much of every day life in the modern world would cease to be possible.\\
+
+Two of the most important topics in cryptography right now are: replacing RSA and DH in practice, and exploring the potential of homomorphic encryption. In this work we examine the application of homomorphic encryption towards the creation of simple public key encryption and key exchange algorithms.
+
+Some of the algorithms are not necessarily novel, but are more explicit and general descriptions of previous public key encryption algorithms; For example, the original Merkle-Hellman Knapsack Cryptosystem is effectively an example of a secret key homorphic cipher being used to create a public key, while inverting the public key encryption function is equivalent to performing a subset sum problem. We generalize the method and encodings for these techniques in this work.
+
+We will examine these systems from several perspectives: As the subset sum problem, and as a lattice problem.
+
+\section{Definitions}
+We use $+$ to denote addition, $ab$ to denote multiplication, and $\mod p$ to denote the modulo operation.
+
+\section{Algorithm}
+First, we shall define the key exchange algorithm; Then, we shall define a secret key cipher suitable for instantiating the key exchange algorithm.
+
+\subsection{Key Exchange Algorithm}
+Let $pb_1$ and $pb_2$ be two encryptions of $0$ under the homomorphic secret key cipher. These two values constitute a public key. To share a secret with the owner of the public key, compute:
+\begin{align}
+    e \gets secret \\
+    c \gets (pb_1  r_1) + (pb_2 r_2) + e
+\end{align}
+
+Then the value $c$ is shared with the owner of the public key. The owner of the public key can recover $e$ by applying the homomorphic decryption operation of the secret key cipher to c; This is because $pb_1$ is an encryption of $0$, $pb_1 r_1$ is equivalent to $0 r_1 \equiv 0$, similar for $pb_2$. So when the decryption operation is applied, the result is $0 + 0 + e \equiv e$.
+
+\subsection{Secret Key Cipher}
+Creation of the $pb_1$ and $pb_2$ values requires a secure, additively homomorphic cipher. We define a simple lattice based cipher which utilizes effectively the same operations as the key exchange process. Let $p_1$ and $p_2$ be two large numbers, where $log_2(p_1) >= log_2(p_2) * 3$; These two numbers constitute the secret key for the cipher, which in turn acts as the private key for the key exchange presented previously.\\
+
+To encrypt a ciphertext, compute:
+
+\begin{align}
+   c \gets (p_1 r_1) + (p_2 r_2) + m
+\end{align}
+
+Where the $r$ values are of appropriate size relative to $p_1$ and $p_2$ \todo{what sizes are appropriate}
+While decryption is computed as:
+
+\begin{align}
+    m \gets (c \mod p_1) \mod p_2
+\end{align}
+
+\subsection{Note}
+While the decryption circuit works via two modulo operations of the base points of the lattice, this operation does not work for the public key/key exchange portion of the algorithm - The reason is because in the secret key cipher, the two different lattice points are of largely different size; In the key exchange algorithm, both points are roughly the same size, and so the double modulo operation does not function identically.
+
+\section{Conclusion}
+ We define a simple lattice based key exchange algorithm. The algorithm utilizes 2 bignum multiplications and 2 bignum additions to generate a keypair, 2 bignum multiplications and 2 bignum additions per key sent, and 2 modulo operations on bignums to receive a key. Public keys typically occupy < 1200 bits using current parameter cohices, while private keys require about 600 bits.
+\end{document}
+

@@ -1,57 +1,59 @@
-# encrypt:
-#   c := p * (kq + m) mod n
-# decrypt:
-#   p := c * pi mod n mod k
+""" Keygen:
+        random integers p, k, n such that modular_inverse(p, n) exists
+    Encrypt:
+        c := p * (kq + m) mod n
+    Decrypt:
+        p := c * pi mod n mod k """
 
-# pq1 mod n
-# pq2 mod n
-# ppq1q2 mod n
-
-#(kq1 + m1) * (kq2 + m2)
-# kkq1q2 + kq2m1 + kq1m1 + m1m2
-
-#kq2(kq1 + m1) + m2kq1 + m1m2
-#kkq1q2 + kq2m1 + m2kq1 + m1m2
-
-# pq + e
-# e must be smaller then p
-# q should be much larger then p
-# therefore it is better to store the data in q then e
-# 0 is a problem for in either place, q, or e
-# encrypt message to randomize it before it using as q
 from crypto.utilities import big_prime, random_integer, modular_inverse, size_in_bits
 
-def generate_key(p_size=33, k_size=33, n_size=67):
-    p = big_prime(p_size)
+P_SIZE = 66
+K_SIZE = 66
+N_SIZE = 133
+Q_SIZE = 32
+
+def generate_key(p_size=P_SIZE, k_size=K_SIZE, n_size=N_SIZE):
+    """ usage: generate_key(p_size=66, k_size=66, 
+                            n_size=133) => private_key
+                            
+        Returns 3 random integers, suitable for use as a key """
+    p = random_integer(p_size)
     k = random_integer(k_size)
-    n = random_integer(n_size)
-   # assert size_in_bits(p) + size_in_bits(k) < size_in_bits(n)
-    return p, k, n
+    while True: # instead of choosing p or n as a prime, just make sure modular inverse of p exists mod n
+        n = random_integer(n_size)
+        try:
+            pi = modular_inverse(p, n)
+        except ValueError:
+            continue
+        else:
+            break
+    #assert size_in_bits(p) + size_in_bits(k) < size_in_bits(n)
+    return p, pi, k, n
     
-def encrypt(m, key, q_size=32):
-    p, k, n = key
+def encrypt(m, key, q_size=Q_SIZE):
+    """ usage: encrypt(m, key, q_size=32) => ciphertext
+    
+        Encrypts an integer m using key.
+        Returns a ciphertext integer.
+        Ciphertexts are of the form: (p * ((k * q) + m)) % n
+        Ciphertexts support addition """
+    p, pi, k, n = key
     q = random_integer(q_size)     
+    _c = (p * ((k * q) + m))
+    #assert _c > n, (_c, _c % n, n, size_in_bits(_c), size_in_bits(n))    
     return (p * ((k * q) + m)) % n
         
-def decrypt(ciphertext, key, operation_count=1):
-    p, k, n = key       
-    return ((ciphertext * modular_inverse(p ** operation_count, n)) % n) % k
+def decrypt(ciphertext, key):
+    """ usage: decrypt(ciphertext, key) => plaintext
+    
+        Decrypts ciphertext using key.
+        Returns plaintext integer. """
+    p, pi, k, n = key
+    return ((ciphertext * pi) % n) % k
         
 def test_encrypt_decrypt():
-    key = generate_key()
-    for message in range(256):
-        message = random_integer(31)
-        ciphertext = encrypt(message, key)
-        plaintext = decrypt(ciphertext, key)
-        assert plaintext == message, (plaintext, message)
-    c1 = encrypt(10, key)
-    c2 = encrypt(20, key)
-    assert decrypt(c1 + c2, key) == 30
-       
-    sizes = [size_in_bits(item) for item in key]
-    print("Key size: p: {}; k: {}; n: {}; total: {}".format(*sizes + [sum(sizes)]))
-    print("Ciphertext size: {}".format(size_in_bits(ciphertext)))
-    print("modular encrypt/decrypt unit test passed")
+    from unittesting import test_symmetric_encrypt_decrypt
+    test_symmetric_encrypt_decrypt("modular", generate_key, encrypt, decrypt)
     
 if __name__ == "__main__":
     test_encrypt_decrypt()

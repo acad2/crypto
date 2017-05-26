@@ -1,13 +1,20 @@
 import crypto.designs.homomorphic.latticebased.modular as modular
 from crypto.utilities import random_integer
 
-def generate_private_key(keygen_function=modular.generate_key):                         
-    key = keygen_function(66, 66, 133)
-    return key
-    
-def generate_public_key(private_key, encryption_function=modular.encrypt):    
-    public_key = (encryption_function(1, private_key),
-                  encryption_function(1, private_key))
+DIMENSION = 3
+P_SIZE = 66
+K_SIZE = 66
+N_SIZE = 133
+R_SIZE = 32
+
+def generate_private_key(keygen_function=modular.generate_key,
+                         p_size=P_SIZE, k_size=K_SIZE, n_size=N_SIZE):                         
+    return keygen_function(p_size, k_size, n_size)
+        
+def generate_public_key(private_key, dimension=DIMENSION, encryption_function=modular.encrypt):     
+    public_key = [encryption_function(1, private_key)]        
+    for counter in range(dimension - 1):
+        public_key.append(encryption_function(0, private_key))           
     return public_key
     
 def generate_keypair(keygen_private=generate_private_key,
@@ -16,31 +23,18 @@ def generate_keypair(keygen_private=generate_private_key,
     public_key = keygen_public(private_key)
     return public_key, private_key
     
-def exchange_key(public_key, r_size=32):
-    p1, p2 = public_key
-    q1, q2 = random_integer(r_size), random_integer(r_size)
-    ciphertext = (p1 * q1) + (p2 * q2)
-    shared_secret = q1 + q2       
-    return ciphertext, shared_secret
+def encrypt(message, public_key, r_size=R_SIZE):
+    p1 = public_key[0]    
+    ciphertext = (p1 * message) + sum(point * random_integer(r_size) for point in public_key[1:])    
+    return ciphertext
     
-def recover_key(ciphertext, private_key, decryption_function=modular.decrypt):
+def decrypt(ciphertext, private_key, decryption_function=modular.decrypt):
     return decryption_function(ciphertext, private_key)
     
-def test_exchange_key_recover_key():
-    print("Generating keypair...")
-    public_key, private_key = generate_keypair()
-    print("...done.")
-    for count in range(1024):             
-        ciphertext, secret = exchange_key(public_key)
-        _secret = recover_key(ciphertext, private_key)
-        assert _secret == secret, (_secret, secret)
-    
-    ciphertext1, secret1 = exchange_key(public_key)
-    ciphertext2, secret2 = exchange_key(public_key)
-    ciphertext3 = ciphertext1 + ciphertext2
-    assert recover_key(ciphertext3, private_key) == secret1 + secret2
-    assert recover_key(ciphertext3 + (public_key[0] * 1), private_key) == secret1 + 1 + secret2
+def test_encrypt_decrypt():
+    from unittesting import test_asymmetric_encrypt_decrypt
+    test_asymmetric_encrypt_decrypt("modularpublickey", generate_keypair, encrypt, decrypt)
     
 if __name__ == "__main__":
-    test_exchange_key_recover_key()        
+    test_encrypt_decrypt()        
         

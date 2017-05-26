@@ -1,0 +1,63 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{doc}[2016/05/09]
+
+\usepackage{bussproofs}
+
+\DeclareRobustCommand{\gobblefive}[5]{}
+
+\newcommand*{\SkipTocEntry}{\addtocontents{toc}{\gobblefive}}
+\usepackage[printonlyused]{acronym}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\acknowledgmentsname}{Acknowledgments}
+\newenvironment{acknowledgments}%
+    {\null\vskip0.2\textheight\begin{center}%
+    \bfseries\acknowledgmentsname\end{center}}%
+
+
+\newcommand{\prerequisitesname}{Prerequisites}
+
+\newenvironment{prerequisites}%
+    {\null\begin{center}%
+    \bfseries\prerequisitesname\end{center}}%
+
+\newcommand{\headerline}[3]{%
+    \makebox[\textwidth][s]{\rlap{#1}\hfill#2\hfill\llap{\texttt{#3}}}%
+}
+
+\newenvironment{note}%
+    {\begin{mdframed}[style=Note]}%
+    {\end{mdframed}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\addto\captionsenglish{\def\acronymtitle{Acronyms}}
+\addto\captionsfrench{\def\acronymtitle{Acronymes}}
+\renewcommand*{\acffont}[1]{\emph{#1}}
+\renewcommand*{\acfsfont}[1]{\emph{#1}}
+
+\newcommand{\printacro}{
+\@ifundefined{chapter}{
+    \section*{\acronymtitle}
+    \label{section:acronyms}
+    \addcontentsline{toc}{section}{\acronymtitle}
+}{
+    \chapter*{\acronymtitle}
+    \label{chapter:acronyms}
+    \addcontentsline{toc}{chapter}{\acronymtitle}
+}
+    \markboth{\acronymtitle}{}
+
+        \begin{acronym}[LARGESTACRO]
+            \input{acronyms}
+        \end{acronym}
+}
+
+\usepackage{cleveref}
+\crefname{listing}{code}{codes}
+\crefformat{equation}{eq.~(#2#1#3)}
+\crefformat{listing}{code~#2#1#3}
+\crefformat{figure}{Fig.~#2#1#3}
+\crefformat{chapter}{chapter~#2#1#3}
+
+
+\newcommand{\xRightarrow}[2][]{\ext@arrow 0359\Rightarrowfill@{#1}{#2}}
