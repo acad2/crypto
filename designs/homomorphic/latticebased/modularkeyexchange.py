@@ -5,7 +5,7 @@ def generate_private_key(keygen_function=modular.generate_key):
     """ usage: generate_private_key(keygen_function=secretkey.generate_key) => private_key
     
         Generates a private key, which is the key for a secret key homomorphic cipher. """                           
-    return keygen_function(66, 66, 133)
+    return keygen_function(n_size=170)
         
 def generate_public_key(private_key, encryption_function=modular.encrypt):    
     """ usage: generate_public_key(private_key,
@@ -43,7 +43,7 @@ def recover_key(ciphertext, private_key, decryption_function=modular.decrypt):
                            
         Returns a shared secret. """
     return decryption_function(ciphertext, private_key)
-    
+        
 def test_exchange_key_recover_key():
     print("Generating keypair...")
     public_key, private_key = generate_keypair()
