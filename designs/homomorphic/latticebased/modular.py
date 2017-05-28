@@ -8,9 +8,9 @@
 from crypto.utilities import big_prime, random_integer, modular_inverse, size_in_bits
 
 P_SIZE = 32
-K_SIZE = 66
-N_SIZE = 64
-Q_SIZE = 66
+K_SIZE = 33
+N_SIZE = 100
+Q_SIZE = 32
 
 def generate_key(p_size=P_SIZE, k_size=K_SIZE, n_size=N_SIZE):
     """ usage: generate_key(p_size=66 k_size=66, 

@@ -478,3 +478,10 @@ def factor_integer(integer):
             break
     return factorization
         
+def modular_inverse2(a, n):
+    inverse = pow(a, n - 2, n)
+    if inverse == 0:
+        raise ValueError("modular inverse does not exist")
+    else:
+        return inverse
+        

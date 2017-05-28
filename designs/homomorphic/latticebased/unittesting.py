@@ -13,15 +13,24 @@ def test_for_homomorphism(ciphertext1, ciphertext2, decrypt, key, m1, m2):
         print("Ciphertexts support AND: D(E(m1) & E(m2)) == m1 & m2")
         
 def test_encrypt_decrypt_time(iterations, encrypt, decrypt, public_key, private_key, plaintext_size):    
-    print("Encrypting and decrypting {} random {}-byte messages...".format(iterations, plaintext_size))
+    print("Encrypting {} {}-byte messages...".format(iterations, plaintext_size))    
+    message = int('11111111' * plaintext_size, 2)#
+    
     before = default_timer()
-    for count in range(iterations): 
-        message = random_integer(plaintext_size)
-        ciphertext = encrypt(message, public_key)
-        plaintext = decrypt(ciphertext, private_key)
-      #  assert plaintext == message, (plaintext, message)
+    for count in range(iterations):                 
+        #message = random_integer(plaintext_size)
+        ciphertext = encrypt(message, public_key)                
     after = default_timer()
     print("Time required: {}".format(after - before))
+    
+    print("Decrypting {} {}-byte messages...".format(iterations, plaintext_size))
+    before = default_timer()
+    for count in range(iterations):
+        plaintext = decrypt(ciphertext, private_key)       
+    after = default_timer()
+    print("Time required: {}".format(after - before))
+    
+    assert plaintext == message, (plaintext, message)
     
 def test_asymmetric_encrypt_decrypt(algorithm_name, generate_keypair, encrypt, decrypt,
                                     iterations=1024, plaintext_size=32):    
@@ -48,7 +57,7 @@ def test_asymmetric_encrypt_decrypt(algorithm_name, generate_keypair, encrypt, d
         
     print("Public key size : {}".format(sum(public_sizes)))
     print("Private key size: {}".format(sum(private_sizes)))
-    print("Ciphertext size : {}".format(size_in_bits(encrypt(2, public_key))))
+    print("Ciphertext size : {}".format(size_in_bits(encrypt(random_integer(32), public_key))))
     print("(sizes are in bits)")
     print("{} unit test passed".format(algorithm_name))
        
@@ -72,6 +81,6 @@ def test_symmetric_encrypt_decrypt(algorithm_name, generate_key, encrypt, decryp
     except:
         sizes = [size_in_bits(key)]
     print("Key size: {}".format(sum(sizes)))
-    print("Ciphertext size: {}".format(size_in_bits(encrypt(2, key))))
+    print("Ciphertext size: {}".format(size_in_bits(encrypt(random_integer(plaintext_size), key))))
     print("{} unit test passed".format(algorithm_name))
     
