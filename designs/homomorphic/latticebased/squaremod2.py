@@ -1,38 +1,3 @@
-#p = random_integer(1)
-#ps = [p]
-#for count in range(8):
-#    ps.append(ps[-1] ** 2)
-#    
-#    
-#   103
-#   201
-#   ----
-#   103
-#  000   
-# 206
-# 20703
-# 
-# 
-#p + pp * (p + pp)
-#p(p + pp) + pp(p + pp)
-#pp + ppp + ppp + pp
-#pppppppppp
-#
-#2p + 2pp * (3p + 3pp)
-#3p(2p + 2pp) + 3pp(2p + 2pp)
-#6pp + 6ppp + 6ppp + 6pppp
-# / pp
-#6 + 12p + 6pp
-
-
-#2p + 2pp * (6pp + 12ppp + 6pppp)
-#2p(6pp + 12ppp + 6pppp) + 2pp(6pp + 12ppp + 6pppp)
-#12ppp + 24pppp + 12ppppp + 12pppp + 24ppppp + 12pppppp
-#12ppp + 36pppp + 36ppppp + 12pppppp
-# / ppp
-#12 + 36p + 36pp + 12ppp
-
-
 from crypto.utilities import random_integer, modular_inverse
 
 P_SIZE = 33
