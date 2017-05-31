@@ -49,14 +49,22 @@ def test_asymmetric_encrypt_decrypt(algorithm_name, generate_keypair, encrypt, d
     try:
         public_sizes = [size_in_bits(item) for item in public_key]
     except TypeError:
-        public_key_sizes = [size_in_bits(public_key)]        
+        try:
+            public_sizes = [size_in_bits(public_key)]        
+        except TypeError:
+            public_sizes = []
     try:
         private_sizes = [size_in_bits(item) for item in private_key]
     except TypeError:
-        private_sizes = [size_in_bits(private_key)]
-        
-    print("Public key size : {}".format(sum(public_sizes)))
-    print("Private key size: {}".format(sum(private_sizes)))
+        try:
+            private_sizes = [size_in_bits(private_key)]
+        except TypeError:
+            private_sizes = []
+            
+    if public_sizes:
+        print("Public key size : {}".format(sum(public_sizes)))
+    if private_sizes:
+        print("Private key size: {}".format(sum(private_sizes)))
     print("Ciphertext size : {}".format(size_in_bits(encrypt(random_integer(32), public_key))))
     print("(sizes are in bits)")
     print("{} unit test passed".format(algorithm_name))
@@ -78,9 +86,13 @@ def test_symmetric_encrypt_decrypt(algorithm_name, generate_key, encrypt, decryp
            
     try:
         sizes = [size_in_bits(item) for item in key]
-    except:
-        sizes = [size_in_bits(key)]
-    print("Key size: {}".format(sum(sizes)))
+    except TypeError:
+        try:
+            sizes = [size_in_bits(key)]
+        except TypeError:
+            sizes = []
+    if sizes:                
+        print("Key size: {}".format(sum(sizes)))
     print("Ciphertext size: {}".format(size_in_bits(encrypt(random_integer(plaintext_size), key))))
     print("{} unit test passed".format(algorithm_name))
     

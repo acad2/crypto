@@ -22,16 +22,11 @@ def generate_key(p_size=P_SIZE, k_size=K_SIZE, n=N):
                             
         Returns 3 integers, suitable for use as a key """              
     assert p_size <= N_SIZE, (p_size, N_SIZE)
-    k = random_integer(k_size)      
-    while True:        
-        p = (n - random_integer(p_size))
-        try:
-            p_i = modular_inverse(p, n)
-        except ValueError:
-            pass
-        else:
-            break
+    k = random_integer(k_size)          
+    p = (n - random_integer(p_size))   
+    p_i = modular_inverse(p, n)    
     assert p > (n - p)
+    assert p_i > k    
     return p, p_i, k
     
 def encrypt(m, key, q_size=Q_SIZE, n=N):
@@ -44,13 +39,13 @@ def encrypt(m, key, q_size=Q_SIZE, n=N):
     #p, p_i, k = key
     return (key[0] * ((key[2] * random_integer(q_size)) + m)) % n
     
-def decrypt(ciphertext, key, n=N):
+def decrypt(ciphertext, key, n=N, operation_count=1):
     """ usage: decrypt(ciphertext, key) => plaintext
     
         Decrypts ciphertext using key.
         Returns plaintext integer. """
     #p, p_i, k = key    
-    return ((ciphertext * key[1]) % n) % key[2]        
+    return ((ciphertext * pow(key[1], operation_count)) % n) % key[2]        
         
 def test_encrypt_decrypt():
     from unittesting import test_symmetric_encrypt_decrypt

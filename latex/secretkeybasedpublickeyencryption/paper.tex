@@ -21,17 +21,17 @@
 
 \author{Ella Rose}
 \institute{Paso Robles, CA \email{python_pride@protonmail.com}}
-\title[An Efficient Public Key Encryption Algorithm]{An Efficient Public Key Encryption Algorithm}
+\title[A Practical Public Key Encryption Algorithm]{A Practical Public Key Encryption Algorithm}
 
 \begin{document}
 
 \maketitle
 
 % use optional argument because the \LaTeX command breaks the PDF keywords
-\keywords[Homomorphic Encryption, Symmetric Encryption, Asymmetric Encryption]{Homomorphic Encryption, Symmetric Encryption, Asymmetric Encryption}
+\keywords[Homomorphic Encryption, Public Keyc Encryption]{Homomorphic Encryption, Public Key Encryption}
 
 \begin{abstract}
- We define a homomorphic encryption based public-key encryption construction that is efficient in terms of key size, ciphertext size, key generation time, and encryption/decryption time. The construction requires only addition, multiplication, and modular reduction on large integers. The security of the secret key cipher that underlies the scheme appears to rely only on the distribution of the random numbers generated and the correct selection of key parameters.
+ We define a public-key encryption construction that is efficient in terms of key size, ciphertext size, key generation time, and encryption/decryption time. The construction requires only addition, multiplication, and modular reduction on large integers. The security of the scheme appears to rely only on the distribution of the random numbers generated and the correct selection of key parameters.
  \end{abstract}
 
 \todototoc
@@ -39,10 +39,10 @@
 
 
 \section{Introduction}
- Ciphers that support homomorphic operations on ciphertexts are very attractive because they tend to make the creation of public key encryption schemes relatively straightforward and simple. This paper presents such a cipher, as well as a public key encryption system based on it.
+ Ciphers that support homomorphic operations on ciphertexts are very attractive because they tend to make the creation of public key encryption schemes relatively straightforward and simple. This paper presents such a public key encryption system, as well as a secret key cipher that is suitable for instantiating the system.
 
 \section{Definitions}
-We use $+$ to denote addition, $a * b$ to denote multiplication, $a / b$ to denote division, and $\mod p$ to denote the modulo operation.
+We use $+$ to denote addition, $a * b$ to denote multiplication, $a / b$ to denote division, and $\mod p$ to denote the modulo operation. We use the function $inverse(k, n)$ to indicate the computation of the modular multiplicative inverse of $k \mod n$.
 
 \section{General Properties of Homomorphic Ciphers}
 \subsection{Basic Definition of Homomorphic Cipher}
@@ -58,7 +58,7 @@ A partially homomorphic cipher is usually defined as supporting an unlimited qua
 
 We will note that such a property implies the ability to perform another operation with plaintext values as the second operand, as in $D(E(m1) * m2)$ == m1 * m2. Put in other words, suppose that addition can be performed on ciphertexts; Then the sum of a ciphertext with itself would be equivalent to multiplication of the ciphertext by 2. Thus the ability to add ciphertexts to each other necessarily implies the ability to multiply a ciphertext by a plaintext amount.
 
-A fully homomorphic cipher supports multiple operations on ciphertexts, usually addition and multiplication. The public key encryption construction presented in this paper does not require a fully homomorphic cipher, only a a partially homomorphic cipher. We mention it here only for the sake of completeness.
+A fully homomorphic cipher supports multiple operations on ciphertexts, usually addition and multiplication. The public key encryption construction presented in this paper does not require a fully homomorphic cipher, only a a partially homomorphic cipher. We mention the term here only for the sake of completeness.
 
 \subsubsection{Access to Encryption Oracle}
 Interestingly, with homomorphic ciphers, access to a single ciphertext can be effectively equivalent to access to an encryption oracle, in that the one ciphertext can be manipulated to create new ciphertexts, the plaintext values for which will have a known relation to the previous. So in this sense, homomorphic ciphers must be secure against a type of adaptive chosen plaintext attack even if only a single plaintext is released.
@@ -72,83 +72,93 @@ There is a publicly agreed upon modulus $n$. The same $n$ may always be used; It
 \subsubsection{Basic Concept}
 A public key consists of two ciphertexts, which are homomorphic encryptions of $1$ and $0$. The encryption function must support the addition of ciphertexts modulo $n$, which also implies that ciphertexts can be multiplied by plaintext values.
 
-\subsection{Key Generation}
+\subsubsection{Key Generation}
 Generation of a public key is very simple: Distribute one encryption of $1$, as well an encryption of $0$. The size of the public key will be determined by the size of the ciphertexts generated by the secret key cipher. 
 
 \begin{flalign*}
+p_0 := encrypt(0, p_k) \\
 p_1 := encrypt(1, p_k) \\
-p_2 := encrypt(0, p_k) \\
-key_{public} = (p_1, p_2)
+key_{public} = (p_0, p_1)
 \end{flalign*}
 
-\subsection{Encryption}
+\subsubsection{Encryption}
 To encrypt a value: First the encryption of $1$ is multiplied by the plaintext message; Then, the encryption of $0$ is multiplied by a random plaintext integer; Finally, these products are summed modulo n to produce the ciphertext.
 
 \begin{flalign*}
-ciphertext := (p_1 * m) + (p_2 * r) \mod n
+ciphertext := (p_0 * r) + (p_1 * m) \mod n
 \end{flalign*}
 
-\subsection{Decryption}
+\subsubsection{Decryption}
 Decryption simply applies the decryption circuit of the secret key cipher to the plaintext. The result will be equivalent to the message, because:
 
 \begin{flalign*}
-D(ciphertext) \equiv (1 * m) + (0 * r_1) \equiv m
+D(ciphertext) \equiv (0 * r) + (1 * m)\equiv m
 \end{flalign*}
 
-\section{Secret Key Cipher}
-\subsection{Basic Concept}
-Points on a lattice can be added together, and this effect is preserved even when a modular reduction step is applied, as long as the lattice basis and modulus are coprime. We exploit this modular reduction to both provide security and decrease the size of ciphertexts considerably.
+\subsection{Secret Key Cipher}
+\subsubsection{Basic Concept}
+Points on (and off of) a lattice can be added together, and this effect is preserved even when a modular reduction step is applied, as long as the lattice basis and modulus are coprime and the point is smaller then the modulus. We exploit this modular reduction to both provide security and decrease the size of ciphertexts considerably.
 
 \subsubsection{Storing Data In the Point Or In the Error}
-When using a lattice to secretly store information, there are two places that the information can be stored: Either the information is encoded as a point on the lattice, or the information is the distance to the nearest lattice point.\\
+When using a lattice to secretly store information, there are two places that the information can be stored: Either the information can be encoded as a point on the lattice, or the information can be encoded as the distance to the nearest lattice point.\\
 
-Written in notation, a point on a lattice takes the form $p * q$, while a point plus some error takes the form $p * q + e$. In the former, the information is recovered by dividing by $p$ - or alternatively, as in this case, multiplying by the modular multiplicative inverse of $p \mod n$. In the latter, the information is recovered by dividing by $p$ and taking the remainder. \\
+Written in notation, a point on a lattice takes the form $p * q$, while a point plus some error takes the form $p * q + e$. In the former, the information is recovered by dividing by $p$ - or alternatively, multiplying by the modular multiplicative inverse of $p \mod n$. In the latter, the information is recovered by dividing by $p$ and taking the remainder. \\
 
-We need to be able to encrypt 0, so using $p * q$ where $q = m$ is not suitable - therefore we must use $p * q + e$ where $e = m$. By itself, this cipher would be insecure; However, it does output a randomly distributed value. We then encrypt this randomly distributed value as a point on the lattice to produce the ciphertext.
+We need to be able to encrypt 0, and using $p * q$ where $q = m$ is not suitable - therefore we must use $p * q + e$ where $e = m$. By itself, this cipher would be insecure; However, it does output a randomly distributed value. We use this randomly distributed value as a point on a secret lattice to produce the ciphertext.
 
-\subsection{Encryption}
+\subsubsection{Encryption}
 \begin{flalign*}
 r_2 := (k_1 * r_1) + m\\
 c := k_2 * r_2 \mod n
 \end{flalign*}
 
-\subsection{Decryption}
+\subsubsection{Decryption}
 \begin{flalign*}
 k_i := inverse(k_2, n)\\
 r_2 := c * k_i \mod n\\
 m := r_2 \mod k_1
 \end{flalign*}
 
-\subsection{Key Generation}
+\subsubsection{Key Generation}
 $k_1$ must be selected such that it is greater then the largest message that will be encrypted. If 256-bit messages are to be encrypted, then $k_1$ must be greater then 256 bits in size. We elect to utilize 264 bits for our $k_1$ values. \\
 
-If the modulus is significantly larger then $k_2$, then $k_2$ could be determined by taking the gcd of $k_2 r_i$ pairs that happened to not reduce. This can be remedied by ensuring that $k_2$ is large enough. We use choose $k_2$ by generating a 256-bit number, and subtracting it from the modulus to obtain $k_2$. Selecting the point starting from $n$ instead of $0$ ensures that $k_2$ is large enough. If $k_2 >= n - k_2$, then gcd cannot be used to extract the value of $k_2$.
+If the modulus is significantly larger then $k_2$, then $k_2$ could be determined by taking the gcd of $k_2 r_i$ pairs that happened to not reduce. This can be remedied by ensuring that $k_2$ is large enough. We use choose $k_2$ by generating a 256-bit number, and subtracting it from the modulus to obtain $k_2$. Selecting the point starting from $n$ instead of $0$ ensures that $k_2$ is large enough. If $k_2 >= n - k_2$, then gcd cannot be used to extract the value of $k_2$ even for consecutive small $q$.
 
 \section{Security Analysis}
 \subsection{Secret Key Cipher}
-The security of the secret key cipher seems to reduce almost exclusively to the distribution of values produced by $(k_1 * r_1) + m$. If $(k_1 * r_1) + m$ is considered to be a uniformly random value, then the secret key cipher is effectively equivalent to a One Time Pad, with a re-usable key. This seems implausible, and so we consider that $(k_1 * r_1) + m$  probably does not always follow such a uniformly random distribution in all cases. 
+The security of $k * q \mod n$ as a cipher seems to reduce almost exclusively to the distribution of values for $q$, which is determined by $(k_1 * r_1) + m$. If $(k_1 * r_1) + m$ is considered to be a uniformly random value, then the secret key cipher is effectively equivalent to a One Time Pad, with a re-usable key. This is demonstrably not the case, as perfect secrecy is not provided by this cipher - A given ciphertext decrypts to one and only one particular plaintext message. We consider that $(k_1 * r_1) + m \mod n$  may not always follow a uniformly random distribution. 
 
 It appears that selecting $n$ as prime ensures a good distribution, regardless of the nature of the values of $k_1$ and $k_2$.\\
 
+Encryptions of 0 take the form $p * k * q \mod n$. Given many such samples for random $q$, can p be recovered? If $x := p * k$, then the expressions look like $x * q \mod n$ for random $q$, which should be secure on the assumption that $q$ is unpredictable. If $q$ is unpredictable, then it should not be possible to recover $p$ from encryptions of $0$.\\
+
+Encryptions of $m$ take the form $(p * k * q) + p * m \mod n$. Given many such samples for random q, can $p$ be recovered? If $p * k * q \equiv p * y \mod n$, and $y \mod n$ is unpredictable, then it should not be possible to recover $p$ from encryptions of $m$.\\
+
+Under chosen ciphertext attack, we can obtain the value of $p_i \mod k$ by submitting the value of $1$ as a ciphertext to the decryption operation. Similarly, we can obtain the value of $p_i * c \mod n \mod k$ for some chosen values $c$. It is not yet clear how this information can be leveraged to recover $p$ or $p_i$.\\
+
+If $k$ is a power of two, then $p_i \mod k$ directly reveals some of the lower bits of $p_i$. It is fantastically unlikely that $k$ will be a power of two if it is a randomly generated 264-bit number.
+
 \subsection{Public Key Cipher}
-The security of the public key system seems very straightforward: as long as $p_2 * r_1 \mod n$ produces a random value, then $(p_1 * m) + (p_2 * r_1) \mod n$ is effectively equivalent to applying a random key to an encoding of the message. As long as the key material is unpredictable and remains unknown, then there shold be no way to recover the message, given only a ciphertext and the public key. 
+The security of the public key system seems very straightforward: as long as $p_0 * r \mod n$ produces an unpredictable random value, then $(p_1 * m) + (p_0 * r) \mod n$ is effectively equivalent to applying a random key to an encoding of the message. As long as the key material is unpredictable and remains unknown, then, given only a ciphertext and the public key, there shold be no way to recover the plaintext message.
 
 \section{Metrics}
 With the parameter sizes in this paper, a public key is 1600 bits in size, while a private key is about 1864 bits in size. Ciphertexts require 800 bits of space to encrypt 256-bit plaintext values. \\
 
-With our public domain python implementation, we can encrypt 10,000 256-bit messages in approximately 0.58 seconds, while we can decrypt 10,000 ciphertexts in approximately 0.32 seconds. While a python implementation may not be the fastest possible, it performs well as much of the computation time is spent on BigNum operations anyways. \\
+With our public domain python implementation, we can encrypt 10,000 256-bit messages in approximately 0.58 seconds, while we can decrypt 10,000 ciphertexts in approximately 0.32 seconds. While a python implementation may not be the fastest possible, it performs well as much of the computation time is spent on BigNum operations anyways.\\
 
-The private key size could be decreased a small amount at the expense of computation time; The figure presented in the paragraph prior represents the storage of $k_1, k_2, inverse(k_2, n)$. It is not necessary to store both $k_2$ and $inverse(k_2, n)$, as they can be calculated from each other. Considering the small amount of space it costs to store the inverse versus how long it takes to compute it, we choose to cache this value.
+The public key encryption operation requires effectively the same amount of time as the secret key encryption operation; Consequently, there is little motivation to use the secret cipher as an encryption algorithm by itself. \\
+
+The private key size could be decreased a small amount at the expense of computation time; The figure cited above represents the storage of $k_1, k_2, inverse(k_2, n)$. It is not necessary to store both $k_2$ and $inverse(k_2, n)$, as they can be calculated from each other. Considering the small amount of space it costs to store the inverse versus how long it takes to compute it, we choose to cache this value.
 
 \subsection{Implementation Complexity}
 The implementation complexity of the scheme is very low. The encryption and decryption functions for both constructions can be implemented with a single line of code each in the function body. Our implementation of the algorithms spans approximately 100 lines, including the documentation and comments.\\
 
-Additional code is required for supporting functions such as the generation of prime numbers (only if $n$ is being generated/not already established), computation of modular inverses, and unit testing. \\
+Additional code is required for supporting functions such as the generation of prime numbers (only if $n$ is being generated/not already established), computation of modular inverses, and unit testing. These are modest requirements that are already well facilitated by existing cryptographic libraries, and in other cases can be implemented without much complexity. \\
 
-Assuming that BigNum operations can be implemented in a manner that does not leak timing information, it appears that the construction is resistant to timing side channel analysis.
+Assuming that BigNum operations can be implemented in a manner that does not leak timing information, it appears that a naive implementation of the algorithm is resistant to timing side channel analysis, as there are no tables or branches.
 
-\section{Resource Asymmetry}
-There is a computational asymmetry between encryption and decryption, even in the simplest setting. Encryption takes longer then decryption, and this is something that potentially could be tuned or exploited for other cryptographic constructions. Perhaps there is a way to distribute large public keys, which could be used as a part of a proof-of-space or proof-of-work scheme, or perhaps password hashing.
+\subsection{Resource Asymmetry}
+There is a computational asymmetry between encryption and decryption: Encryption takes longer then decryption. This is something that potentially could be tuned or exploited for other cryptographic constructions. Perhaps there is a way to distribute large public keys, which could be used as a part of a proof-of-space or proof-of-work scheme, or perhaps password hashing.
 
 \section{Conclusion}
 We define a conceptually simple, resource-practical public-key encryption algorithm. The security of our construction(s) appear to rest only on the distribution of intermediately generated random data and the correct selection of parameters.
