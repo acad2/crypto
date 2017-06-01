@@ -461,7 +461,7 @@ def quicksum(p):
     return (p * q) + e
     
 def size_in_bits(integer):
-    return int(log(integer, 2)) + 1
+    return int(log(integer or 1, 2)) + 1
     
 def factor_integer(integer):
     factorization = dict()    

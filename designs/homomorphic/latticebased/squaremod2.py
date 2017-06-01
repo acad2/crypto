@@ -29,7 +29,7 @@ def decrypt(ciphertext, key, depth=1, n=N):
     if depth > 1:        
         ciphertext /= p[0] 
         
-    ciphertext %= p[2] 
+   # ciphertext %= p[2] 
     ciphertext %= p[1] 
     return ciphertext / p[0]
         
@@ -38,10 +38,10 @@ def test_encrypt_decrypt():
     test_symmetric_encrypt_decrypt("squaremod2", generate_key, encrypt, decrypt)
     
     k = random_integer(64)
-    p = random_integer(11)    
+    p = random_integer(32)    
     key = [[p, p ** 2, p ** 3], k, modular_inverse(k, N)]#generate_key()#[10, 100, 1000]
-    m1 = 20#12389124981
-    m2 = 3#1000129012    
+    m1 = 12389124981
+    m2 = 1000129012    
     ciphertext1 = encrypt(m1, key)
     _m1 = decrypt(ciphertext1, key) 
     assert _m1 == m1 % key[0][0], (_m1, m1)
