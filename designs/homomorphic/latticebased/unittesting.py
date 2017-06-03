@@ -43,7 +43,7 @@ def test_encrypt_decrypt_time(iterations, encrypt, decrypt, public_key, private_
     after = default_timer()
     print("Time required: {}".format(after - before))
     
-    assert plaintext == message, (plaintext, message)
+    assert plaintext == message, '\n'.join(str(item) for item in ('\n', plaintext, message))
     
 def test_asymmetric_encrypt_decrypt(algorithm_name, generate_keypair, encrypt, decrypt,
                                     iterations=1024, plaintext_size=32):    
