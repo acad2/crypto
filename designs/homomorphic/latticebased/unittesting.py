@@ -14,12 +14,15 @@ def test_for_homomorphism(ciphertext1, ciphertext2, decrypt, key, m1, m2):
         
 def determine_key_size(key):    
     sizes = []
-    for item in key:
-        try:
-            for _item in item:
-                sizes.append(size_in_bits(_item))
-        except TypeError:
-            sizes.append(size_in_bits(item))
+    try:
+        sizes.append(size_in_bits(key))
+    except TypeError:        
+        for item in key:
+            try:
+                for _item in item:
+                    sizes.append(size_in_bits(_item))
+            except TypeError:
+                sizes.append(size_in_bits(item))
     return sizes
     
 def test_encrypt_decrypt_time(iterations, encrypt, decrypt, public_key, private_key, plaintext_size):    
@@ -83,5 +86,45 @@ def test_symmetric_encrypt_decrypt(algorithm_name, generate_key, encrypt, decryp
     key_size = determine_key_size(key)          
     print("Key size: {}".format(sum(key_size)))
     print("Ciphertext size: {}".format(size_in_bits(encrypt(random_integer(plaintext_size), key))))
+    print("{} unit test passed".format(algorithm_name))
+
+def test_exchange_key_recover_key_time(iterations, exchange_key, recover_key, public_key, private_key, key_size=32):    
+    print("Exchanging {} {}-byte messages...".format(iterations, key_size))            
+    before = default_timer()
+    for count in range(iterations):                     
+        ciphertext, key = exchange_key(public_key)
+    after = default_timer()
+    print("Time required: {}".format(after - before))
+    
+    print("Recovering {} {}-byte keys...".format(iterations, key_size))
+    before = default_timer()
+    for count in range(iterations):
+        _key = recover_key(ciphertext, private_key)       
+    after = default_timer()
+    print("Time required: {}".format(after - before))        
+    
+def test_key_exchange(algorithm_name, generate_keypair, exchange_key, recover_key, 
+                      iterations=1024):
+    print("Beginning {} unit test...".format(algorithm_name))
+    print("Generating keypair...")
+    public_key, private_key = generate_keypair()
+    print("...done")
+    
+    print("Validating correctness...")
+    for count in range(iterations):
+        ciphertext, key = exchange_key(public_key)
+        _key = recover_key(ciphertext, private_key)
+        if _key != key:
+            raise BaseException("Unit test failed")
+    print("...done")
+    
+    test_exchange_key_recover_key_time(iterations, exchange_key, recover_key, public_key, private_key)
+    
+    public_sizes = determine_key_size(public_key)
+    private_sizes = determine_key_size(private_key)
+    print("Public key size : {}".format(sum(public_sizes)))
+    print("Private key size: {}".format(sum(private_sizes)))
+    print("Ciphertext size : {}".format(size_in_bits(ciphertext)))
+    print("(sizes are in bits)")
     print("{} unit test passed".format(algorithm_name))
     
