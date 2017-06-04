@@ -9,7 +9,7 @@ N = 9053982199960166701001649843353809235060184806550933505038277816869787762296
 from math import log
 
 def generate_key(pi_size=65, n=N):
-    pi = random_integer(pi_size)
+    pi = random_integer(pi_size)    
     p = modular_inverse(pi, n)    
     return p, pi
     

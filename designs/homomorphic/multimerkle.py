@@ -22,13 +22,21 @@
 #       - if ciphertext % prime == 0:
 #           - set the plaintext bit at the corresponding index to 1
 #       otherwise, set the plaintext bit at the corresponding index to 0
-from crypto.utilities import big_prime, random_integer, modular_inverse
+from crypto.utilities import big_prime, random_integer, modular_inverse, shuffle, random_bytes, prime_generator
 
-def generate_private_key(prime_count=32, prime_size=4, key_size=4, modulus_size=5):
-    primes = [big_prime(prime_size) for count in range(prime_count)]
+generator = prime_generator()
+PRIMES = []
+for count in range(1000):
+    PRIMES.append(next(generator))
+del generator
+del count
+
+def generate_private_key(prime_count=1000, key_size=16, modulus_size=66):
+    primes = PRIMES[:]
+    shuffle(primes, bytearray(random_bytes(len(primes))))
     key = random_integer(key_size)
     modulus = big_prime(modulus_size)
-    return primes, key, modulus
+    return primes[:prime_count], key, modulus
     
 def generate_public_key(private_key):
     primes, key, modulus = private_key
@@ -42,7 +50,7 @@ def generate_keypair(prime_count=32, prime_size=4):
 def _to_bits(integer, bit_size):
     return format(integer, 'b').zfill(bit_size)    
     
-def encrypt(message, public_key, message_size=4):
+def verify(message, public_key, message_size=4):
     ciphertext = 1    
     for index, bit in enumerate(_to_bits(message, message_size * 8)):
         if bit == '1':
@@ -51,28 +59,34 @@ def encrypt(message, public_key, message_size=4):
         #    ciphertext *= 1
     return ciphertext
     
-def decrypt(ciphertext, private_key, message_size=4):    
+def sign(ciphertext, private_key, message_size=4):    
     primes, key, modulus = private_key
     ciphertext = (modular_inverse(key, modulus) * ciphertext) % modulus
     
-    plaintext_bits = ['0'] * (message_size * 8)    
-    for index, prime in enumerate(reversed(primes)):
-        if ciphertext % prime == 0:   
-            print "Setting bit: ", index
-            plaintext_bits[index] = '1'
+    plaintext_bits = ['0'] * (message_size * 8)  
+    for count in range(2):
+        for index, prime in enumerate(reversed(primes)):
+            if ciphertext % prime == 0:   
+                print "Setting bit: ", index, prime
+                plaintext_bits[index] = '1'
+                ciphertext = (ciphertext * modular_inverse(prime, modulus)) % modulus
+            else:
+                print "Prime not in ciphertext", prime
+            
     return int(''.join(plaintext_bits), 2)
 
-def test_encrypt_decrypt():
+def test_sign_verify():
     print("Generating keypair...")
     public_key, private_key = generate_keypair()
     print("...done.")
     for message in range(1, 256):
-        ciphertext = encrypt(message, public_key)
-        plaintext = decrypt(ciphertext, private_key)
+        message = hash(message)
+        signature = sign(message, private_key)
+        plaintext = verify(signature, public_key)
         assert plaintext == message, (plaintext, message)
         
 if __name__ == "__main__":
-    test_encrypt_decrypt()
+    test_sign_verify()
 
 
 
