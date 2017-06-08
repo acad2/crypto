@@ -22,7 +22,7 @@ def determine_key_size(key):
                 for _item in item:
                     sizes.append(size_in_bits(_item))
             except TypeError:
-                sizes.append(size_in_bits(item))
+                sizes.append(size_in_bits(item))    
     return sizes
     
 def test_encrypt_decrypt_time(iterations, encrypt, decrypt, public_key, private_key, plaintext_size):    
@@ -128,3 +128,43 @@ def test_key_exchange(algorithm_name, generate_keypair, exchange_key, recover_ke
     print("(sizes are in bits)")
     print("{} unit test passed".format(algorithm_name))
     
+def test_sign_verify_time(iterations, sign, verify, public_key, private_key, message_size=32):    
+    message = random_integer(message_size)
+    print("Signing {} {}-bit messages...".format(iterations, message_size * 8))         
+    before = default_timer()
+    for count in range(iterations):                     
+        signature = sign(message, private_key)
+    after = default_timer()
+    print("Time required: {}".format(after - before))
+    
+    print("Verifying {} {}-bit signatures...".format(iterations, sum(determine_key_size(signature))))
+    before = default_timer()
+    for count in range(iterations):
+        valid_flag = verify(signature, message, public_key)       
+    after = default_timer()
+    print("Time required: {}".format(after - before))        
+    
+def test_sign_verify(algorithm_name, generate_keypair, sign, verify, 
+                     iterations=1024, message_size=32):
+    print("Beginning {} unit test...".format(algorithm_name))
+    print("Generating keypair...")
+    public_key, private_key = generate_keypair()
+    print("...done")
+    
+    print("Validating correctness...")
+    for count in range(iterations):
+        message = random_integer(message_size)
+        signature = sign(message, private_key)
+        if not verify(signature, message, public_key):        
+            raise BaseException("Unit test failed")
+    print("...done")
+    
+    test_sign_verify_time(iterations, sign, verify, public_key, private_key)
+    
+    public_sizes = determine_key_size(public_key)
+    private_sizes = determine_key_size(private_key)
+    print("Public key size : {}".format(sum(public_sizes)))
+    print("Private key size: {}".format(sum(private_sizes)))
+    print("Signature size : {}".format(sum(determine_key_size(signature))))
+    print("(sizes are in bits)")
+    print("{} unit test passed".format(algorithm_name))    

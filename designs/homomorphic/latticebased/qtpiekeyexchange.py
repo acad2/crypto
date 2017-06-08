@@ -1,5 +1,3 @@
-# need to randomize message
-
 from math import log
 
 from crypto.utilities import random_integer, modular_inverse, big_prime, modular_subtraction
@@ -8,7 +6,10 @@ N = 9053982199960166701001649843353809235060184806550933505038277816869787762296
 
 #1 + 33 + 32 = 66
 
+# prq + e
+# q + pirie
 
+#65 + 97 + 32 =
 def generate_private_key(pi_size=65, n=N):
     pi = random_integer(pi_size)    
     assert log(n, 2) - log(pi, 2) > 256, log(n, 2) - log(pi, 2)
@@ -26,22 +27,24 @@ def generate_keypair():
     public_key = generate_public_key(private_key)
     return public_key, private_key
     
-def encrypt(m, public_key, q_size=32, n=N): 
-    return ((public_key * random_integer(q_size)) + m) % n
+def exchange_key(public_key, q_size=32, n=N): 
+    assert n == N
+    e = random_integer(q_size)        
+    return ((public_key * random_integer(q_size)) + e) % n, e % n
         
     # pq + e == q + pie mod n
     
-def decrypt(ciphertext, private_key, n=N):    
+def recover_key(ciphertext, private_key, n=N):
     pi = private_key
     pie_q = (pi * ciphertext) % n
     q = pie_q % pi
     pie = pie_q - q
-    return pie / pi    
+    return pie / pi   
     
-def test_encrypt_decrypt():
-    from unittesting import test_asymmetric_encrypt_decrypt
-    test_asymmetric_encrypt_decrypt("qtpiepublickey", generate_keypair, encrypt, decrypt, iterations=10000)
+def test_exchange_key_recover_key():
+    from unittesting import test_key_exchange
+    test_key_exchange("qtpiekeyexchange", generate_keypair, exchange_key, recover_key, iterations=10000)
     
 if __name__ == "__main__":
-    test_encrypt_decrypt()
+    test_exchange_key_recover_key()
    

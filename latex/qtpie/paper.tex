@@ -1,0 +1,116 @@
+\documentclass[preprint]{iacrtrans}
+\usepackage[utf8]{inputenc}
+
+% Select what to do with todonotes: 
+% \usepackage[disable]{todonotes} % notes not showed
+\usepackage[draft,color=orange!20!white,linecolor=orange,textwidth=3cm,colorinlistoftodos]{todonotes}   % notes showed
+\setlength{\marginparwidth}{3cm}
+\usepackage{graphicx}
+\usepackage{soul}
+\graphicspath{{images/}} % end dirs with `/'
+% \usepackage{longtable}
+\usepackage{tikz}
+\usetikzlibrary{arrows}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{positioning}
+\usetikzlibrary{calc}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{arrows}
+\usetikzlibrary{crypto.symbols}
+\tikzset{shadows=no}        % Option: add shadows to XOR, ADD, etc.
+
+\author{Ella Rose}
+\institute{Paso Robles, CA \email{python_pride@protonmail.com}}
+\title[$q + p_i e$ Public Key Algorithms]{$q + p_i e$ Public Key Algorithms}
+
+\begin{document}
+
+\maketitle
+
+% use optional argument because the \LaTeX command breaks the PDF keywords
+\keywords[Homomorphic Encryption, Public Key Encryption]{Homomorphic Encryption, Public Key Encryption}
+
+\begin{abstract}
+ We define an extremely simple key exchange algorithm that is efficient in terms of key size, ciphertext size, key generation time, and encryption/decryption time. The construction requires only addition, multiplication, and modular reduction on large integers. The name "qtpie" is a play on the expression that appears during decryption, $q + p_i e$. 
+ \end{abstract}
+
+\todototoc
+\listoftodos
+
+
+\section{Introduction}
+
+\section{Definitions}
+We use $+$ to denote addition, $a * b$ to denote multiplication, $a / b$ to denote division, and $\mod p$ to denote the modulo operation. We use the function $inverse(k, n)$ to indicate the computation of the modular multiplicative inverse of $k \mod n$. We use the function $random(k)$ to indicate the generation of of a random $k$-bit integer.
+
+\section{Algorithm}
+There is a publicly agreed upon modulus $N$. The same $N$ may always be used. It must be prime; It it is not secret, and only needs to be both agreed upon and large enough.
+
+\subsection{Basic Concept}
+Consider the following function:
+
+\begin{flalign*}
+c := (p * q) + e \mod N
+\end{flalign*}
+
+We can recover $e$ from $c$ using the following algorithm:
+
+\begin{flalign*}
+p_i := inverse(p, N)\\
+t := (c * p_i) \mod N\\
+t \equiv q + p_i e\\
+q := t \mod p_i\\
+t := t - q \\
+t \equiv p_i e
+e := t / p_i
+\end{flalign*}
+
+The step $q := q + p_i e \mod p_i$ will only function correctly if $q < p_i$ and if $p_i e < N$. If $p_i$ is generated from a random $p$, this latter condition is unlikely to be met for any sizable value of e, for the generated $p_i$ will likely be close to $log_2(N)$ bits in size. Consequently, during key generation, we must generate a random $p_i$ of appropriate size and generate $p$ from it and $N$ via the $inverse$ function. The value $p$ serves as an encryption key, while the value $p_i$ serves as the decryption key. 
+
+A public key consists of an encryption of the encryption key $p$ in the form of $p q \mod n$. The inability to selectively generate a small inverse of the public key ensures that supplying the public key to the decryption algorithm will not produce correct plaintext for any sizable message value $e$.
+
+\subsection{Key Generation}
+\begin{flalign*}
+key_{pr} := N - random(m_{size} + 1)\\
+r := random(k_{size})\\
+key_{pub} := inverse(key_{pr}, N) * r) \mod N\\
+\end{flalign*}
+
+In the above, $m_{size}$ is equal to the size of the shared secret material in bits. $k_{size}$ is a security parameter that is equal to the size of the randomly generated value in bits. We elect to set $m_{size}$ and $k_{size}$ to be 256 bits.
+
+$key_{pr}$ must be selected such that $key_{pr} e < N$, as well as $key_{pr} > r q$, where $q$ is the security parameter of the public key operation.
+
+\subsection{Exchanging Keys}
+To exchange a secret key: multiply the public key by a random value, then add the secret key to the result modulo $N$.
+
+\begin{flalign*}
+secret := random(m_{size})\\
+ciphertext := (key_{pub} random(q_{size}) + secret \mod N\\
+\end{flalign*}
+
+\subsection{Key Recover}
+The shared secret can be recover from the ciphertext via the following algorithm:
+\begin{flialign*}
+pie_q := ciphertext key_{pr} \mod N\\
+q := pie_q \mod key_{pr}\\
+pie := pie_q - q\\
+e := pie / pi
+\end{flalign*}
+
+
+\section{Security Analysis}
+\subsection{Public Key Cipher}
+
+\section{Metrics}
+
+\subsection{Implementation Complexity}
+The implementation complexity of the scheme is very low. The encryption and decryption functions for the public key construction can be implemented with a single line of code each in the function body. Our implementation of the algorithms spans approximately 100 lines, including the documentation and comments.\\
+
+Additional code is required for supporting functions such as the generation of prime numbers (only if $n$ is being generated/not already established), computation of modular inverses, and unit testing. These are modest requirements that are already well facilitated by existing cryptographic libraries, and in other cases can be implemented without much complexity. \\
+
+Assuming that BigNum operations can be implemented in a manner that does not leak timing information, it appears that a naive implementation of the algorithm is resistant to timing side channel analysis, as there are no tables or branches in the algorithm.
+
+\section{Conclusion}
+We define a conceptually simple, resource-practical public-key encryption algorithm. 
+\end{document}
+

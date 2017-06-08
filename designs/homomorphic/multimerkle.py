@@ -26,12 +26,12 @@ from crypto.utilities import big_prime, random_integer, modular_inverse, shuffle
 
 generator = prime_generator()
 PRIMES = []
-for count in range(1000):
+for count in range(80):
     PRIMES.append(next(generator))
 del generator
 del count
 
-def generate_private_key(prime_count=1000, key_size=16, modulus_size=66):
+def generate_private_key(prime_count=80, key_size=16, modulus_size=33):
     primes = PRIMES[:]
     shuffle(primes, bytearray(random_bytes(len(primes))))
     key = random_integer(key_size)
