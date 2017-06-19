@@ -21,17 +21,17 @@
 
 \author{Ella Rose}
 \institute{Paso Robles, CA \email{python_pride@protonmail.com}}
-\title[$q + p_i e$ Public Key Algorithms]{$q + p_i e$ Public Key Algorithms}
+\title[EPQ Trapdoor Function]{EPQ Trapdoor Function}
 
 \begin{document}
 
 \maketitle
 
 % use optional argument because the \LaTeX command breaks the PDF keywords
-\keywords[Homomorphic Encryption, Public Key Encryption]{Homomorphic Encryption, Public Key Encryption}
+\keywords[Homomorphic Encryption, Public Key Cryptography]{Homomorphic Encryption, Public Key Cryptography}
 
 \begin{abstract}
- We define an extremely simple key exchange algorithm that is efficient in terms of key size, ciphertext size, key generation time, and encryption/decryption time. The construction requires only addition, multiplication, and modular reduction on large integers. The name "qtpie" is a play on the expression that appears during decryption, $q + p_i e$. 
+ We define a simple trapdoor function that is suitable for use as a key exchange algorithm. The algorithm is relatively efficient in terms of key size, key generation time, ciphertext size, and public/private key operation time: The public key operation utilizes a single multiplication and addition modulo a big prime.
  \end{abstract}
 
 \todototoc
@@ -39,78 +39,132 @@
 
 
 \section{Introduction}
+A Trapdoor One-Way Function (TOWF) is a function that is easy to compute in one direction, but is hard to compute in reverse without some additional piece of information. A TOWF makes exchanging cryptographic keys a straightforward exercise: Alice can simply apply a TOWF to a randomly generated key and send the output to Bob, who knows the trapdoor information. Bob can then invert the output to obtain the key. 
+
+In this paper we define a candidate Trapdoor One-Way Function that is suitable for use to exchange cryptographic keys. It is based on a simple observation of a congruence, $pq + e \equiv q + p_i e \mod N$, along with some subtle manipulation of the sizes of the numbers involved.
 
 \section{Definitions}
-We use $+$ to denote addition, $a * b$ to denote multiplication, $a / b$ to denote division, and $\mod p$ to denote the modulo operation. We use the function $inverse(k, n)$ to indicate the computation of the modular multiplicative inverse of $k \mod n$. We use the function $random(k)$ to indicate the generation of of a random $k$-bit integer.
+We use $+$ to denote addition, $a / b$ to denote division, and $\mod p$ to denote the modulo operation. We use both $a b$ and $a * b$ to indicate multiplication. We use the function $inverse(k, n)$ to indicate the computation of the modular multiplicative inverse of $k \mod n$. We use the function $random(k)$ to indicate the generation of of a random $k$-bit integer.
 
 \section{Algorithm}
-There is a publicly agreed upon modulus $N$. The same $N$ may always be used. It must be prime; It it is not secret, and only needs to be both agreed upon and large enough.
+There is a publicly agreed upon modulus $N$. The same $N$ may always be used. It must be prime; It it is not secret, and otherwise only needs to be both agreed upon and large enough. The size of $N$ is determined by the rest of the parameter sizes which are discussed below; In our python implementation, $N$ is slightly less then 800 bits in size. The larger $N$ is, the longer the BigNum arithmetic operations take, and the larger ciphertexts become; Consequently, we opt for the smallest $N$ possible.
 
 \subsection{Basic Concept}
 Consider the following function:
 
 \begin{flalign*}
-c := (p * q) + e \mod N
+c := pq + e \mod N
 \end{flalign*}
 
-We can recover $e$ from $c$ using the following algorithm:
+Given $c, p, N$, we can recover $q, e$ using the following algorithm:
 
 \begin{flalign*}
 p_i := inverse(p, N)\\
-t := (c * p_i) \mod N\\
-t \equiv q + p_i e\\
+t := p_i c \mod N\\
 q := t \mod p_i\\
 t := t - q \\
-t \equiv p_i e
 e := t / p_i
 \end{flalign*}
 
-The step $q := q + p_i e \mod p_i$ will only function correctly if $q < p_i$ and if $p_i e < N$. If $p_i$ is generated from a random $p$, this latter condition is unlikely to be met for any sizable value of e, for the generated $p_i$ will likely be close to $log_2(N)$ bits in size. Consequently, during key generation, we must generate a random $p_i$ of appropriate size and generate $p$ from it and $N$ via the $inverse$ function. The value $p$ serves as an encryption key, while the value $p_i$ serves as the decryption key. 
+The step $q := t \mod p_i$ will only function correctly if $q < p_i$ and if $p_i e < N$. We leverage this latter fact to create a trapdoor. We select a suitable $p_i$ that is large enough such that $q < p_i$ and small enough such that $p_i e < N$. Then, we calculate the modular multilicative inverse $p := inverse(p_i, N)$. To create a public key, we then encrypt $p$ using a random $r$ to preclude the ability of others to calculate $p_i$. 
 
-A public key consists of an encryption of the encryption key $p$ in the form of $p q \mod n$. The inability to selectively generate a small inverse of the public key ensures that supplying the public key to the decryption algorithm will not produce correct plaintext for any sizable message value $e$.
+The inability to selectively generate a small inverse of the public key ensures that supplying the public key to the inversion algorithm will not produce correct plaintext. We can witness this via the attempt below:
+
+\begin{flalign*}
+q := random(q_{size})\\
+e := random(e_{size})\\
+c := prq + e \mod N\\
+pr_i := inverse(pr, N)\\
+c_i := c pr_i \mod N\\
+c_i \equiv q + p_i r_i e \mod N\\
+\end{flalign*}
+
+In the final line $c_i \equiv q + p_i r_i e \mod N$, we can see that the inverse of the public key is too large if $p_i r_i e > N$. While $p_i$ is relatively small, $r_i$ is (most likely) large - Ultimately, the size of $p_i r_i$ is roughly the same as $p r$, and so this alternative perspective of $q + p_i r_i e$ offers no fewer unknown bits to guess then the original $prq + e$ did.
+
+This is in contrast to the perspective that the holder of $p_i$ has:
+
+\begin{flalign*}
+q := random(q_{size})\\
+e := random(e_{size})\\
+c := prq + e \mod N\\
+p_i := inverse(p, N)\\
+c_i := c p_i \mod N\\
+c_i \equiv qr + p_i e \mod N
+\end{flalign*}
+
+We can see the difference in the final line $c_i \equiv qr + p_i e \mod N$ from before; While the $r$ variable is still present on the left term, $p_i e < N$ and so the inversion algorithm will work as intended. The presence of the $r$ variable on the left does require that $p_i$ be larger to ensure that $qr < p_i$.
 
 \subsection{Key Generation}
 \begin{flalign*}
-key_{pr} := N - random(m_{size} + 1)\\
-r := random(k_{size})\\
-key_{pub} := inverse(key_{pr}, N) * r) \mod N\\
+k_{priv} := random(priv_{size})\\
+p := inverse(k_{priv}, N)\\
+r := random(r_{size})\\
+k_{pub} := p r \mod N\\
 \end{flalign*}
 
-In the above, $m_{size}$ is equal to the size of the shared secret material in bits. $k_{size}$ is a security parameter that is equal to the size of the randomly generated value in bits. We elect to set $m_{size}$ and $k_{size}$ to be 256 bits.
 
-$key_{pr}$ must be selected such that $key_{pr} e < N$, as well as $key_{pr} > r q$, where $q$ is the security parameter of the public key operation.
+$priv_{size}$ must be selected such that $e k_{priv} < N$, as well as $k_{priv} > r q$, where $q, e$ are the security parameter of the public key operation and shared secret. For 256-bit $e, r, q$ values, $priv_{size}$ is 520 bits, while $N$ is slightly less then 800 bits.
 
 \subsection{Exchanging Keys}
-To exchange a secret key: multiply the public key by a random value, then add the secret key to the result modulo $N$.
+To exchange a secret key: multiply the public key $p$ by a random value $q$, then add a random value $e$ to the result modulo $N$. The shared secret will be either $q$ or $e$ (or some combination of the two); We discuss the implications of the choices later. We default to using $e$ as the secret, as it is slightly less complex.
 
 \begin{flalign*}
-secret := random(m_{size})\\
-ciphertext := (key_{pub} random(q_{size}) + secret \mod N\\
+p := key_{pub}\\
+q := random(q_{size})\\
+e := random(e_{size})\\
+ciphertext := p q + e \mod N\\
 \end{flalign*}
 
-\subsection{Key Recover}
-The shared secret can be recover from the ciphertext via the following algorithm:
-\begin{flialign*}
-pie_q := ciphertext key_{pr} \mod N\\
-q := pie_q \mod key_{pr}\\
-pie := pie_q - q\\
-e := pie / pi
+\subsection{Key Recovery}
+The shared secret $e$ (or $q$ or both) can be recover from the ciphertext via the following algorithm:
+
+\begin{flalign*}
+p_i := key_{priv}\\
+t := ciphertext * p_i \mod N\\
+q := t \mod p_i\\
+t := t - q\\
+e := t / pi\\
+q := q / r
 \end{flalign*}
 
+\subsection{Homomorphism}
+In addition to the ability to add ciphertexts together, ciphertexts can be multiplied by plaintext values, and plaintext values can be added to ciphertexts. This second property follows naturally from the ability to add ciphertexts together. The third property is a result of the fact that $e$ is attached to the ciphertext by simple addition. In the following examples, $c_i$ are ciphertexts, while $1, 2$ are plaintext integers.
+
+\begin{flalign*}
+c_3 := c_1 + c_2\\
+c_4 := c_3 + 1\\
+c_5 := 2 c_4 
+\end{flalign*}
+
+It should be noted that multiplication will quickly increase the size of the terms in the expressions, and if the size of the terms grows too large, decryption will fail.
 
 \section{Security Analysis}
-\subsection{Public Key Cipher}
+There are two main security goals: First, given the public key, the private key must not be obtainable; Second, The output of the public key operation must not be invertible without the private key.
 
-\section{Metrics}
+\subsection{Key Generation}
+It would appear that obtaining the private key from the public key must be done by guessing one of $p, p_i, r$. If this were not the case, then whatever algorithm that can be used to recover any of $p, p_i, r$ from $p r \mod N$ could be used to recover plaintexts from ciphertexts of the form $m k \mod N$ for random $m, k$ where one of $m, k$ is smaller then the other (but still large enough to reduce modulo $N$). It seems unlikely that such an attack exists and is faster then guessing $p, p_i,  r$. 
 
-\subsection{Implementation Complexity}
-The implementation complexity of the scheme is very low. The encryption and decryption functions for the public key construction can be implemented with a single line of code each in the function body. Our implementation of the algorithms spans approximately 100 lines, including the documentation and comments.\\
+This implies that the private key cannot be recovered from the public key.
 
-Additional code is required for supporting functions such as the generation of prime numbers (only if $n$ is being generated/not already established), computation of modular inverses, and unit testing. These are modest requirements that are already well facilitated by existing cryptographic libraries, and in other cases can be implemented without much complexity. \\
+\subsection{Public Key Operation}
+The security of the public key operation appears to scale with the size of the randomly generated $q$. It remains to be proven that given $c := p q + e \mod N$, $p$, recovering $e$ is difficult.
 
+\subsection{Side Channel Analysis}
 Assuming that BigNum operations can be implemented in a manner that does not leak timing information, it appears that a naive implementation of the algorithm is resistant to timing side channel analysis, as there are no tables or branches in the algorithm.
 
+\section{Metrics}
+Using our public domain python implementation that is configured for a 256-bit security level, we can perform 10,000 public key operations in slightly under 1 second. It requires .3 seconds to perform 10,000 private key operations, which implies that roughly 30,000 private key operations per second can be performed on very modest hardware. Our tests were performed on an Intel Celeron N2830 2.16GHz with 2 cores. 
+
+In our implementation, most of the time for the public key operation is spent generating $q$ and $e$. In a synthetic test where $q, e$ are not generated for each invocation of the function, we can perform 100,000 public key operations per second.
+
+Our implementation is optimized for readability. Much of the computation time is spent on bignum operations, and while an optimized C implementation may certainly be faster, it is not required to obtain an acceptable level of performance. 
+
+\subsection{Implementation Complexity}
+The implementation complexity of the scheme is very low. Our public domain python implementation of the algorithm spans barely 100 lines, including the documentation and comments.\\
+
+Additional code is required for supporting functions such as the generation of prime numbers (only if $N$ is being generated/not already established) and unit testing. These are modest requirements that can be implemented without much complexity. \\
+
 \section{Conclusion}
-We define a conceptually simple, resource-practical public-key encryption algorithm. 
+We define a conceptually simple, resource-practical key exchange algorithm. 
 \end{document}
 

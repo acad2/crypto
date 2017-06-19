@@ -88,8 +88,10 @@ def test_symmetric_encrypt_decrypt(algorithm_name, generate_key, encrypt, decryp
     print("Ciphertext size: {}".format(size_in_bits(encrypt(random_integer(plaintext_size), key))))
     print("{} unit test passed".format(algorithm_name))
 
-def test_exchange_key_recover_key_time(iterations, exchange_key, recover_key, public_key, private_key, key_size=32):    
-    print("Exchanging {} {}-byte messages...".format(iterations, key_size))            
+def test_exchange_key_recover_key_time(iterations, exchange_key, recover_key, public_key, private_key, key_size=32):        
+    if iterations == 0:
+        return None    
+    print("Exchanging {} {}-byte keys...".format(iterations, key_size))            
     before = default_timer()
     for count in range(iterations):                     
         ciphertext, key = exchange_key(public_key)
@@ -104,7 +106,7 @@ def test_exchange_key_recover_key_time(iterations, exchange_key, recover_key, pu
     print("Time required: {}".format(after - before))        
     
 def test_key_exchange(algorithm_name, generate_keypair, exchange_key, recover_key, 
-                      iterations=1024):
+                      iterations=1024, key_size=32):
     print("Beginning {} unit test...".format(algorithm_name))
     print("Generating keypair...")
     public_key, private_key = generate_keypair()
@@ -118,13 +120,13 @@ def test_key_exchange(algorithm_name, generate_keypair, exchange_key, recover_ke
             raise BaseException("Unit test failed")
     print("...done")
     
-    test_exchange_key_recover_key_time(iterations, exchange_key, recover_key, public_key, private_key)
+    test_exchange_key_recover_key_time(iterations, exchange_key, recover_key, public_key, private_key, key_size)
     
     public_sizes = determine_key_size(public_key)
     private_sizes = determine_key_size(private_key)
     print("Public key size : {}".format(sum(public_sizes)))
     print("Private key size: {}".format(sum(private_sizes)))
-    print("Ciphertext size : {}".format(size_in_bits(ciphertext)))
+    print("Ciphertext size : {}".format(size_in_bits(exchange_key(public_key)[0])))
     print("(sizes are in bits)")
     print("{} unit test passed".format(algorithm_name))
     
