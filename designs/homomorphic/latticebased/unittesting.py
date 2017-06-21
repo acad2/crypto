@@ -161,7 +161,7 @@ def test_sign_verify(algorithm_name, generate_keypair, sign, verify,
             raise BaseException("Unit test failed")
     print("...done")
     
-    test_sign_verify_time(iterations, sign, verify, public_key, private_key)
+    test_sign_verify_time(iterations, sign, verify, public_key, private_key, message_size)
     
     public_sizes = determine_key_size(public_key)
     private_sizes = determine_key_size(private_key)

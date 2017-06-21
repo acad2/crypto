@@ -1,8 +1,8 @@
 """ Provides authenticated encryption and decryption functions using only the python standard library. """    
 import hashlib
 import hmac as _hmac
-
 from pickle import dumps, loads
+
 from utilities import slide, xor_subroutine, random_bytes
 
 __all__ = ("encrypt", "decrypt")           

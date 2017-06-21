@@ -39,15 +39,15 @@
 
 
 \section{Introduction}
-A Trapdoor One-Way Function (TOWF) is a function that is easy to compute in one direction, but is hard to compute in reverse without some additional piece of information. A TOWF makes exchanging cryptographic keys a straightforward exercise: Alice can simply apply a TOWF to a randomly generated key and send the output to Bob, who knows the trapdoor information. Bob can then invert the output to obtain the key. 
+A Trapdoor One-Way Function (TOWF) is a function that is easy to compute in one direction, but is hard to compute in reverse without some additional piece of information. A TOWF makes exchanging cryptographic keys a straightforward exercise: Alice can simply apply a TOWF to a randomly generated key and send the output to Bob, who knows the trapdoor information. Bob can then use the trapdoor information to invert the output and obtain the key. 
 
-In this paper we define a candidate Trapdoor One-Way Function that is suitable for use to exchange cryptographic keys. It is based on a simple observation of a congruence, $pq + e \equiv q + p_i e \mod N$, along with some subtle manipulation of the sizes of the numbers involved.
+In this paper we define a candidate TOWF that is suitable for use to exchange cryptographic keys. It is based on a simple observation of a congruence, $pq + e \equiv q + p_i e \mod N$, along with some subtle manipulation of the sizes of the numbers involved.
 
 \section{Definitions}
 We use $+$ to denote addition, $a / b$ to denote division, and $\mod p$ to denote the modulo operation. We use both $a b$ and $a * b$ to indicate multiplication. We use the function $inverse(k, n)$ to indicate the computation of the modular multiplicative inverse of $k \mod n$. We use the function $random(k)$ to indicate the generation of of a random $k$-bit integer.
 
 \section{Algorithm}
-There is a publicly agreed upon modulus $N$. The same $N$ may always be used. It must be prime; It it is not secret, and otherwise only needs to be both agreed upon and large enough. The size of $N$ is determined by the rest of the parameter sizes which are discussed below; In our python implementation, $N$ is slightly less then 800 bits in size. The larger $N$ is, the longer the BigNum arithmetic operations take, and the larger ciphertexts become; Consequently, we opt for the smallest $N$ possible.
+There is a publicly agreed upon modulus $N$. The same $N$ may always be used. It must be prime; It it is not secret, and otherwise only needs to be both agreed upon and large enough. The size of $N$ is determined by the rest of the parameter sizes which are discussed below; In our python implementation which targets a 256-bit security level, $N$ is slightly less then 800 bits in size. The larger $N$ is, the longer the BigNum arithmetic operations take, and the larger ciphertexts become; Consequently, we opt for the smallest $N$ possible.
 
 \subsection{Basic Concept}
 Consider the following function:
@@ -66,9 +66,9 @@ t := t - q \\
 e := t / p_i
 \end{flalign*}
 
-The step $q := t \mod p_i$ will only function correctly if $q < p_i$ and if $p_i e < N$. We leverage this latter fact to create a trapdoor. We select a suitable $p_i$ that is large enough such that $q < p_i$ and small enough such that $p_i e < N$. Then, we calculate the modular multilicative inverse $p := inverse(p_i, N)$. To create a public key, we then encrypt $p$ using a random $r$ to preclude the ability of others to calculate $p_i$. 
+The step $q := t \mod p_i$ will only function correctly if $q < p_i$ and if $p_i e < N$. We leverage this latter fact to create a trapdoor. We select a suitable $p_i$ that is large enough such that $q < p_i$ and small enough such that $p_i e < N$. Then, we calculate the modular multilicative inverse $p := inverse(p_i, N)$. This number will likely be very large, closer to $N$ in size then to $p_i$. To create a public key, we then encrypt $p$ using a random $r$ to preclude the ability of others to calculate $p_i$. 
 
-The inability to selectively generate a small inverse of the public key ensures that supplying the public key to the inversion algorithm will not produce correct plaintext. We can witness this via the attempt below:
+The public key provides the ability to compute the forward operation $p q + e \mod N$ because there is no size constraint on $p$ for this operation (as long as $p < N$ anyways). Supplying the inverse of the public key to the inversion algorithm will not produce correct plaintext, because the generated value will be too large. We can witness this via the attempt below:
 
 \begin{flalign*}
 q := random(q_{size})\\
@@ -138,13 +138,16 @@ c_5 := 2 c_4
 
 It should be noted that multiplication will quickly increase the size of the terms in the expressions, and if the size of the terms grows too large, decryption will fail.
 
+\subsubsection{$q$ and Anti-Malleability}
+If $q$ is used as the secret instead of $e$, then the ability to add plaintext values to ciphertexts disappears. The value of $e$ will not influence $q$, and manipulations of the ciphertext less then a certain magnitude will not modify the plaintext obtained upon decryption. This is in stark contrast to the more common Non-Malleability, where modification of the ciphertext will usually modify the corresponding plaintext to a meaningless value.
+
 \section{Security Analysis}
 There are two main security goals: First, given the public key, the private key must not be obtainable; Second, The output of the public key operation must not be invertible without the private key.
 
 \subsection{Key Generation}
 It would appear that obtaining the private key from the public key must be done by guessing one of $p, p_i, r$. If this were not the case, then whatever algorithm that can be used to recover any of $p, p_i, r$ from $p r \mod N$ could be used to recover plaintexts from ciphertexts of the form $m k \mod N$ for random $m, k$ where one of $m, k$ is smaller then the other (but still large enough to reduce modulo $N$). It seems unlikely that such an attack exists and is faster then guessing $p, p_i,  r$. 
 
-This implies that the private key cannot be recovered from the public key.
+This implies that there does not exist an algorithm to recover the private key from the public key, other then brute force guessing.
 
 \subsection{Public Key Operation}
 The security of the public key operation appears to scale with the size of the randomly generated $q$. It remains to be proven that given $c := p q + e \mod N$, $p$, recovering $e$ is difficult.
@@ -165,6 +168,6 @@ The implementation complexity of the scheme is very low. Our public domain pytho
 Additional code is required for supporting functions such as the generation of prime numbers (only if $N$ is being generated/not already established) and unit testing. These are modest requirements that can be implemented without much complexity. \\
 
 \section{Conclusion}
-We define a conceptually simple, resource-practical key exchange algorithm. 
+We define a conceptually simple, resource-practical Trapdoor One-Way Function and key exchange algorithm. 
 \end{document}
 
