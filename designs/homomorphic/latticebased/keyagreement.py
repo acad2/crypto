@@ -1,32 +1,31 @@
 from crypto.utilities import random_integer, big_prime
 
 G = random_integer(32)
-N = big_prime(33)
+N = random_integer(33)
 POINT_COUNT = 16
 
+def random_walk(starting_point, directions, point_count, n=N):
+    q, e = directions   
+    current_location = starting_point
+    for count in range(point_count):
+        current_location = ((current_location * q) + (n * e)) % n
+    return current_location
+    
 def generate_private_key(q_size=32, e_size=32):
     q = random_integer(q_size)
     e = random_integer(e_size)
     return q, e
     
-def generate_public_key(private_key, g=G, points=POINT_COUNT, n=N):
-    q, e = private_key
-    starting_point = g
-    for count in range(points):
-        starting_point = ((starting_point * q) + (n * e)) % n
-    return starting_point
+def generate_public_key(private_key, g=G, point_count=POINT_COUNT, n=N):
+    return random_walk(g, private_key, point_count, n)
         
-def generate_keypair(q_size=32, e_size=32, g=G):
+def generate_keypair(q_size=32, e_size=32, g=G, point_count=POINT_COUNT, n=N):
     private_key = generate_private_key(q_size, e_size)
-    public_key = generate_public_key(private_key, g)
+    public_key = generate_public_key(private_key, g, point_count, n)
     return public_key, private_key
        
-def key_agreement(public_key, private_key, g=G, points=POINT_COUNT, n=N):
-    q, e = private_key    
-    starting_point = public_key
-    for count in range(points):
-        starting_point = ((starting_point * q) + (n * e)) % n
-    return int(format(starting_point, 'b')[:224], 2)
+def key_agreement(public_key, private_key, point_count=POINT_COUNT, n=N):
+    return random_walk(public_key, private_key, point_count, n)
         
 def test_key_agreement():
     from unittesting import test_key_agreement
