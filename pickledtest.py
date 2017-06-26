@@ -22,7 +22,8 @@ def encrypt(data, key, nonce=None, additional_data='', algorithm="sha512", nonce
         Encrypts and authenticates data using key and nonce.
         Authenticates but does not encrypt additional_data
         algorithm determines which hash algorithm to use with HMAC
-        data, key, nonce, and additional_data should be bytes or bytearray. """
+        data, key, nonce, and additional_data should be bytes or bytearray. 
+        If nonce is None, then a random nonce of nonce_size will be generated. """
     data = bytearray(data)
     key = bytearray(key)
     nonce = bytearray(nonce if nonce is not None else random_bytes(32))

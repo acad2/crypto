@@ -17,7 +17,7 @@ def test_break():
 def break_qtpie(p, c, n):    
     x = n - p
     q, e = divmod(c, x)
-    _c = (((x * q) + e) % n)
+    _c = n - (((x * q) + e) % n)
     assert _c == c, (_c, c)
     
     e -= 1
