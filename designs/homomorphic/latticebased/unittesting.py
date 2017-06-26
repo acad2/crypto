@@ -193,7 +193,7 @@ def test_key_agreement(algorithm_name, generate_keypair, key_agreement,
     for count in range(iterations):
         key = key_agreement(public_key2, private_key)
         _key = key_agreement(public_key, private_key2)
-        assert key == _key        
+        assert key == _key, (key, _key)
     print("...done")
     
     test_key_agreement_time(iterations, key_agreement, public_key2, private_key, key_size=key_size)
