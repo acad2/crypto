@@ -1,32 +1,48 @@
-from crypto.utilities import random_integer, big_prime
+from os import urandom as random_bytes
 
-G = random_integer(32)
-N = random_integer(33)
-POINT_COUNT = 16
+__all__ = ["random_walk", "generate_private_key", "generate_public_key", "generate_keypair", "key_agreement",
+           "X", "Y"]
 
-def random_walk(starting_point, directions, point_count, n=N):
-    q, e = directions   
-    current_location = starting_point
-    for count in range(point_count):
-        current_location = ((current_location * q) + (n * e)) % n
-    return current_location
+# utilities    
+def bytes_to_integer(data):
+    output = 0    
+    size = len(data)
+    for index in range(size):
+        output |= data[index] << (8 * (size - 1 - index))
+    return output
     
-def generate_private_key(q_size=32, e_size=32):
-    q = random_integer(q_size)
-    e = random_integer(e_size)
-    return q, e
-    
-def generate_public_key(private_key, g=G, point_count=POINT_COUNT, n=N):
-    return random_walk(g, private_key, point_count, n)
+def random_integer(size_in_bytes):
+    return bytes_to_integer(bytearray(random_bytes(size_in_bytes)))
+# end utilities        
         
-def generate_keypair(q_size=32, e_size=32, g=G, point_count=POINT_COUNT, n=N):
-    private_key = generate_private_key(q_size, e_size)
-    public_key = generate_public_key(private_key, g, point_count, n)
+X = random_integer(32)
+Y = random_integer(33)
+POINT_COUNT = 2
+A_SIZE = 32
+B_SIZE = 32
+
+def random_walk(x, y, directions, point_count):
+    a, b = directions       
+    for count in range(point_count):                
+        x = ((a * x) + (b * y)) % y
+    return x
+    
+def generate_private_key(a_size=A_SIZE, b_size=B_SIZE):
+    a = random_integer(a_size)
+    b = random_integer(b_size)
+    return a, b
+    
+def generate_public_key(private_key, x=X, y=Y, point_count=POINT_COUNT):
+    return random_walk(x, y, private_key, point_count)
+        
+def generate_keypair(a_size=A_SIZE, b_size=B_SIZE, x=X, y=Y, point_count=POINT_COUNT):
+    private_key = generate_private_key(a_size, b_size)
+    public_key = generate_public_key(private_key, x, y, point_count)
     return public_key, private_key
        
-def key_agreement(public_key, private_key, point_count=POINT_COUNT, n=N):
-    return random_walk(public_key, private_key, point_count, n)
-        
+def key_agreement(public_key, private_key, y=Y, point_count=POINT_COUNT):
+    return random_walk(public_key, y, private_key, point_count)
+
 def test_key_agreement():
     from unittesting import test_key_agreement
     test_key_agreement("keyagreement", generate_keypair, key_agreement, iterations=10000)

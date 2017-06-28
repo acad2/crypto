@@ -1,0 +1,225 @@
+\documentclass[preprint]{iacrtrans}
+\usepackage[utf8]{inputenc}
+
+% Select what to do with todonotes: 
+% \usepackage[disable]{todonotes} % notes not showed
+\usepackage[draft,color=orange!20!white,linecolor=orange,textwidth=3cm,colorinlistoftodos]{todonotes}   % notes showed
+\setlength{\marginparwidth}{3cm}
+\usepackage{graphicx}
+\usepackage{soul}
+\graphicspath{{images/}} % end dirs with `/'
+% \usepackage{longtable}
+\usepackage{tikz}
+\usetikzlibrary{arrows}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{positioning}
+\usetikzlibrary{calc}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{arrows}
+\usetikzlibrary{crypto.symbols}
+\tikzset{shadows=no}        % Option: add shadows to XOR, ADD, etc.
+
+\author{Ella Rose}
+\institute{Paso Robles, CA \email{python_pride@protonmail.com}}
+\title[Trapdoors and Random Walks With LWE]{Trapdoors and Random Walks With LWE}
+
+\begin{document}
+
+\maketitle
+
+% use optional argument because the \LaTeX command breaks the PDF keywords
+\keywords[Homomorphic Encryption, Public Key Cryptography, LWE]{Homomorphic Encryption, Public Key Cryptography, LWE}
+
+\begin{abstract}
+ We define a trapdoor function and random-walk type function based on the Learning-With-Errors problem; Together, the algorithms constitute post-quantum alternatives to traditional RSA and DH . Our constructions are practical and efficient in terms of size and space: public and private keys are small, ciphertext expansion is relatively low, and public and private key operation times are fast.
+ \end{abstract}
+
+\todototoc
+\listoftodos
+
+
+\section{Introduction}
+A Trapdoor One-Way Function (TOWF) is a function that is easy for anyone to compute in one direction, but is hard to compute in reverse without some additional piece of information. A TOWF makes exchanging cryptographic keys a straightforward exercise: Suppose that Bob happens to know the trapdoor information for a TOWF: Alice can simply apply the TOWF to a randomly generated key and send the output to Bob. Bob can then use the trapdoor information to invert the output and obtain the key. With the right padding, a TOWF may be used for public key encryption as well; The difference is that instead of a random value, Alice can choose the value that she sends to Bob. 
+
+A Random-Walk function is a function that facilitates key agreement: Suppose Alice was to walk in a particular but random pattern where she ends up at a destination $A$; Bob does the same, walking in his own particular but random pattern to end up at a destination $B$. Then, if Alice starts at $B$ and walks her random path again, she will end up at a point $C$; If Bob starts at $A$ and walks his random path again, he too will end up at point $C$. In this way, both parties arrive at the same final location, and neither learns the particular way that the other one arrived. Elliptic-Curve Diffie-Hellman is an examplea of a Random-Walk type function.
+
+The Learning-With-Errors (LWE) problem is a mathematical problem that is believed to be difficult to solve efficiently even with a quantum computer. Problems of this type take the form $a s + e \mod q$, where $a, q$ are public knowledge and $s, e$ are kept secret.
+
+In this paper we define a candidate TOWF based on 1-dimensional LWE. It is based on a simple observation of a congruence, $pq + e \equiv q + p_i e \mod N$, along with some subtle manipulation of the sizes of the numbers involved.
+
+Additionally, we also define a Random-Walk type function using the observation of the fact that LWE incorporates scaling and translation; The combined effects of scaling and translation act as the random steps on the path taken by Alice and Bob.
+
+\section{Definitions}
+We $+$ to denote addition, $a b$ to indicate multiplication, $a / b$ to denote division, and $\mod p$ to denote the modulo operation. We use the function $inverse(k, n)$ to indicate the computation of the modular multiplicative inverse of $k \mod n$. We use the function $random(k)$ to indicate the generation of of a random $k$-bit integer.
+
+\section{Trapdoor Algorithm}
+There is a publicly agreed upon modulus $N$. The same $N$ may always be used. It should be prime; It it is not secret, and otherwise only needs to be both agreed upon and large enough. The size of $N$ is determined by the rest of the parameter sizes which are discussed below; In our python implementation which targets a 256-bit security level, $N$ is slightly less then 800 bits in size. The larger $N$ is, the longer the BigNum arithmetic operations take, and the larger ciphertexts become; Consequently, we opt for the smallest $N$ possible.
+
+\subsection{Basic Concept}
+Consider the following function:
+
+\begin{flalign*}
+c := pq + e \mod N
+\end{flalign*}
+
+Given $c, p, N$, we can recover $q, e$ using the following algorithm:
+
+\begin{flalign*}
+p_i := inverse(p, N)\\
+t := p_i c \equiv p_i p q + p_i e \equiv q + p_i e \mod N\\
+q := t \mod p_i\\
+t := t - q \\
+e := t / p_i
+\end{flalign*}
+
+The step $q := t \mod p_i$ will only function correctly if $q < p_i$ and if $p_i e < N$. We leverage this latter fact to create a trapdoor. We select a suitable $p_i$ that is large enough such that $q < p_i$ and small enough such that $p_i e < N$. Then, we calculate the modular multilicative inverse $p := inverse(p_i, N)$. This number will likely be very large, closer to $N$ in size then to $p_i$. To create a public key, we then encrypt $p$ using a random $r$ to preclude the ability of others to calculate $p_i$. 
+
+The public key provides the ability to compute the forward operation $p q + e \mod N$ because there is no size constraint on $p$ for this operation (as long as $p < N$ anyways). Supplying the inverse of the public key to the inversion algorithm will not produce correct plaintext, because the generated value will be too large. We can witness this via the attempt below:
+
+\begin{flalign*}
+q := random(q_{size})\\
+e := random(e_{size})\\
+c := prq + e \mod N\\
+pr_i := inverse(pr, N)\\
+c_i := c pr_i \mod N\\
+c_i \equiv q + p_i r_i e \mod N\\
+\end{flalign*}
+
+In the final line $c_i \equiv q + p_i r_i e \mod N$, we can see that the inverse of the public key is too large if $p_i r_i e > N$. While $p_i$ is relatively small, $r_i$ is (most likely) large - Ultimately, the size of $p_i r_i$ is roughly the same as $p r$, and so this alternative perspective of $q + p_i r_i e$ offers no fewer unknown bits to guess then the original $prq + e$ did.
+
+This is in contrast to the perspective that the holder of $p_i$ has:
+
+\begin{flalign*}
+q := random(q_{size})\\
+e := random(e_{size})\\
+c := prq + e \mod N\\
+p_i := inverse(p, N)\\
+c_i := c p_i \mod N\\
+c_i \equiv qr + p_i e \mod N
+\end{flalign*}
+
+We can see the difference in the final line $c_i \equiv qr + p_i e \mod N$ from before; While the $r$ variable is still present on the left term, $p_i e < N$ and so the inversion algorithm will work as intended. The presence of the $r$ variable on the left does require that $p_i$ be larger to ensure that $qr < p_i$.
+
+\subsection{Key Generation}
+\begin{flalign*}
+k_{priv} := random(priv_{size})\\
+p := inverse(k_{priv}, N)\\
+r := random(r_{size})\\
+k_{pub} := p r \mod N\\
+\end{flalign*}
+
+
+$priv_{size}$ must be selected such that $e k_{priv} < N$, as well as $k_{priv} > r q$, where $q, e$ are the security parameter of the public key operation and shared secret. For 256-bit $e, r, q$ values, $priv_{size}$ is 520 bits, while $N$ is slightly less then 800 bits.
+
+\subsection{Exchanging Keys}
+To exchange a secret key: multiply the public key $p$ by a random value $q$, then add a random value $e$ to the result modulo $N$. The shared secret will be either $q$ or $e$ (or some combination of the two); We discuss the implications of the choices later. We default to using $e$ as the secret, as it is slightly less complex.
+
+\begin{flalign*}
+p := key_{pub}\\
+q := random(q_{size})\\
+e := random(e_{size})\\
+ciphertext := p q + e \mod N\\
+\end{flalign*}
+
+\subsection{Key Recovery}
+The shared secret $e$ (or $q$ or both) can be recover from the ciphertext via the following algorithm:
+
+\begin{flalign*}
+p_i := key_{priv}\\
+t := ciphertext * p_i \mod N\\
+q := t \mod p_i\\
+t := t - q\\
+e := t / pi\\
+q := q / r
+\end{flalign*}
+
+\subsubsection{Processing the Secret}
+The secret should be processed before use a key. Ideally, HKDF should be used; If it is not available, a simple hash function applied to the secret should be sufficient.
+
+\subsection{Homomorphism}
+In addition to the ability to add ciphertexts together, ciphertexts can be multiplied by plaintext values, and plaintext values can be added to ciphertexts. This second property follows naturally from the ability to add ciphertexts together. The third property is a result of the fact that $e$ is attached to the ciphertext by simple addition. In the following examples, $c_i$ are ciphertexts, while $1, 2$ are plaintext integers.
+
+\begin{flalign*}
+c_3 := c_1 + c_2\\
+c_4 := c_3 + 1\\
+c_5 := 2 c_4 
+\end{flalign*}
+
+It should be noted that multiplication will quickly increase the size of the terms in the expressions, and if the size of the terms grows too large, decryption will fail.
+
+\subsubsection{$q$ and Anti-Malleability}
+If $q$ is used as the secret instead of $e$, then the ability to add plaintext values to ciphertexts disappears. The value of $e$ will not influence $q$, and manipulations of the ciphertext less then a certain magnitude will not modify the plaintext obtained upon decryption. This is in stark contrast to the more common Non-Malleability, where modification of the ciphertext will usually modify the corresponding plaintext to a meaningless value.
+
+\subsection{Security Analysis}
+There are two main goals: First, given the public key, the private key must not be obtainable; Second, The output of the public key operation must not be invertible without the private key.
+
+\subsubsection{Key Generation}
+It would appear that obtaining the private key from the public key must be done by guessing one of $p, p_i, r$. If this were not the case, then whatever algorithm that can be used to recover any of $p, p_i, r$ from $p r \mod N$ could be used to recover plaintexts from ciphertexts of the form $m k \mod N$ for random $m, k$ where one of $m, k$ is smaller then the other (but still large enough to reduce modulo $N$). It seems unlikely that such an attack exists and is faster then guessing $p, p_i,  r$. 
+
+This implies that there does not exist an algorithm to recover the private key from the public key, other then brute force guessing.
+
+\subsubsection{Public Key Operation}
+The public key operation appears to be a 1-dimensional version of the learning-with-errors problem.\\
+
+If we consider the case where $pr = 1$, then $prq + e \equiv q + e \mod P$ for uniformly random values $q, e$. 
+
+\subsubsection{Side Channel Analysis}
+Assuming that BigNum operations can be implemented in a manner that does not leak timing information, it appears that a naive implementation of the algorithm is resistant to timing side channel analysis, as there are no tables or branches in the algorithm.
+
+\section{Random-Walk Algorithm}
+There is a publicly known and agreed upon starting point $x$, as well as another starting point and modulus $y$. The size of $y$ determines the ciphertext size and key size; The size of $x$ should be close to but smaller then $y$. We elect to utilize 256 bits for the size of $x$, and $264$ bits for the size of $y$; This ensures that 256 bits of key material are available as a shared secret.
+
+\subsection{Basic Concept}
+A random walk requires a starting point, as well as directions for where to proceed next. The LWE expression $a s + e \mod q$ incorporates a scaling by $s$ and a translation by $e$; These steps serve as the directions for the random walk, as they determine which destination point is selected; The value of $a$ acts as the initial location where the walk begins from.
+
+\subsection{Random Walk Algorithm}
+\begin{flalign*}
+point_2 := point_1 s + e y \mod y
+\end{flalign*}
+
+The above expression calculates the location of the next point (which may be the destination) according to the values of $s, e$; The value of $e$ is mutliplied by $y$ to facilitate the reduction modulo $y$. This expression is used to generate a public key, as well as to compute the shared secret between parties.
+
+\subsection{Key Generation}
+A private key consists of random integers $s, e$. A public key consists of the point that is arrived at after using the private key "directions" $s, e$ to walk, starting from the base points $x, y$:
+
+\begin{flalign*}
+s := random(s_{size})\\
+e := random(e_{size})\\
+point := x s + e y \mod y\\
+key_{private} := s, e\\
+key_{public} := point
+\end{flalign*}
+
+\subsection{Key Agreement}
+A shared secret can be obtained by applying the random walk function using the other parties public key as the starting location.
+
+\begin{flalign*}
+secret := key_{public} s + e y \mod y
+\end{flalign*}
+
+\subsection{Additional Points on the Walk}
+In the examples given in the prior section, the random walk function is only applied once; In fact, it may be applied many times. An arbitrary number of points can be walked through without increasing space requirements - it only costs more time to walk further. 
+
+It may be required that a greater number of points on the path is required for security; We are unable to demonstrate an attack against a single point walk. We choose to utilize the fewest number of points required for efficiency reasons provided security can still be maintained. 
+
+
+\section{Metrics}
+\subsection{Trapdoor Algorithm}
+Using our public domain python implementation that is configured for a 256-bit security level, we can perform 10,000 public key operations in slightly under 1 second. It requires .3 seconds to perform 10,000 private key operations, which implies that roughly 30,000 private key operations per second can be performed on very modest hardware. Our tests were performed on an Intel Celeron N2830 2.16GHz with 2 cores. 
+
+In our implementation, most of the time for the public key operation is spent generating $q$ and $e$. In a synthetic test where $q, e$ are not generated for each invocation of the function, we can perform 100,000 public key operations per second.
+
+Our implementation is optimized for readability. Much of the computation time is spent on bignum operations, and while an optimized C implementation may certainly be faster, it is not required to obtain an acceptable level of performance. 
+
+\subsubsection{Implementation Complexity}
+The implementation complexity of the scheme is very low. Our public domain python implementation of the algorithm spans barely 100 lines, including the documentation and comments.\\
+
+Additional code is required for supporting functions such as the generation of prime numbers (only if $N$ is being generated/not already established) and unit testing. These are modest requirements that can be implemented without much complexity. \\
+
+\subsection{Random-Walk Algorithm}
+
+
+\section{Conclusion}
+We define a conceptually simple, resource-practical Trapdoor One-Way Function and key exchange algorithm. 
+\end{document}
+
