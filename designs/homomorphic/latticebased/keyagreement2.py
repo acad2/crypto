@@ -24,6 +24,9 @@ def point_addition(a, b, x, y, point_count):
     adjustment = calculate_a_adjustment(point_count)
     return ((_a * x) + (b * y * (a + adjustment))) % y
     
+def compute_inverse(a, b, x, y, point_count):
+    return point_addition(a, b, x, y, y - (1 + point_count))    
+        
 def generate_private_key(private_key_size=PRIVATE_KEY_SIZE):
     return random_integer(private_key_size)        
     
@@ -42,6 +45,16 @@ def test_key_agreement():
     from unittesting import test_key_agreement
     test_key_agreement("keyagreement2", generate_keypair, key_agreement, iterations=10000)
     
+def test_inverse():
+    public1, private1 = generate_keypair() 
+    a, b, x, y = A, B, X, Y
+    _public1 = point_addition(a, b, x, y, private1)
+    assert public1 == _public1    
+    
+    _x = compute_inverse(A, B, _public1, Y, private1)    
+    assert _x == x, (_x, x)    
+        
 if __name__ == "__main__":
-    test_key_agreement()
+    #test_key_agreement()
+    test_inverse()
     

@@ -11,12 +11,12 @@ def generate_parameters(a_size=A_SIZE, b_size=B_SIZE,
     a = random_integer(a_size)
     b = random_integer(b_size)
     x = random_integer(x_size)
-    y = big_prime(y_size)
+    y = big_prime(y_size) 
     return a, b, x, y, b * y
     
 PARAMETERS = A, B, X, Y, BY = generate_parameters()
     
-def point_addition(x, _a, adjustment, y=Y):
+def point_addition(x, _a, adjustment, y=Y):    
     return ((_a * x) + adjustment) % y
     
 def calculate_a_adjustment(point_count):
@@ -24,12 +24,12 @@ def calculate_a_adjustment(point_count):
                 
 def generate_private_key(a, b, y, private_key_size=PRIVATE_KEY_SIZE):    
     point_count = random_integer(private_key_size)
-    _a = pow(a, point_count, y)
-    adjustment = calculate_a_adjustment(point_count)
-    return _a, (b * y * (a + adjustment)) % y
+    _a = pow(a, point_count, y)     
+    adjustment = calculate_a_adjustment(point_count)    
+    return _a, (b * y * (a + adjustment)) 
         
 def generate_public_key(private_key, parameters):   
-    _a, adjustment = private_key
+    _a, adjustment = private_key    
     a, b, x, y, by = parameters
     public_key = point_addition(x, _a, adjustment, y)
     return public_key
