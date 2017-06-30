@@ -16,21 +16,22 @@ def random_integer(size_in_bytes):
 # end utilities        
         
 X = random_integer(32)
-Y = random_integer(33)
+Y = random_integer(32)
+Z = random_integer(32)
 POINT_COUNT = 2
 A_SIZE = 32
 B_SIZE = 32
 
-def random_walk(x, y, directions, point_count):
-    a, b = directions       
+def random_walk(x, y, directions, point_count, z=Z):
+    a, b, c = directions       
     for count in range(point_count):                
-        x = ((a * x) + (b * y)) % y
+        x = ((((a * x) + (b * y)) % y) + (c * z)) % z
     return x
     
 def generate_private_key(a_size=A_SIZE, b_size=B_SIZE):
     a = random_integer(a_size)
     b = random_integer(b_size)
-    return a, b
+    return a, b, random_integer(b_size)
     
 def generate_public_key(private_key, x=X, y=Y, point_count=POINT_COUNT):
     return random_walk(x, y, private_key, point_count)

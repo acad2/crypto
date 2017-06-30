@@ -228,6 +228,9 @@ def bytes_to_integer(data):
         output |= data[index] << (8 * (size - 1 - index))
     return output
     
+def random_integer(size_in_bytes):
+    return bytes_to_integer(bytearray(random_bytes(size_in_bytes)))
+    
 def integer_to_bytes(integer, _bytes):
     output = bytearray()
     #_bytes /= 2
@@ -386,9 +389,6 @@ def test_integer_to_words_words_to_integer():
     words = integer_to_words(m, 384, 64)
     _m = words_to_integer(words, 64)
     assert m == _m, (m, _m, words)
-        
-def random_integer(size_in_bytes):
-    return bytes_to_integer(bytearray(random_bytes(size_in_bytes)))
         
 def big_prime(size_in_bytes):           
     while True:

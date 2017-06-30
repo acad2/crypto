@@ -36,7 +36,45 @@
 
 \todototoc
 \listoftodos
+You are missing all the non fake signature etc.
 
+Where is your trap door function defined where is the key exchange defined ?
+
+You should use the environment algorithm to write your algorithm. It is difficult to understand as is.
+
+Section 2 is too short to be a section as is.
+
+Addition over what field ? Etc for the rest. (edited)
+
+Why 800 bits for N. Why not less ?
+
+Given the following function....
+That's not a function. That's an equation. (edited)
+
+What are p q e ?
+
+Use leftarrow instead of :=
+
+If it's an algorithm don't put equivalent (triple equal) in it
+
+Use $p^-1$ or something else but not pi.
+It confusing.
+
+Inverse mod N in which field ?????
+Or group.
+My bad it's in 2.
+
+Basic concept is not a good name for a section.
+Use specifications.
+Or Design motivation (after specifications)
+
+You should not need to specify mod N in each operations.
+
+Why k private is 520 bits ?
+
+How does all this compares to others methods ?
+
+What is that t in key recovery.
 
 \section{Introduction}
 A Trapdoor One-Way Function (TOWF) is a function that is easy for anyone to compute in one direction, but is hard to compute in reverse without some additional piece of information. A TOWF makes exchanging cryptographic keys a straightforward exercise: Suppose that Bob happens to know the trapdoor information for a TOWF: Alice can simply apply the TOWF to a randomly generated key and send the output to Bob. Bob can then use the trapdoor information to invert the output and obtain the key.  
