@@ -16,11 +16,23 @@ def generate_parameters(a_size=A_SIZE, b_size=B_SIZE,
     
 PARAMETERS = A, B, X, Y, BY = generate_parameters()
     
-def point_addition(x, _a, adjustment, y=Y):    
-    return ((_a * x) + adjustment) % y
+def point_addition(x, _a, adjustment, y=Y):  
+    #_t = ((_a * x) + adjustment) % y
+    #assert _t != (_a * x) % y
+    return ((_a * x) + adjustment)
     
 def calculate_a_adjustment(point_count):
-    return (2 * point_count) + ((point_count - 1) % 2)
+    #(0, 0) (1, 0) (2, 1) (3, 3) (4, 5), (5, 7)
+    if point_count in (0, 1):
+        return 0    
+    return 1 + (2 * (point_count - 2)) 
+    
+#def calculate_a_adjustment(point_count):
+#    # (1, 0), (2, 1), (3, 3), 
+#    _x = (2 * point_count) + (point_count - 2)
+#    _y = (2 * point_count) + ((point_count - 1) % 2)
+#    assert _x == _y, (point_count, point_count - 2, ((point_count - 1) % 2))
+#    return (2 * point_count) + (point_count - 2)#((point_count - 1) % 2)
                 
 def generate_private_key(a, b, y, private_key_size=PRIVATE_KEY_SIZE):    
     point_count = random_integer(private_key_size)
@@ -42,7 +54,7 @@ def generate_keypair(private_key_size=PRIVATE_KEY_SIZE, parameters=PARAMETERS):
     
 def key_agreement(public_key, private_key, y=Y):   
     _a, adjustment = private_key
-    return point_addition(public_key, _a, adjustment, y)
+    return point_addition(public_key, _a, adjustment, y) % y
     
 def test_key_agreement():
     from unittesting import test_key_agreement
