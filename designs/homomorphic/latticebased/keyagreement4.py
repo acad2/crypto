@@ -12,32 +12,33 @@ def generate_parameters(a_size=A_SIZE, b_size=B_SIZE,
     b = random_integer(b_size)
     x = random_integer(x_size)
     p = big_prime(p_size) 
-    return a, b, x, p
+    z = modular_inverse(modular_subtraction(1, a, p), p)
+    return a, b, x, p, z
     
-PARAMETERS = A, B, X, P = generate_parameters()
+PARAMETERS = A, B, X, P, Z = generate_parameters()
     
 def point_addition(x, a, b, p=P):  
     return ((a * x) + b) % p
            
-def _sum_geometric_series(b, a, point_count, p=P):
-    t = modular_subtraction(b, (b * pow(a, point_count, p)), p)
-    return (t * modular_inverse(modular_subtraction(1, a, p), p)) % p  
+def _sum_geometric_series(b, a, point_count, p=P, z=Z):
+    t = modular_subtraction(1, pow(a, point_count, p), p)
+    return (t * z) % p  
     
-def generate_private_key(a, b, p, private_key_size=PRIVATE_KEY_SIZE):    
+def generate_private_key(a, b, p, z, private_key_size=PRIVATE_KEY_SIZE):    
     point_count = random_integer(private_key_size)
     _a = pow(a, point_count, p)   
-    _b = _sum_geometric_series(b, a, point_count)    
+    _b = _sum_geometric_series(b, a, point_count, p, z)    
     return _a, _b
         
 def generate_public_key(private_key, parameters):   
     _a, _b = private_key    
-    a, b, x, p = parameters
+    a, b, x, p, z = parameters
     public_key = point_addition(x, _a, _b, p)
     return public_key
     
 def generate_keypair(private_key_size=PRIVATE_KEY_SIZE, parameters=PARAMETERS):
-    a, b, x, p = parameters
-    private_key = generate_private_key(a, b, p, private_key_size)
+    a, b, x, p, z = parameters
+    private_key = generate_private_key(a, b, p, z, private_key_size)
     public_key = generate_public_key(private_key, parameters)
     return public_key, private_key
     
