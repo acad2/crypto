@@ -32,8 +32,11 @@
 #a2x + b2
 #a1(a2x + b2) + b1
 #a1a2x + a1b2 + b1
+from os import urandom as random_bytes
+from timeit import default_timer # for unit test
+from math import log # for unit test
 
-from crypto.utilities import  modular_inverse, modular_subtraction
+__all__ = ["generate_keypair", "key_agreement"]
 
 # utilities
 def bytes_to_integer(data):
@@ -81,6 +84,7 @@ def is_prime(n, _mrpt_num_trials=10): # from https://rosettacode.org/wiki/Miller
                 return False
         return True # n is definitely composite
     
+    import random
     random.seed(random_bytes(32))
     for i in range(_mrpt_num_trials):
         a = random.randrange(2, n)
@@ -161,10 +165,65 @@ def key_agreement(public_key, private_key, p=P):
 # end algorithm
 
 # testing    
-def test_key_agreement():
-    from unittesting import test_key_agreement
+def size_in_bits(integer):
+    return int(log(integer or 1, 2)) + 1
+    
+def determine_key_size(key):    
+    sizes = []
+    try:
+        sizes.append(size_in_bits(key))
+    except TypeError:        
+        for item in key:
+            try:
+                for _item in item:
+                    sizes.append(size_in_bits(_item))
+            except TypeError:
+                sizes.append(size_in_bits(item))    
+    return sizes
+
+def test_key_agreement_time(iterations, key_agreement, public_key, private_key, key_size=32):        
+    if iterations == 0:
+        return None    
+    print("Agreeing upon {} {}-byte keys...".format(iterations, key_size))            
+    before = default_timer()
+    for count in range(iterations):                     
+        key = key_agreement(public_key, private_key)
+    after = default_timer()
+    print("Time required: {}".format(after - before))   
+            
+def test_key_agreement(algorithm_name, generate_keypair, key_agreement, 
+                       iterations=1024, key_size=32):
+    print("Beginning {} unit test...".format(algorithm_name))
+    print("Generating {} keypairs...".format(iterations))    
+    before = default_timer()
+    for count in range(iterations):
+        public_key, private_key = generate_keypair()        
+    after = default_timer()
+    print("...done")
+    print("Time required: {}".format(after - before))
+               
+    print("Validating correctness...")    
+    for count in range(iterations):
+        public_key, private_key = generate_keypair()
+        public_key2, private_key2 = generate_keypair()
+        key = key_agreement(public_key2, private_key)
+        _key = key_agreement(public_key, private_key2)
+        assert key == _key, (key, _key)
+    print("...done")
+    
+    test_key_agreement_time(iterations, key_agreement, public_key2, private_key, key_size=key_size)
+    
+    public_sizes = determine_key_size(public_key)
+    private_sizes = determine_key_size(private_key)
+    print("Public key size : {}".format(sum(public_sizes)))
+    print("Private key size: {}".format(sum(private_sizes)))
+    print("Key size : {}".format(size_in_bits(key)))
+    print("(sizes are in bits)")
+    print("{} unit test passed".format(algorithm_name))
+    
+def unit_test():    
     test_key_agreement("keyagreement4", generate_keypair, key_agreement, iterations=10000)
         
 if __name__ == "__main__":
-    test_key_agreement()    
+    unit_test()    
     
