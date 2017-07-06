@@ -1,0 +1,21 @@
+recipe for random walk crypto system:
+    - requires a public function that offers a fast way to compute the value of the Nth iteration
+        - i.e. F_n(...F_2(F_2(F_1(x))))
+        - function must offer a shortcut that allows to compute the above non-sequentially
+            - shortcut does not have to be secret, it just needs to be efficient
+        - it should be hard to determine n, given F_n(...(F_3(F_2(F_1(x))))
+    - private key: Number of times function is iterated
+    - public key: Output of iterating function private key number of times
+    - key agreement: Using the public key of the other party as the starting point, iterate the function private key number of times      
+    
+    - key1 <- F_5(F_4(F_3(F_2(F_1(x))))) 
+    - key2 <- F_6(F_5(F_4(F_3(F_2(F_1(x))))))
+    - secret1 <- F_5(F_4(F_3(F_2(F_1(F_6(F_5(F_4(F_3(F_2(F_1(x))))))))))) 
+    - secret2 <- F_6(F_5(F_4(F_3(F_2(F_1(F_5(F_4(F_3(F_2(F_1(x))))))))))) 
+    - secret1 == secret2 == F_11(F_10(F_9(F_8(F_7(F_6(F_5(F_4(F_3(F_2(F_1(x)))))))))))
+    
+    key generation:
+        private_key <- random integer
+        public_key <- F_n(...F_3(F_2(F_1(start)))) where n = private_key
+    key agreement:
+        shared key <- F_n(...F_3(F_2(F_1(start)))) where n = private_key

@@ -22,7 +22,6 @@
 
 # key generation is more expensive then the key agreement operation, due to the modular exponentiation
 
-# does not function with arbitrary/random a, b values
 # it happens to work out that
 
 #a1x + b1
@@ -54,16 +53,18 @@ PARAMETERS = A, B, X, P, Z = generate_parameters()
     
 def point_addition(x, a, b, p=P):  
     return ((a * x) + b) % p
-           
+               
 def _sum_geometric_series(a, p=P, z=Z):
-    t = modular_subtraction(1, a, p)
-    return (t * z) % p  
+    return modular_subtraction(z, z * a, p)    
     
-def generate_private_key(a, p, z, private_key_size=PRIVATE_KEY_SIZE):    
-    point_count = random_integer(private_key_size)
+def generate_a_b(point_count, a=A, p=P, z=Z):        
     _a = pow(a, point_count, p)   
     _b = _sum_geometric_series(_a, p, z)    
     return _a, _b
+    
+def generate_private_key(a, p, z, private_key_size=PRIVATE_KEY_SIZE):    
+    point_count = random_integer(private_key_size)
+    return generate_a_b(point_count, a, p, z)
         
 def generate_public_key(private_key, parameters):   
     _a, _b = private_key    
@@ -84,7 +85,28 @@ def key_agreement(public_key, private_key, p=P):
 def test_key_agreement():
     from unittesting import test_key_agreement
     test_key_agreement("keyagreement4", generate_keypair, key_agreement, iterations=10000)
+    
+def test_inverse_parameters():
+    ai = random_integer(32)#modular_inverse(A, P)
+    #zi = modular_inverse(modular_subtraction(1, ai, P), P)
+    bi = 0
+   # assert (bi + B) % P == 0
+    
+    pub1, priv1 = generate_keypair()
+    
+    pub2, priv2 = generate_keypair(parameters=(ai, bi, X, P, Z))
+    point1 = key_agreement(pub1, priv2)
+    point2 = key_agreement(pub2, priv1)
+    assert point1 == point2, (point1, point2)    
+    #a_n x + b
+    #ai_k(a_n x + b) + bi
+    #a^(n-k)x + ai^kb + bi
+    
+   # assert point1 == (X + (ai * B) + bi) % P
+   # _point1 = modular_subtraction(point1, X, P)
+   # assert _point1 == ((ai * B) + bi) % P
         
 if __name__ == "__main__":
     test_key_agreement()    
+   # test_inverse_parameters()
     

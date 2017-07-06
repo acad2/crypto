@@ -182,15 +182,20 @@ def test_key_agreement_time(iterations, key_agreement, public_key, private_key, 
     print("Time required: {}".format(after - before))   
     
 def test_key_agreement(algorithm_name, generate_keypair, key_agreement, 
-                      iterations=1024, key_size=32):
+                       iterations=1024, key_size=32):
     print("Beginning {} unit test...".format(algorithm_name))
-    print("Generating keypair...")
-    public_key, private_key = generate_keypair()
-    print("...done")
-    public_key2, private_key2 = generate_keypair()
-    
-    print("Validating correctness...")
+    print("Generating {} keypairs...".format(iterations))    
+    before = default_timer()
     for count in range(iterations):
+        public_key, private_key = generate_keypair()        
+    after = default_timer()
+    print("...done")
+    print("Time required: {}".format(after - before))
+               
+    print("Validating correctness...")    
+    for count in range(iterations):
+        public_key, private_key = generate_keypair()
+        public_key2, private_key2 = generate_keypair()
         key = key_agreement(public_key2, private_key)
         _key = key_agreement(public_key, private_key2)
         assert key == _key, (key, _key)

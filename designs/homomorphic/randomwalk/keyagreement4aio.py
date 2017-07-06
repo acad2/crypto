@@ -40,7 +40,7 @@ __all__ = ["generate_keypair", "key_agreement"]
 
 # utilities
 def bytes_to_integer(data):
-    output = 0    
+    output = 0        
     size = len(data)
     for index in range(size):
         output |= data[index] << (8 * (size - 1 - index))
