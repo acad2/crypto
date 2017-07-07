@@ -305,7 +305,8 @@ def long_longs_to_bytes(*longs):
     return output
     
 def shuffle(data, key):
-    for i in reversed(range(len(data))):        
+    for i in reversed(range(1, len(data))):
+        # Fisher-Yates shuffle        
         j = key[i] % i            
         data[i], data[j] = data[j], data[i]           
             

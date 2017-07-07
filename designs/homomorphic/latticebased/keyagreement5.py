@@ -13,6 +13,14 @@
 #z(a1 - a1a2) + z(1 - a2)
 #z(a2 - a1a2) + z(1 - a1)
 
+#(a2 - a1a2) + (1 - a2)
+
+#(a1 - a1a2) + (1 - a1)
+
+
+#a1(1 - a2) + (1 - a1)
+#a2(1 - a1) + (1 - a2)
+
 
  
 # a - ab mod p
@@ -35,21 +43,24 @@ def generate_parameters(x_size=X_SIZE, p_size=P_SIZE, z_size=Z_SIZE):
     return x, p, z
     
 PARAMETERS = X, P, Z = generate_parameters()        
-        
-def point_addition(a, b, x, p=P):  
-    return ((a * x) + b) % p
+           
+from math import log           
+def point_addition(a, b, x, p=P):     
+   # print log(((a * x) + b), 2), log(p * random_integer(24), 2)
+   # _t = ((a * x) + b)
+   # assert _t > (p * random_integer(24))
+    return ((a * x) + b) % (p * random_integer(24))
                
 def _sum_geometric_series(a, p=P, z=Z):
     return modular_subtraction(z, z * a, p)    
     
-def generate_a_b(point_count, p=P, z=Z):        
+def generate_a_b(p=P, z=Z):        
     a = random_integer(32)
     b = _sum_geometric_series(a, p, z)    
     return a, b
         
-def generate_private_key(p, z, a_size=A_SIZE):    
-    point_count = random_integer(a_size)
-    return generate_a_b(point_count, p, z)
+def generate_private_key(p, z, a_size=A_SIZE):        
+    return generate_a_b(p, z)
         
 def generate_public_key(private_key, parameters):   
     a, b = private_key    
@@ -65,7 +76,7 @@ def generate_keypair(a_size=A_SIZE, parameters=PARAMETERS):
     
 def key_agreement(public_key, private_key, p=P):   
     a, b = private_key   
-    return point_addition(a, b, public_key, p)
+    return point_addition(a, b, public_key, p) % p
     
 def test_key_agreement():
     from unittesting import test_key_agreement

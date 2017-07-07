@@ -1,18 +1,4 @@
-#recipe for random walk crypto systems:
-#   - a public function that offers a fast way to compute the value of the Nth iteration
-#       - i.e. F(F(F(...F(starting_point))))
-#       - function must offer a shortcut that allows to compute the above non-sequentially
-#       - shortcut does not have to be secret, it just needs to be efficient
-#   - private key: Number of times function is iterated
-#   - public key: Output of iterating function private key number of times
-#   - provides key agreement
-#   - key agreement: Using the public key of the other party as the starting point, iterate the function private key number of times
-#   
-#   key generation:
-#       private_key <- random integer
-#       public_key <- F_n(...F_3(F_2(F_1(start)))) where n = private_key
-#   key agreement:
-#       shared key <- F_n(...F_3(F_2(F_1(start)))) where n = private_key
+
 from crypto.utilities import shuffle, random_integer, random_bytes
 
 SIZE = 32

@@ -57,6 +57,9 @@ def print_state_16x8(inputs):
 def print_state_64x8(inputs):
     _print_state(inputs, 8)         
             
+def print_state_64x6(inputs):
+    _print_state(inputs, 6) 
+    
 def print_state_32x32(inputs):
     _print_state(inputs, 32)
     
@@ -87,6 +90,9 @@ def test_4x64_function(function, inputs, print_function=print_state_4x64_256_as_
 def test_64x8_function(function, inputs, print_function=print_state_64x8):
     test_function(function, inputs, print_function)
         
+def test_64x6_function(function, inputs, print_function=print_state_64x6):
+    test_function(function, inputs, print_function)
+    
 def test_4x4x8_function(function, inputs, print_function=print_state_4x4x8):
     test_function(function, inputs, print_function)                 
             
