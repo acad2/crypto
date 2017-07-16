@@ -39,10 +39,10 @@ def generate_keypair():
     public_key = generate_public_key(private_key)
     return public_key, private_key
     
-def exchange_key(public_key, q_size=32, n=N, e=random_integer(32), q=random_integer(32)):    
-    e = random_integer(q_size)   
-    q = random_integer(q_size)
-    return ((public_key * q) + e) % n, e           
+def exchange_key(public_key, q_size=32, n=N, e_size=32, s_size=32):    
+    e = random_integer(e_size)   
+    s = random_integer(s_size)
+    return ((public_key * s) + e) % n, e           
     
 # pq + e == q + pie mod n    
     
@@ -98,8 +98,45 @@ def test_break_exchange_key():
             print "is qtpie broken?"
     
     
+from crypto.utilities import modular_subtraction, bytes_to_integer, integer_to_bytes
+import hashlib
+
+def hash_function(integer):
+    #return abs(hash(integer))
+    return bytes_to_integer(bytearray(hashlib.sha256(integer_to_bytes(integer, 32)).digest()))
     
+def encrypt(message, public_key, e_size=32, p=N, _hash=hash_function):    
+    e = random_integer(32)
+    secret_key = _hash(e)
+    ciphertext = message ^ secret_key
+    return ((public_key * ciphertext) + e) % p
+        
+def decrypt(ciphertext, private_key, p=N, _hash=hash_function):    
+    private_key, pubk_i = private_key
+    e = recover_key(ciphertext, private_key, p)    
+    pubk_ciphertext = modular_subtraction(ciphertext, e, p)
+    _ciphertext = (pubk_ciphertext * pubk_i) % p    
+    key = _hash(e)
+    return _ciphertext ^ key
+
+def test_encrypt_decrypt():
+   # pub, priv = generate_keypair()
+   # priv = (priv, modular_inverse(pub, N))
+   # for count in range(1024):
+   #     message = random_integer(32)
+   #     ciphertext = encrypt(message, pub)        
+   #     plaintext = decrypt(ciphertext, priv)
+   #     assert plaintext == message
+    
+    from unittesting import test_asymmetric_encrypt_decrypt
+    def _generate_keypair():
+        pub, priv = generate_keypair()
+        priv = (priv, modular_inverse(pub, N))
+        return pub, priv
+    test_asymmetric_encrypt_decrypt("publickeytest", _generate_keypair, encrypt, decrypt, iterations=10000)
+            
 if __name__ == "__main__":
     #test_break_exchange_key()
     test_exchange_key_recover_key()
+    test_encrypt_decrypt()
     

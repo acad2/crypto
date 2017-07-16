@@ -34,6 +34,20 @@ def verify(signature, message, public_key, n=N):
 #q <- qr * k2 mod P
 #e <- (pie * k3) mod P
      
+# ((k1m mod P) mod k1) * k2     
+# ((k1m mod P) - ((k1m mod P) mod k1)) * k3
+
+# (x mod k1) * k2
+# (x - (x mod k1)) * k3
+
+# y k2
+# (x - y) * k3
+# k3x - k3y
+
+# k1k2r + k2e1
+# (pq + e2 - k1r + e1) * k3
+#
+
 def sign(message, private_key, n=N):
     pi, ri, p = private_key       
     pie_qr = (pi * message) % n    

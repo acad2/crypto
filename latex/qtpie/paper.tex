@@ -38,174 +38,151 @@
 \listoftodos
 You are missing all the non fake signature etc.
 
-Where is your trap door function defined where is the key exchange defined ?
-
 You should use the environment algorithm to write your algorithm. It is difficult to understand as is.
-
-Section 2 is too short to be a section as is.
 
 Addition over what field ? Etc for the rest. (edited)
 
-Why 800 bits for N. Why not less ?
-
-Given the following function....
-That's not a function. That's an equation. (edited)
-
-What are p q e ?
-
-Use leftarrow instead of :=
-
-If it's an algorithm don't put equivalent (triple equal) in it
-
-Use $p^-1$ or something else but not pi.
-It confusing.
-
-Inverse mod N in which field ?????
-Or group.
-My bad it's in 2.
-
-Basic concept is not a good name for a section.
-Use specifications.
-Or Design motivation (after specifications)
-
-You should not need to specify mod N in each operations.
-
-Why k private is 520 bits ?
+What key sizes? Why k private is 520 bits ?
 
 How does all this compares to others methods ?
 
-What is that t in key recovery.
-
 \section{Introduction}
-A Trapdoor One-Way Function (TOWF) is a function that is easy for anyone to compute in one direction, but is hard to compute in reverse without some additional piece of information. A TOWF makes exchanging cryptographic keys a straightforward exercise: Suppose that Bob happens to know the trapdoor information for a TOWF: Alice can simply apply the TOWF to a randomly generated key and send the output to Bob. Bob can then use the trapdoor information to invert the output and obtain the key.  
+A Trapdoor One-Way Function (TOWF) is a function that is easy for anyone to compute in one direction, but is hard to compute in reverse without some additional piece of information. TOWFs are useful for cryptography, because they make constructing various public key primitives a relatively straightforward exercise.
 
-The Learning-With-Errors (LWE) problem is a mathematical problem that is believed to be difficult to solve efficiently even with a quantum computer. 
+The Learning-With-Errors (LWE) problem is a mathematical problem that is believed to be difficult to solve efficiently even with a quantum computer. A 1-dimensional LWE problem takes the form $a s + e \mod P$, where $a, P$ are known and $s, e$ are secret, random values.
 
-In this paper we define a candidate TOWF based on 1-dimensional LWE. It is based on a simple observation of a congruence, $pq + e \equiv q + p_i e \mod N$, along with some subtle manipulation of the sizes of the numbers involved.
+In this paper we define a candidate TOWF based on 1-dimensional LWE. It is based on a simple observation of a congruence, $a s + e \equiv s + a^{-1} e \mod P$, along with some subtle manipulation of the sizes of the numbers involved. The trapdoor information is the short inverse $a^{-1}$, which allows the recovery of $s, e$ from a point $a s + e \mod P$, provided some constraints on the sizes of numbers are satisfied.
 
-\section{Definitions}
-We $+$ to denote addition, $a b$ to indicate multiplication, $a / b$ to denote division, and $\mod p$ to denote the modulo operation. We use the function $inverse(k, n)$ to indicate the computation of the modular multiplicative inverse of $k \mod n$. We use the function $random(k)$ to indicate the generation of of a random $k$-bit integer.
+We use the TWOF to construct basic public key algorthims for exchanging keys and creating digital signatures.
+
+\subsection{Definitions}
+We $+$ to denote addition, $a b$ to indicate multiplication, $a / b$ to denote division, and $\mod p$ to denote the modulo operation. We use $\leftarrow$ to indicate the assignment of a value to a name, and $\rightarrow$ to indicate the sending of data from one party to another. We use the function $inverse(k, n)$ to indicate the computation of the modular multiplicative inverse of $k \mod n$. We use the function $random(k)$ to indicate the generation of of a random $k$-bit integer. We write application of the public key operation as $key_{pub}(s,\ e)$, and application of the private key operation as $key_{priv}(c)$.
 
 \section{Algorithm}
-There is a publicly agreed upon modulus $N$. The same $N$ may always be used. It should be prime; It it is not secret, and otherwise only needs to be both agreed upon and large enough. The size of $N$ is determined by the rest of the parameter sizes which are discussed below; In our python implementation which targets a 256-bit security level, $N$ is slightly less then 800 bits in size. The larger $N$ is, the longer the BigNum arithmetic operations take, and the larger ciphertexts become; Consequently, we opt for the smallest $N$ possible.
+There is a publicly agreed upon modulus $P$. All math is done modulo $P$. The same $P$ may always be used. It should be prime; It it is not secret, and otherwise only needs to be both agreed upon and large enough. The size of $P$ is determined by the rest of the parameter sizes which are discussed below; In our python implementation which targets a 256-bit security level, $P$ is slightly less then 800 bits in size. The larger $P$ is, the longer the BigNum arithmetic operations take, and the larger ciphertexts become; Consequently, we opt for the smallest $P$ possible.
 
-\subsection{Basic Concept}
-Consider the following function:
-
-\begin{flalign*}
-c := pq + e \mod N
-\end{flalign*}
-
-Given $c, p, N$, we can recover $q, e$ using the following algorithm:
+\subsection{Design Outline}
+Consider the following expression:
 
 \begin{flalign*}
-p_i := inverse(p, N)\\
-t := p_i c \equiv p_i p q + p_i e \equiv q + p_i e \mod N\\
-q := t \mod p_i\\
-t := t - q \\
-e := t / p_i
+c \leftarrow a s + e \mod P
 \end{flalign*}
 
-The step $q := t \mod p_i$ will only function correctly if $q < p_i$ and if $p_i e < N$. We leverage this latter fact to create a trapdoor. We select a suitable $p_i$ that is large enough such that $q < p_i$ and small enough such that $p_i e < N$. Then, we calculate the modular multilicative inverse $p := inverse(p_i, N)$. This number will likely be very large, closer to $N$ in size then to $p_i$. To create a public key, we then encrypt $p$ using a random $r$ to preclude the ability of others to calculate $p_i$. 
-
-The public key provides the ability to compute the forward operation $p q + e \mod N$ because there is no size constraint on $p$ for this operation (as long as $p < N$ anyways). Supplying the inverse of the public key to the inversion algorithm will not produce correct plaintext, because the generated value will be too large. We can witness this via the attempt below:
+Given $c, p, N$, we can recover $s, e$ using the following algorithm:
 
 \begin{flalign*}
-q := random(q_{size})\\
-e := random(e_{size})\\
-c := prq + e \mod N\\
-pr_i := inverse(pr, N)\\
-c_i := c pr_i \mod N\\
-c_i \equiv q + p_i r_i e \mod N\\
+t \leftarrow a^{-1} c\\
+s \leftarrow t \mod a^{-1}\\
+t \leftarrow t - s \\
+e \leftarrow t / a^{-1}
 \end{flalign*}
 
-In the final line $c_i \equiv q + p_i r_i e \mod N$, we can see that the inverse of the public key is too large if $p_i r_i e > N$. While $p_i$ is relatively small, $r_i$ is (most likely) large - Ultimately, the size of $p_i r_i$ is roughly the same as $p r$, and so this alternative perspective of $q + p_i r_i e$ offers no fewer unknown bits to guess then the original $prq + e$ did.
+Where $a^{-1}$ is the output of $inverse(a, P)$.
 
-This is in contrast to the perspective that the holder of $p_i$ has:
+The step $s \leftarrow t \mod a^{-1}$ will only function correctly if $s < a^{-1}$ and if $a^{-1} e < P$. We leverage this latter fact to create the trapdoor: We select a suitable $a^{-1}$ that is large enough such that $s < a^{-1}$ and small enough such that $a^{-1} e < P$. Then, we calculate the modular multilicative inverse $a \leftarrow inverse(a^{-1}, P)$. This number will likely be very large, closer to $P$ in size then to $a^{-1}$. To create a public key, we then encrypt $a$ using a random $r$ to preclude the ability of others to calculate $a^{-1}$. 
+
+The public key provides the ability to compute the forward operation $a s + e \mod P$ because there is no size constraint on $a$ for this operation to function (as long as $a < P$ anyways). Supplying the inverse of the public key to the inversion algorithm will not produce correct plaintext, because the generated value will be too large. We can witness this via the attempt below:
 
 \begin{flalign*}
-q := random(q_{size})\\
-e := random(e_{size})\\
-c := prq + e \mod N\\
-p_i := inverse(p, N)\\
-c_i := c p_i \mod N\\
-c_i \equiv qr + p_i e \mod N
+key_{pub} \leftarrow a r\\
+s \leftarrow random(s_{size})\\
+e \leftarrow random(e_{size})\\
+c \leftarrow key_{pub} s + e\\
+key_{pub}^{-1} \leftarrow inverse(key_{pub}, P)\\
+c_i \leftarrow c key_{pub}^{-1}\\
+c_i \equiv s + a^{-1} r^{-1} e\\
 \end{flalign*}
 
-We can see the difference in the final line $c_i \equiv qr + p_i e \mod N$ from before; While the $r$ variable is still present on the left term, $p_i e < N$ and so the inversion algorithm will work as intended. The presence of the $r$ variable on the left does require that $p_i$ be larger to ensure that $qr < p_i$.
+In the final line $c_i \equiv s + a^{-1} r^{-1} e$, we can see that the inverse of the public key is too large if $a^{-1} r^{-1} e > P$; In such a case, $s + a^{-1} r^{-1} e \mod a^{-1} r^{-1}$ will not yield $s$; While $a^{-1}$ is relatively small, $r^{-1}$ is (most likely) large - Ultimately, the size of $a^{-1} r^{-1}$ is roughly the same as $a r$, and so this alternative perspective of $s + a^{-1} r^{-1} e$ offers no more advantage to recovering $s, e$ as then the original $ars + e$ did.
+
+This is in contrast to the perspective that the holder of $a^{-1}$ has:
+
+\begin{flalign*}
+s \leftarrow random(s_{size})\\
+e \leftarrow random(e_{size})\\
+c \leftarrow key_{pub}s + e\\
+c_i \leftarrow c a^{-1}\\
+c_i \equiv sr + a^{-1} e
+\end{flalign*}
+
+We can see the difference in the final line $c_i \equiv sr + a^{-1} e$ from before; While the $r$ variable is still present on the left term, $a^{-1} e < N$ and so $sr + a^{-1} e \mod a^{-1}$ will yield $sr$ and the inversion algorithm will work as intended. The presence of the $r$ variable on the left does require that $a^{-1}$ be larger to ensure that $sr < a^{-1}$.
 
 \subsection{Key Generation}
 \begin{flalign*}
-k_{priv} := random(priv_{size})\\
-p := inverse(k_{priv}, N)\\
-r := random(r_{size})\\
-k_{pub} := p r \mod N\\
+key_{priv} \leftarrow random(priv_{size})\\
+a \leftarrow inverse(key_{priv}, N)\\
+r \leftarrow random(r_{size})\\
+k_{pub} \leftarrow a r\\
 \end{flalign*}
 
+For the trapdoor to function correctly, $priv_{size}$ must be selected such that $e k_{priv} < P$, as well as $k_{priv} > r s$, where $s, e$ are the security parameters of the public key operation. For 256-bit $e, r, s$ values, $priv_{size}$ is 520 bits, while $P$ is 783 bits.
 
-$priv_{size}$ must be selected such that $e k_{priv} < N$, as well as $k_{priv} > r q$, where $q, e$ are the security parameter of the public key operation and shared secret. For 256-bit $e, r, q$ values, $priv_{size}$ is 520 bits, while $N$ is slightly less then 800 bits.
+\subsection{Public Key Operation}
+\begin{flalign*}
+a \leftarrow key_{pub}\\
+s \leftarrow random(s_{size})\\
+e \leftarrow random(e_{size})\\
+c \leftarrow a s + e\\
+\end{flalign*}
 
-\subsection{Exchanging Keys}
-To exchange a secret key: multiply the public key $p$ by a random value $q$, then add a random value $e$ to the result modulo $N$. The shared secret will be either $q$ or $e$ (or some combination of the two); We discuss the implications of the choices later. We default to using $e$ as the secret, as it is slightly less complex.
+\subsection{Private Key Operation}
 
 \begin{flalign*}
-p := key_{pub}\\
-q := random(q_{size})\\
-e := random(e_{size})\\
-ciphertext := p q + e \mod N\\
+t \leftarrow a^{-1} c\\
+sr \leftarrow t \mod a^{-1}\\
+t \leftarrow t - sr\\
+s \leftarrow sr r^{-1}\\
+e \leftarrow t a\\
+output\ s,\ e
 \end{flalign*}
 
-\subsection{Key Recovery}
-The shared secret $e$ (or $q$ or both) can be recover from the ciphertext via the following algorithm:
-
-\begin{flalign*}
-p_i := key_{priv}\\
-t := ciphertext * p_i \mod N\\
-q := t \mod p_i\\
-t := t - q\\
-e := t / pi\\
-q := q / r
-\end{flalign*}
-
-\subsubsection{Processing the Secret}
-The secret should be processed before use a key. Ideally, HKDF should be used; If it is not available, a simple hash function applied to the secret should be sufficient.
+Either $s, e$ or a combination of both may be used in different contexts to achieve different effects.
 
 \subsection{Homomorphism}
-In addition to the ability to add ciphertexts together, ciphertexts can be multiplied by plaintext values, and plaintext values can be added to ciphertexts. This second property follows naturally from the ability to add ciphertexts together. The third property is a result of the fact that $e$ is attached to the ciphertext by simple addition. In the following examples, $c_i$ are ciphertexts, while $1, 2$ are plaintext integers.
-
-\begin{flalign*}
-c_3 := c_1 + c_2\\
-c_4 := c_3 + 1\\
-c_5 := 2 c_4 
-\end{flalign*}
+Two ciphertexts of the form $a s + e$ may be added together to yield $a (s_1 + s_2) + e_1 + e_2$. 
+Ciphertexts may be multiplied by plaintext scalars - this follows from the previous property, as $c + c \equiv 2c$.
+Additionally, adjustments may be made to the value of $e$ via addition/subtraction with a plaintext scalar: $a s + e + r$.
 
 It should be noted that multiplication will quickly increase the size of the terms in the expressions, and if the size of the terms grows too large, decryption will fail.
 
-\subsubsection{$q$ and Anti-Malleability}
-If $q$ is used as the secret instead of $e$, then the ability to add plaintext values to ciphertexts disappears. The value of $e$ will not influence $q$, and manipulations of the ciphertext less then a certain magnitude will not modify the plaintext obtained upon decryption. This is in stark contrast to the more common Non-Malleability, where modification of the ciphertext will usually modify the corresponding plaintext to a meaningless value.
+\section{Key Exchange and Digital Signatures}
+\subsection{Key Exchange}
+Given a TWOF, a basic algorithm to exchange keys can be constructed as follows: Assuming that Alice has Bob's public key already, she simply applies the public key operation to a random value and sends the result to Bob; Bob can then use the private key to recover the random value. Assuming that both parties are honest, then the random value will be unknown to all parties but Alice and Bob, and they can use this information to construct a secured communications channel.
+
+The basic mechanism presented in this section is not sufficient for constructing a general purpose secure communications protocol - for example, authentication is not addressed. The construction of such protocols is outside of the scope of this paper. 
+
+\subsection{Digital Signatures}
+A TWOF can serve as a fundamental part of a digital signature scheme: The private key operation can be used to produce a preimage for a given ciphertext, and the corresponding public key can be used to check if the preimage outputs the challenge ciphertext. 
+
+We note that ciphertexts produced by the TWOF are additively homomorphic - this means that signatures will possess this quality as well. This feature can be removed by signing a hash of the message instead of the message itself.
 
 \section{Security Analysis}
 There are two main goals: First, given the public key, the private key must not be obtainable; Second, The output of the public key operation must not be invertible without the private key.
 
+There is a third goal that is only applicable in the context of digital signatures: The output of the private key operation must not leak the private key. This goal is not applicable in the context of key exchange, because the adversary does not see the output of the private key operation.
+
 \subsection{Key Generation}
-It would appear that obtaining the private key from the public key must be done by guessing one of $p, p_i, r$. If this were not the case, then whatever algorithm that can be used to recover any of $p, p_i, r$ from $p r \mod N$ could be used to recover plaintexts from ciphertexts of the form $m k \mod N$ for random $m, k$ where one of $m, k$ is smaller then the other (but still large enough to reduce modulo $N$). It seems unlikely that such an attack exists and is faster then guessing $p, p_i,  r$. 
+It would appear that obtaining the private key from the public key must be done by guessing one of $a, a^{-1}, r$. If this were not the case, then whatever algorithm that can be used to recover any of $a, a^{-1}, r$ from $a r \mod P$ could be used to recover plaintexts from ciphertexts of the form $m k \mod P$ for random $m, k$ where one of $m, k$ is smaller then the other (but still large enough to reduce modulo $P$). It seems unlikely that such an attack exists and is faster then guessing $a, a^{-1},  r$. 
 
 This implies that there does not exist an algorithm to recover the private key from the public key, other then brute force guessing.
 
 \subsection{Public Key Operation}
 The public key operation appears to be a 1-dimensional version of the learning-with-errors problem.\\
 
-If we consider the case where $pr = 1$, then $prq + e \equiv q + e \mod P$ for uniformly random values $q, e$. 
+If we consider the case where $ar = 1$, then $ars + e \equiv s + e \mod P$ for uniformly random values $s, e$. 
+
+\subsection{Private Key Operation}
+Utilizing the TWOF here as a signature function does not provide the same confidence as using the TWOF for key exchange: With the private key operation, the expressions do not take the form of the LWE problem. Despite this, it is not obvious to us how to take advantage of this fact to recover the private key.
 
 \subsection{Side Channel Analysis}
 Assuming that BigNum operations can be implemented in a manner that does not leak timing information, it appears that a naive implementation of the algorithm is resistant to timing side channel analysis, as there are no tables or branches in the algorithm.
 
 \section{Metrics}
-Using our public domain python implementation that is configured for a 256-bit security level, we can perform 10,000 public key operations in slightly under 1 second. It requires .3 seconds to perform 10,000 private key operations, which implies that roughly 30,000 private key operations per second can be performed on very modest hardware. Our tests were performed on an Intel Celeron N2830 2.16GHz with 2 cores. 
+Using our public domain python implementation that is configured for a 256-bit security level, we can perform 10,000 public key operations in slightly under 1 second. We can perform roughly 30,000 private key operations per second. Our tests were performed on modest hardware, namely an Intel Celeron N2830 2.16GHz with 2 cores. 
 
-In our implementation, most of the time for the public key operation is spent generating $q$ and $e$. In a synthetic test where $q, e$ are not generated for each invocation of the function, we can perform 100,000 public key operations per second.
+In our implementation, most of the time for the public key operation is spent generating $s$ and $e$. In a synthetic test where $s, e$ are not generated for each invocation of the function, we can perform 100,000 public key operations per second.
 
-Our implementation is optimized for readability. Much of the computation time is spent on bignum operations, and while an optimized C implementation may certainly be faster, it is not required to obtain an acceptable level of performance. 
+Our implementation is optimized for readability. Much of the computation time is spent on bignum operations, and while an optimized C implementation may certainly be faster, it is not required to obtain an acceptable level of performance in the context of hybrid cryptosystems. 
 
 \subsection{Implementation Complexity}
 The implementation complexity of the scheme is very low. Our public domain python implementation of the algorithm spans barely 100 lines, including the documentation and comments.\\
@@ -213,6 +190,6 @@ The implementation complexity of the scheme is very low. Our public domain pytho
 Additional code is required for supporting functions such as the generation of prime numbers (only if $N$ is being generated/not already established) and unit testing. These are modest requirements that can be implemented without much complexity. \\
 
 \section{Conclusion}
-We define a conceptually simple, resource-practical Trapdoor One-Way Function and key exchange algorithm. 
+We define a conceptually simple, resource-practical Trapdoor One-Way Function. 
 \end{document}
 
