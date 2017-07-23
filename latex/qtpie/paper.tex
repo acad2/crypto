@@ -36,13 +36,6 @@
 
 \todototoc
 \listoftodos
-You are missing all the non fake signature etc.
-
-You should use the environment algorithm to write your algorithm. It is difficult to understand as is.
-
-Addition over what field ? Etc for the rest. (edited)
-
-What key sizes? Why k private is 520 bits ?
 
 How does all this compares to others methods ?
 
@@ -115,7 +108,7 @@ r \leftarrow random(r_{size})\\
 k_{pub} \leftarrow a r\\
 \end{flalign*}
 
-For the trapdoor to function correctly, $priv_{size}$ must be selected such that $e k_{priv} < P$, as well as $k_{priv} > r s$, where $s, e$ are the security parameters of the public key operation. For 256-bit $e, r, s$ values, $priv_{size}$ is 520 bits, while $P$ is 783 bits.
+For the trapdoor to function correctly, $priv_{size}$ must be selected such that $e k_{priv} < P$, as well as $k_{priv} > r s$, where $s, e$ are the security parameters of the public key operation. For 256-bit $e, r, s$ values, $priv_{size}$ is 520 bits, while $P$ is 783 bits. The size of the modulus effectively determines the size of the public key; This results in a public key size of 783 bits, for the aforementioned parameters.
 
 \subsection{Public Key Operation}
 \begin{flalign*}
@@ -136,18 +129,20 @@ e \leftarrow t a\\
 output\ s,\ e
 \end{flalign*}
 
-Either $s, e$ or a combination of both may be used in different contexts to achieve different effects.
+The private key operation presented here is slightly more complex than the example demonstrated earlier because of the presence of the $r$ term. Either $s, e$ or a combination of both may be used in different contexts to achieve different effects.
 
 \subsection{Homomorphism}
-Two ciphertexts of the form $a s + e$ may be added together to yield $a (s_1 + s_2) + e_1 + e_2$. 
+Ciphertexts support integer addition: Two ciphertexts of the form $a s + e$ may be added together to yield $a (s_1 + s_2) + e_1 + e_2$. 
+
 Ciphertexts may be multiplied by plaintext scalars - this follows from the previous property, as $c + c \equiv 2c$.
+
 Additionally, adjustments may be made to the value of $e$ via addition/subtraction with a plaintext scalar: $a s + e + r$.
 
 It should be noted that multiplication will quickly increase the size of the terms in the expressions, and if the size of the terms grows too large, decryption will fail.
 
 \section{Key Encapsulation, Public Key Encryption, and Digital Signatures}
 \subsection{Key Encapsulation}
-Given a TWOF, a basic algorithm to exchange keys can be constructed as follows: Assuming that Alice has Bob's public key already, she simply applies the public key operation to a random value and sends the result to Bob; Bob can then use the private key to recover the random value. Assuming that both parties are honest, then the random value will be unknown to all parties but Alice and Bob, and they can use this information to construct a secured communications channel.
+Given a TWOF, a basic algorithm to exchange keys can be constructed as follows: Assuming that Alice has Bob's public key already, she simply applies the public key operation to a random value and sends the output to Bob; Bob can then use the private key to recover the random value. Assuming that both parties are honest, then the random value will be unknown to all parties but Alice and Bob, and they can use this information to construct a secured communications channel.
 
 The basic mechanism presented in this section is not sufficient for constructing a general purpose secure communications protocol - for example, authentication is not addressed. The construction of such protocols is outside of the scope of this paper. 
 
@@ -180,7 +175,7 @@ We will first consider the case where $e \leftarrow random(1)$. The task of the 
 
 If we consider the case where $a = 1$, then $a s + e \equiv s + e \mod P$ for uniformly random values $s, e$. Recovering $s,\ e$ in this situation is clearly intractable.
 
-If we consider 8-bit $a, s$ values and $P = 257$, then we can evaluate the function $a x$ on values $\{0,\dots,\ 256\}$ and produce an 8-bit s-box, like the kind used in symmetric cryptography. We can then analyze the result with the same techniques and tools. We have done so and found differentials ranging from probability $62/256$ in the worst case, to around $64/256$ in the average case, to $254/256$ in the worst case. However, considering that each ciphertext $a s + e$ uses a unique, random $s$, it is not clear how to select a differential to try to exploit. Additionally, real instances of the problem will use $a,\ s$ values that are much larger then any tool for analyzing s-boxes can handle.
+If we consider 8-bit $a, s$ values and $P = 257$, then we can evaluate the function $a s$ on values $\{0,\dots,\ 256\}$ and produce an 8-bit s-box, like the kind used in symmetric cryptography. We can then analyze the result with the same techniques and tools. We have done so and found differentials ranging from probability $62/256$ in the worst case, to around $64/256$ in the average case, to $254/256$ in the worst case. However, considering that each ciphertext $a s + e$ uses a unique, random $s$, it is not clear how to select a differential to try to exploit. Additionally, real instances of the problem will use $a,\ s$ values that are much larger then any tool for analyzing s-boxes can handle.
 
 \subsection{Private Key Operation}
 Utilizing the TWOF here as a signature function does not provide the same confidence as using the TWOF for key exchange: With the private key operation, the expressions do not take the form of the LWE problem. Despite this, it is not obvious to us how to take advantage of this fact to recover the private key.
@@ -189,14 +184,18 @@ Utilizing the TWOF here as a signature function does not provide the same confid
 Assuming that BigNum operations can be implemented in a manner that does not leak timing information, it appears that a naive implementation of the algorithm is resistant to timing side channel analysis, as there are no tables or branches in the algorithm.
 
 \section{Metrics}
-Using our public domain python implementation that is configured for a 256-bit security level, we can perform 10,000 public key operations in 1 second. We can perform roughly 30,000 private key operations per second. Our tests were performed on modest hardware, namely an Intel Celeron N2830 2.16GHz with 2 cores. 
+We have implemented the trapdoor and developed a key encapsulation mechanism with it. Using our open-source public-domain python implementation that is configured for a 256-bit security level, we can perform 10,000 public key operations in 1 second. We can perform roughly 30,000 private key operations per second. Our tests were performed on modest hardware, namely an Intel Celeron N2830 2.16GHz with 2 cores. 
 
 In our implementation, most of the time for the public key operation is spent generating $s$ and $e$. In a synthetic test where $s, e$ are not generated for each invocation of the function, we can perform 100,000 public key operations per second.
 
-Our implementation is optimized for readability. Much of the computation time is spent on bignum operations, and while an optimized C implementation may certainly be faster, it is not required to obtain an acceptable level of performance in the context of hybrid cryptosystems. 
+Key sizes and ciphertext sizes are relatively small - ciphertexts and public keys are effectively the same size as the modulus; In our implementation, ciphertexts and public keys are about 783 bits in size.
+
+Private keys are also quite small, with certain time/space tradeoffs available: In the most compact scenario for key encapsulation, the private key can require only 520 bits for storage, used to store only the short inverse $a^{-1}$. In the worst case scenario, where each of $a,\ a^{-1},\ r$ is stored, the private key size requires slightly less then 1600 bits of storage space. 
+
+Our implementation is optimized for clarity and readability. Much of the computation time is spent on bignum operations, and while an optimized C implementation may certainly be faster, it is not required to obtain an acceptable level of performance in the context of hybrid cryptosystems. 
 
 \section{Open Problems}
-Our results are lacking in rigorous proof; We do not posses the requisite skills to create such proofs. We leave it as an open problem to formally prove (or dis-prove) the security of the key generation function and public key operation.
+Our results are lacking in formal rigorous proof; We do not posses the requisite skills to create such proofs. We leave it as an open problem to formally prove or dis-prove the security of the key generation function and public key operation.
 
 We do not know if the private key operation can be proven secure; We leave this as an open problem, along with the construction of a concrete digital signature scheme.
 
