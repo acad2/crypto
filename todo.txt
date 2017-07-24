@@ -1,0 +1,380 @@
+    
+random notes
+----------    
+# the most generic cipher is a gigantic fisher yates shuffle of all n-bit blocks
+# for example, for a 4 bit cipher, there are 2 ** 4 = 16 different possible message blocks
+# encryption would be as follows:
+#   prepare a list containing each possible message block (for example: [0, 1, 2, ..., 14, 15])
+#   shuffle the list according to the key (a psuedo random permutation of the list)
+#   find your message in the list and output its location as the ciphertext
+#
+# decryption would be:
+#   perform the list shuffle again
+#   check for the index that the ciphertext block is moved back to
+#   output that block/index as the plaintext
+
+# or
+# encryption:
+#   apply a one-to-one first-preimage resistant function to the message to produce an ciphertext block
+
+# decryption:
+#   apply the inverse of function used during encryption
+
+
+
+# keyed, one-to-one, first preimage resistant function
+#   - second preimages and collisions not possible, because it is one-to-one/not compressing
+# hard to find input, given output
+# hard to find key, given only output
+
+# find some other key that happens to produce the inverse mapping to the first key
+# find some function that allows to find such a key faster then brute force
+#   - but only if you have certain information
+
+    
+    
+    
+# for successive p_i where next_p >= this_p ** 2
+# each p is a basis for a lattice
+# + is the superposition operator (point(s) + point(s))
+# * selects a point on the lattice (basis * point)
+# modulo (aka "mod" and "%") removes the modulo-d basis from the superposition (superposition_of_points % basis)
+# - (subtraction) removes some point(s) from the superposition (superposition_of_points - point(s))
+# / (division) determines the point on the lattice (point / basis) ((p * q) / p == q)
+
+# i.e.:
+#   (p1 * q1) + (p2 * q2)
+# q1 is a point on the p1 lattice
+# q2 is a point on the p2 lattice
+# the two are joined via the addition operator into a superposition of state
+# while in this superposition, they may be manipulated independently as well as simultaneously
+# points can be removed from the superposition if the basis are known
+# it is simply a matter of performing superposition_of_points modulo basis
+# i.e.:
+#   ((p1 * q1) + (p2 * q2)) mod p1 == p2 * q2   # modulo removes p1 * q1 from the equation
+#   ((p1 * q1) + (p2 * q2)) - (p2 * q2) == p1 * q1  # subtraction removes the previously acquired p2 * q2 from the superposition
+# 
+# modulo only requires a lattice basis (p)
+# while subtraction requires some point on the lattice (p * q)
+#   - or a superposition of points (p1 * q1 + p2 * q2 + ...)
+
+# elements may be manipulated individually by using the basis to address to element
+# for example:
+#   q1 := 10
+#   state := (p1 * q1) + (p2 * q2)
+#   state += (p1 * 2) # increments the point on the p1 lattice by 2
+#   state %= p2 # removes p2 from state
+#   state /= p1 # recovers q1 from state
+#   state == 12
+
+
+
+# p1 m1 + p2 mac(m1)
+
+
+Given $p1, p2$ and a sum $sum := p_1 q_1 + p_2 q_2$, how hard is it to recover any of: $q_1, q_2, q_1 + q_2$
+    - $p1, p2$ are approximately the same size in bits 
+    - $p1, p2$ are psuedorandom values, while $q_1 and q_2$ are independently generated random values
+    
+Right now, the size of each $p_i$ is about 1060 bits. 
+The size of each $q_i$ is 256 bits.    
+    - The $q_i$ may need to be a lot larger then then $p_i$; But until I understand why, I do not know what else to set it to
+
+    
+if p1q1 + p2q2 is easy to invert, then we can create ciphertexts that take the form of plaintext
+if p1q1 + p2q2 is hard to invert, then we use it for public key crypto
+
+
+# subset sum problem
+# 2 elements are summed from a huge set
+# from: https://en.wikipedia.org/wiki/Subset_sum_problem
+#> If N (the number of variables) is small, then an exhaustive search for the solution is practical. If P (the number of place values) is a small fixed number, then there are dynamic programming algorithms that can solve it exactly.
+#
+# huge set size makes exhaustive search impractical
+# huge set is generated via multiplication of large numbers
+#   - results in large sum of varying size
+  
+  
+  
+  
+modular stuff
+----
+# if p == n - 1, then p == modular_inverse(p, n)
+# also, p == n - 1 is not vulnerable to gcd
+# x * (n - 1) mod n reverses the set of elements  0, 1, 2, ... n
+
+# x * y mod n
+# produces pairs that add up to n at opposite ends
+# n = 10
+# x = 7
+# [(x * count) % n for count in range(n)]
+# [0, 7, 4, 1, 8, 5, 2, 9, 6, 3]
+#     7                       3
+#        4                 6
+#          1            9
+#              8     2
+#                 5
+# each pair sums to n (10)
+# (except for the 5 in the middle which is not present when n is odd)
+# the difference between each successive point is equal to the difference between x and n
+# 
+# gcd(p1, p2) == (n - x if x < n) else x
+
+# (x * (n - y)) mod n == y(n - x) mod n
+# (x * (n + y)) mod n == y(n + x) mod n
+# (x * (n * y)) mod n == y * n * x mod n
+
+# x * (n - 1) mod n is equivalent to n - x
+# x * (n - 2) mod n is equivalent to 2n - 2x
+# x * (n - y) mod n is equivalent to yn - yx
+# x * (n + y) mod n is equivalent to yn + yx
+
+# additive inverse of x mod n == x * (n - 1) mod n            x + y == 0
+# multiplicative inverse of x mod n == (x ** (n - 2)) mod n   x * y == 1
+# exponential inverse of x mod n == tetrate(x, n - 1) mod n   x ** y == 1
+#   - incorrect?
+#   tetrate(x, n - 1, n) yields either 1 or x
+#       - yields 1 if x is even
+#       - yields x is x is odd
+
+# x * x_i (n - x) (n - x_i)  
+
+
+# key swap algorithm
+# swaps the keys used on c1 and c2
+# keys also swap polarity and become the inverse
+# c1 := kn + kx
+# c2 := k2n + k2y
+# c3 = c1 + c2
+# c4a = (c3 * modular_inverse(k, n)
+
+
+# kn + kx + k2n + k2y
+# ki(kn + kx + k2n + k2y)
+# n + x + kik2n + kik2y
+# k2i(n + x + k1k2n + k1k2y)
+
+# k2in + k2ix + k1in + k1iy
+
+
+
+
+(k1 * r1) + m1
+k2 * hash(m1)
+
+
+# how to take the remainder when doing modulo?
+# i.e. pq + e mod n
+# pi(pq + e) == q + pie
+# (pq + e) - (q + pie) == (p1q + e) - (1q + pie)
+# (p1 - 1)q - (e - pie)
+
+
+# pq
+
+
+
+
+
+
+
+k * m mod P creates a permutation of P elements
+
+[(k * m) % P for m in range(P)]
+
+0 is a fixed point
+
+[0, 1, 2, 3, 4]
+[0, 3, 1, 4, 2] # k = 3
+
+if a random ordering of set(range(P)) is shuffled by k, can k be determined, given only the shuffled set?
+
+[0, 3, 1, 4, 2] # a "random" ordering
+[0, 4, 3, 2, 1] # after shuffling according to k = 3
+
+[0, 1, 2, 3, 4] # a "random" ordering
+[0, 4, 3, 2, 1] # after shuffling according to k = 5
+
+Multiple k could have produced the shuffled set.
+Each possible value of k could have produced the shuffled set, and each has a corresponding initial ordering.
+If the initial ordering can be guessed with any probability better then random, then the design will leak key information.
+
+The initial ordering is produced by (k2 * r) + m % P, which is at most equal to P - 1
+Assuming m is constant, the distribution is determined by k2: k2 will be the difference between two successive items
+
+The distribution is determined by (k * k2 * i) % P for i in range(P)
+The difference between successive i is equivalent to k * k2
+i are not generated in order; they are drawn randomly from the available space
+
+generate many encryptions of 0
+take the difference between many pairs
+compute gcd of many such differences
+compute gcd of gcds
+factor obtained element to obtain k2
+use k2 to learn initial ordering
+use knowledge of initial ordering to recover k
+ 
+
+    
+    
+    
+    
+visual cryptography slider puzzle
+a 2-d NxN slider puzzle, where the image only appears when the correct tiles are superimposed
+
+
+adder that works big end to small end instead of small end to big end
+
+
+
+
+
+# "local" keyring
+# feed password to key derivation function to obtain master key
+# per device:
+#   + create random keys for device
+#   + encrypt device keys with master key when not in use
+
+
+# authentication tokens
+# !generate random strings on device and encrypt/decrypt via master password
+#   + good for authentication security
+#   - lost device -> lost ability to authenticate
+# !store encrypted authentication token in decentralized network
+#   + access authentication tokens from any device
+#   - encrypted tokens are public knowledge and only protected by a password
+#       - an integrity mechanism on the encrypted token could be used a password verifier by an adversary
+
+# "global" keys
+# store encrypted master keys in decentralized network
+#   + encrypt keys using master password and per device token
+#      + password still protects keys even if a device is compromised
+#           ! could password protect device token, so that even if device is compromised device token is secure as password
+#               - but then adversary can verify password with only the compromised device
+#               + could use additional per-device password to protect device token
+#      + device token protects keys even if password is compromised
+#   - must download keys anonymously to avoid association of a user with a set of encrypted keys
+#       - negative point because it takes time, and could be complicated to implement successfully in practice
+#       - If this is not done, it is obvious what device a set of keys belongs to
+#   + adversary cannot test password guesses unless they compromise users device AND know which keys are associated with the device
+#       - If a device is compromised, then adversary can test password guesses...
+#           + ... *if* they know which set of encrypted keys belongs to the targeted user
+#               -> keys are downloaded anonymously
+#                   -> adversary does not know which set of encrypted keys belongs to targeted user
+#                       -> adversary cannot test password guesses
+#   -> To test a guessed password, the adversary must:
+#       -> de-anonymize traffic to find the associated set of encrypted keys to obtain the password verifier
+#           -> compromise the device associated with that particular set of keys to obtain the device token
+#               -> Then they may begin to guess the users password
+
+
+# when a new authentication token for a service is needed: create a random 32 character password and store it on the device
+# + no additional password to remember
+# + secure against cracking without the need for slow hashing
+# + store encrypted on device when not in use
+#   -> crypto provider options: master password, device password, device token, device password + token, master password + device password + device token
+# - lost device -> lost ability to authenticate to service
+#    -> Cancel old device token and register new token 
+#        + this is better UX then a password change -> only have to remember master password
+#            - master password is hashed very slowly -> it takes real time before a new password can be generated
+
+
+
+# two types of storage: password protected, and device protected
+# 
+# !'master' 'global' key derived using very, very slow (salted) hash
+#   - as in minutes or hours or days slow
+#       - master password is weakest link and difficult to keep secure for *long* periods of time 
+#           -> must have practical method for changing master password
+#   + not bound to any particular device
+#   -> can store 
+#       -> can use it to set up authentication token 
+#           + per device secret authentication token = very fast + secure
+
+
+
+
+
+
+# store public signing key with server
+# to login: sign something and send to server
+# server validates signature with public key
+# !share one public signing key with many servers
+#   + one keypair for all services
+
+
+# distribute public signing key to key registration service
+# pre-distribute public key of key registration service to all users
+# to authenticate to a service/peer:
+#   
+
+
+
+# device security
+# password -> derive master key(s)
+#   -> encryption, MAC keys
+#   ? asymmetric keys?
+#       -> everyone will have public key -> everyone will have password verifier
+#           !unless you can randomize the public key
+#           - keygen generates the private key
+#     - just store a "real" keypair encrypted using the password
+# generate device keys
+# -> encryptions, MAC keys
+#   -> use master keys to protect these when not in use
+#   + on password change: re-encrypt device keys under new master key
+
+# network storage
+# -> guarantees only integrity of data (stores hash(data):data pairs)
+# -> must store sensitive content encrypted
+#   - if you encrypt using the device key (more secure), then losing device means losing the data
+#       ! could make backups of device key
+#           -> requires network storage for true reliability
+#           -> store key encrypted in network
+#               -> must use password to encrypt key
+#   - must encrypt using password to ensure availability of data
+#      - Integrity mechanisms on data can be used as a password verifier
+# solution: very slow key derivation function
+#   - as in minutes or hours or days slow
+#   + can store a "shortcut" on the device that allows to compute the result in significantly less time then with the password alone
+#       -> apply key derivation function for total - shortcut size iterations and store intermediate result; 
+#       -> continue computing password hash
+#       -> can start hashing with only shortcut iterations left in the future
+#           ! requires that the full password be required even with the shortcut
+#               i.e. hash(password || shortcut)
+#   + shortcut can also act as device identifier
+#   - "registering" a new device (computing the hash without the shortcut) takes a long time
+#   + adversary with device must guess password for remaining iterations
+#       + if iterations are sufficient, then adversary is in same position were the shortcut not in play at all
+#       + adversary cannot precompute without shortcut 
+#   - salt must be available to all devices
+#       -> implies network storage
+#           !salt should be stored without association to user/device
+#               -> implies confidential/anonymous retrieval of salt
+
+
+
+
+
+
+
+                                                /--- random walks --- DH/DL ---------\
+                                               /    |key      |                       > --- Signatures
+                           /--- asymmetric ---<     |agreement|   /---RSA/Factoring  /     /  /
+            /--linear-----<                    \--- trapdoors ---< -----------------/     ?  !
+cryptography               \                    \    |pke|        \---EPQ/LWE            /  /
+          \                 \                    >--- pke schemes -?-?-?-?-?-?-?-?-?-?-??  !
+           \                 \--- symmetric ----/                                         /
+            \                                                                            !
+             \--non-linear ---- < --- permutation --- keyed prp                         /
+                                 \      |     \                                        !
+                                  \     |      \-------- SPN blockcipher              /
+                                   \  sponge             |block ciphers|             !
+                                    \     \         /--- Feistel Network            /
+                                     \     \       /                               !
+                                      \--- prf ---<                 /-!-!-!-!-!-!-/
+                                                   \--- hashing ---<
+                                                                    \--- keyed MAC
+                                                                                
+chess as a one way function
+given a board configuration, it appears hard to find the sequence of moves that resulted in the configuration                                                                    
+
