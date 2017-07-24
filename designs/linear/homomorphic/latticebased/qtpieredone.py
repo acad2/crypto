@@ -2,7 +2,7 @@ from crypto.utilities import random_integer, modular_inverse, big_prime
 
 P = big_prime(130)#90539821999601667010016498433538092350601848065509335050382778168697877622963864208930434463149476126948597274673237394102007067278620641565896411613073030816577188842779580374266789048335983054644275218968175557708746520394332802669663
 
-POINT_COUNT = 5
+#POINT_COUNT = 5
 
 def calculate_parameter_sizes(security_level):
     """ usage: calculate_parameters_sizes(security_level) => short_inverse size, r size, s size, e size, P size
