@@ -1,33 +1,35 @@
-from crypto.utilities import random_integer, modular_inverse, big_prime
+from epqcrypto.utilities import random_integer, modular_inverse
 
-P = big_prime(130)
+P = (2 ** 772) - 545
+
+POINT_COUNT = 4
 
 def calculate_parameter_sizes(security_level):
     """ usage: calculate_parameters_sizes(security_level) => short_inverse size, r size, s size, e size, P size
     
         Given a target security level, designated in bytes, return appropriate parameter sizes for instantiating the trapdoor. """
-    short_inverse_size = (security_level * 2) + 1
+    short_inverse_size = (security_level * 2)
     p_size = short_inverse_size + security_level + 1
     return short_inverse_size, security_level, security_level, security_level, p_size
     
-def generate_private_key(short_inverse_size=65, p=P):
+def generate_private_key(short_inverse_size=64, p=P):
     """ usage: generate_private_key(short_inverse_size=65, p=P) => private_key
     
         Returns 1 integer, suitable for use as a private key. """
-    short_inverse = random_integer(short_inverse_size)       
-    a = modular_inverse(short_inverse, p)
-    b = random_integer(32)
-    c = random_integer(32)    
-    return short_inverse, a, b, c
+    short_inverse = (random_integer(short_inverse_size) << 1) | (random_integer(1) & 1)
+    return short_inverse
     
-def generate_public_key(private_key, r_size=32, p=P): 
+def generate_public_key(private_key, r_size=32, p=P, point_count=POINT_COUNT): 
     """ usage: generate_public_key(private_key, r_size=32, p=P) => public_key
     
         Returns 1 integer, suitable for use as a public key. """
-    ai, a, b, c = private_key
-    public_key = ((a * b) + c) % p    
+    random_number = modular_inverse(private_key, p) # selects a random integer with an appropriate sized inverse by selecting the inverse first
+    public_key = []
+    for count in range(point_count):
+        point = (random_number * (random_integer(r_size) >> 1)) % p            
+        public_key.append(point)
     return public_key
-        
+    
 def generate_keypair():
     """ usage: generate_keypair() => public_key, private_key
     
@@ -36,28 +38,28 @@ def generate_keypair():
     public_key = generate_public_key(private_key)
     return public_key, private_key
     
-def exchange_key(public_key, s_size=32, e_size=64, p=P): 
+def exchange_key(public_key, s_size=32, e_size=32, p=P): 
     """ usage: exchange_key(public_key, s_size=32, e_size=32, p=P) => ciphertext, secret
     
-        Returns a ciphertext and a shared secret.
-        The ciphertext should be delivered to the holder of the associated private key, so that they may recover the shared secret. """
-    s = random_integer(s_size)  
-    ciphertext = (public_key * s) + random_integer(e_size)
-    return ciphertext % p, s
-    
+        Returns a compressed ciphertext and a shared secret.
+        The ciphertext should be delivered to the holder of the associated private key, so that they may recover the shared secret. """    
+    c = 0
+    for element in public_key:
+        c += element * random_integer(s_size)
+        
+    c_high = c >> 772
+    c = (c + c_high + (c_high << 5) + (c_high << 9)) % (2 ** 772)
+    e = (-c) % (2 ** 256)
+    c = (c >> 256) + 1    
+    return c, e
+        
 def recover_key(ciphertext, private_key, p=P):
     """ usage: recover_key(ciphertext, private_key, p=P) => secret
     
         Returns a shared secret in the form of a random integer. """
-    # r(ab + c) + e
-    # rab + rc + e
-    # rb + airc + aie
-    # rb + ai(cr + e)    # 32 + 32    65 + 64 + 1 
-    #                    # 16 + 32    49 + 64 + 1     114
-    ai, a, b, c = private_key
-    rb_aicr_e = (ai * ciphertext) % p
-    rb = rb_aicr_e % ai
-    return rb / b    
+    short_inverse = private_key
+    sie_q = (short_inverse * ciphertext * (2 ** 256)) % p
+    return sie_q / short_inverse  
     
 def hash_public_key(hash_function, public_key):
     """ usage: hash_public_key(hash_function, public_key) => public_key_fingerprint
