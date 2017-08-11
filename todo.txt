@@ -378,3 +378,28 @@ cryptography               \                    \    |pke|        \---EPQ/LWE   
 chess as a one way function
 given a board configuration, it appears hard to find the sequence of moves that resulted in the configuration                                                                    
 
+
+
+# password hashing
+# goal: large latency when processing hash, regardless of number of available parallelism or computing power
+# problems: Adversary has significantly better funding + hardware then honest users
+# usual solution: 
+#   - Design an algorithm that runs at optimal efficiency on a general purpose CPU
+#       - now specialized hardware provides no real advantage
+#           - for *now*, specialized hardware may provide smaller advantage
+#               - but the password need to be secure for the future, not just now
+#       - assuming there exists a algorithm that runs optimally on a general purpose CPU...
+#           - the adversaries CPU clock still runs much faster then an honest users does
+# other souces of latency:
+#   - network latency
+#       - only usable if adversary does not have access to password verifier
+#       ! authentication beacon, that collects 
+
+
+
+
+#a^x + b^y = c^z
+#ax + by = cz
+#a + a + a + ... + a + b + b + b + ... + b = c + c + c + ... + c
+
+#
