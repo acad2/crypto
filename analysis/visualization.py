@@ -41,6 +41,11 @@ def print_state_4x32_128_as_4x32(inputs, message=''):
         print message
     _print_state(inputs, 32)
     
+def print_state_16x32_as_4x32(inputs, message=''):
+    if message:
+        print message    
+    _print_state(inputs[3::4], 32)
+    
 def print_state_4x32_128_as_8x16(inputs):    
     for word in inputs:
         print '\n'.join(slide(format(word, 'b').zfill(32), 16))
@@ -81,6 +86,9 @@ def test_32x32_function(function, inputs, print_function=print_state_32x32):
 def test_4x32_function(function, inputs, print_function=print_state_4x32_128_as_4x32):
     test_function(function, inputs, print_function)
             
+def test_16x32_function(function, inputs, print_function=print_state_16x32_as_4x32):
+    test_function(function, inputs, print_function)
+    
 def test_8x32_function(function, inputs, print_function=print_state_4x32_128_as_4x32):
     test_function(function, inputs, print_function)
     

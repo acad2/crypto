@@ -403,3 +403,8 @@ given a board configuration, it appears hard to find the sequence of moves that 
 #a + a + a + ... + a + b + b + b + ... + b = c + c + c + ... + c
 
 #
+
+
+
+
+self similar error correcting codes

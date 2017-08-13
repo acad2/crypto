@@ -1,3 +1,19 @@
+#a + b
+#sa + sb + e
+#s + saib + aie
+#ai(bs + e) + s   # what if we use a short inverse for b as well as a?
+
+#ai(bs + e) + s 
+#ai(bx + y) + x
+#ai(b(s + x) + e + y) + s + x
+
+
+
+#a + b + c
+#sa + sb + sc + e
+#s + saib + saic + aie
+#s + ai(bs + cs + e)
+
 from crypto.utilities import random_integer, modular_inverse, big_prime
 
 P = big_prime(50)
@@ -10,14 +26,14 @@ def calculate_parameter_sizes(security_level):
     p_size = short_inverse_size + security_level + 1
     return short_inverse_size, security_level, security_level, security_level, p_size
     
-def generate_private_key(short_inverse_size=24, p=P):
+def generate_private_key(short_inverse_size=17, p=P):
     """ usage: generate_private_key(short_inverse_size=65, p=P) => private_key
     
         Returns 1 integer, suitable for use as a private key. """
     short_inverse = random_integer(short_inverse_size)       
     a = modular_inverse(short_inverse, p)
-    b = random_integer(11)
-    c = random_integer(11)    
+    b = random_integer(short_inverse_size - 1)
+    c = random_integer(short_inverse_size - 1)
     return short_inverse, a, b, c
     
 def generate_public_key(private_key, p=P): 
@@ -25,7 +41,7 @@ def generate_public_key(private_key, p=P):
     
         Returns 1 integer, suitable for use as a public key. """
     ai, a, b, c = private_key
-    public_key = ((a * b) + c) % p    
+    public_key = (a + b + c) % p    
     return public_key
         
 def generate_keypair():
@@ -36,7 +52,7 @@ def generate_keypair():
     public_key = generate_public_key(private_key)
     return public_key, private_key
     
-def exchange_key(public_key, s_size=13, e_size=25, p=P): 
+def exchange_key(public_key, s_size=16, e_size=16, p=P): 
     """ usage: exchange_key(public_key, s_size=32, e_size=32, p=P) => ciphertext, secret
     
         Returns a ciphertext and a shared secret.
@@ -49,21 +65,25 @@ def recover_key(ciphertext, private_key, p=P):
     """ usage: recover_key(ciphertext, private_key, p=P) => secret
     
         Returns a shared secret in the form of a random integer. """
-    # s(ab + c) + e
-    # sab + sc + e
-    # sb + aisc + aie
-    # sb + ai(cs + e)    # 32 + 32    65 + 64 + 1 
-    #                    # 16 + 32    49 + 64 + 1     114
-    #                    # 17 + 7     24 + 24 + 1      49
+    #a + b
+    #sa + sb + e
+    #s + saib + aie        
+    #s + ai(bs + e)         # 32   33 32 32 + 1  130
+    #                       # 16   17 16 16 + 1
     ai, a, b, c = private_key
-    rb_aicr_e = (ai * ciphertext) % p
-    rb = rb_aicr_e % ai
-    return rb / b    
+    return ((ai * ciphertext) % p) % ai
+    # as + e
+    # s + aie               # 32 33 32   65      (32 * 2) + 32 == 96    65 + 32 == 97
+    #                       # 32 33 16   49      (32 * 2) + 16 == 80    49 + 32 == 81
+    #                       # 33 34 32   66      (32 * 2) + 32 == 96    66 + 32 == 98
+    # ras + re
     
-# c = m * x mod P
-# c = c mod x
-# c = c / y
-
+    
+    # a + bc
+    #sa + sbc + e
+    #s + saibc + aie
+    # s + ai(bs + e)        # 256   257 256 256 1
+    
 def hash_public_key(hash_function, public_key):
     """ usage: hash_public_key(hash_function, public_key) => public_key_fingerprint
     
