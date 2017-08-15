@@ -10,15 +10,14 @@
 #define store_register(name, state_array, offset) _mm_storeu_si128((void *) (state_array + offset), name)  
 
 #define mix_columns(a, b, c, d) {a += b; c += d; b ^= c; d ^= a;}
-#define little_swap(a)({\
-    byteswap_index = _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);\
-    a = _mm_shuffle_epi8(a, byteswap_index);})
+#define shift_left(word, bits) {word = _mm_slli_epi32(word, bits);}
+
 #define big_swap(a)({\
     byteswap_index = _mm_set_epi32(0, 1, 2, 3);\
     a = _mm_shuffle_epi32(a, 0b11100100);})
     
 #define shift_rows(b, c, d) {b = _mm_shuffle_epi32(b, 0b01101100); c = _mm_shuffle_epi32(c, 0b10110001); d = _mm_shuffle_epi32(d, 0b11000110);}
-#define mix_slice(a, b, c, d)({mix_columns(a, b, c, d); little_swap(a);\
+#define mix_slice(a, b, c, d)({mix_columns(a, b, c, d); shift_left(a, 1);\
                                mix_columns(a, b, c, d); big_swap(a);})
                                
 #define add_constant(a) ({load_register(t, round_constants, 0);\
