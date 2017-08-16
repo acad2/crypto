@@ -25,6 +25,19 @@ class Register(object):
         for index, word in enumerate(other_words.words):
             words[index] = (words[index] * word) % mask
         return self
+     
+    def __shl__(self, shift_amounts):
+        mask = self.mask
+        words = self.words
+        for index, amount in enumerate(shift_amounts):
+            words[index] = (words[index] << amount) & mask
+        return self
+        
+    def __getitem__(self, index):
+        return self.words[index]
+        
+    def __setitem__(self, index, value):
+        self.words[index] = value
         
     def big_swap(self):        
         self.words = list(reversed(self.words))
@@ -39,23 +52,13 @@ class Register(object):
             words[index] = (word << amount) & mask
             
         
-def mix_columns(a, b, c, d, constant=Register((2147483649, 1677216, 65537, 257))):    
+def mix_columns(a, b, c, d):
     a += b           #   ab
     c += d        
     b ^= c
-    d ^= a
-    a *= constant      
-    #c *= constant
-
-    #a ^= c
-    #b ^= d
-    #c ^= b
-    #d ^= a
+    d ^= a      
     return a, b, c, d
-          
-def shift_rows(a, b, c, d, word_size=32):
-    pass
-    
+              
 def permutation(a, b, c, d, 
                 e, f, g, h,
                 i, j, k, l,
@@ -64,19 +67,17 @@ def permutation(a, b, c, d,
     a = Register((a, b, c, d), word_size, mask)
     b = Register((e, f, g, h), word_size, mask)
     c = Register((i, j, k, l), word_size, mask)
-    d = Register((m, n, o, p), word_size, mask)
-    round_constant = Register((1, 1, 1, 1), word_size, mask)        
-    _increment = Register((1, 1, 1, 1), word_size, mask)
-    for round in range(1, rounds + 1):        
-        #a = a + round_constant
-        #round_constant += _increment
+    d = Register((m, n, o, p), word_size, mask)    
+    round_constant = Register((1, 1, 1, 1), word_size, mask);
+    for round in range(1, rounds + 1): 
+        a += round_constant
+        round_constant += round_constant                
         a, b, c, d = mix_columns(a, b, c, d)
-        #b.shift_left(1)
-        #a, b, c, d = mix_columns(a, b, c, d)    
+        a, b, c, d = mix_columns(a, b, c, d)    
         #a.big_swap()        
-        #b.shift_rows(1)
-        #c.shift_rows(2)
-        #d.shift_rows(3)
+        b.shift_rows(1)
+        c.shift_rows(2)
+        d.shift_rows(3)
     return a.words + b.words + c.words + d.words
     
 def visualize_permutation():
