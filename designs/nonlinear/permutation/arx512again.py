@@ -75,7 +75,8 @@ def permutation(a, b, c, d,
     b = Register((e, f, g, h), word_size, mask)
     c = Register((i, j, k, l), word_size, mask)
     d = Register((m, n, o, p), word_size, mask)    
-    round_constant = Register((3, 7, 12, 24), word_size, mask);
+    round_constant = Register((1, 1, 1, 1), word_size, mask);
+    #shuf_mask = Register((13,12, 15,14,  9,8, 11,10,  5,4, 7,6,  1,0, 3,2);\
     for round in range(1, rounds + 1): 
         a += round_constant
         round_constant += round_constant                
