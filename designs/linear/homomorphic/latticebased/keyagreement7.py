@@ -12,8 +12,33 @@ def f(a, b, c, d, p=P):
     d = (d + a) % p
     return a, b, c, d
     
+# g(a, b, c, d):
+#   a = f(a, b)
+#   c = f(c, d)
+#   b = f(b, c)
+#   d = f(d, a)
+
 def shortcut_f(a, b, c, d, iterations):
     raise NotImplementedError()
+    #  a  b 0c 0d
+    # 0a  b  c  d
+    # 0a 0b  c  d
+    #  a  b 0c  d
+    
+    #  a 2b  c  d
+    #  a  b  c 2d
+    #  a 2b 2c 3d
+    # 2a 3b  c 2d
+    
+    # 2a 4b 3c 4d   
+    # 3a 4b 2c 4d
+    # 4a 6b 4c 7d
+    # 4a 7b 4c 6d
+    
+    # 5a 8b 5c 8d
+    # 11a 17b 10c 17d
+    # 8a 13b 8c 13d
+    # 9a 15b 9c 14d
     
 def generate_private_key(size=SIZE, dimension=DIMENSION):
     return random_integer(1)

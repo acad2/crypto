@@ -14,7 +14,7 @@
 # 21a + 34b
 from crypto.utilities import random_integer, big_prime
 
-SIZE = 2
+SIZE = 32
 POINTS = random_integer(SIZE), random_integer(SIZE)
 P = big_prime(33)
 
@@ -51,7 +51,7 @@ def fib_f(n):
         # u of 2m
         return u * v
         
-def fib_generator(start=None):
+def fib_generator(start=None):        
     assert start is not None    
     x = fib_f(start)
     y = fib_f(start + 1)    
@@ -64,7 +64,9 @@ def fib_generator(start=None):
     return x, y, z
     
 def generate_private_key(size=SIZE):
-    x, y, z = fib_generator(start=random_integer(size))
+    #x, y, z = fib_generator(start=random_integer(size))
+    x, y = random_integer(size), random_integer(size)
+    z = x + y
     return x, y, z
     
 def generate_public_key(private_key, points=POINTS, p=P):
