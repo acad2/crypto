@@ -184,13 +184,13 @@ def test_key_agreement_time(iterations, key_agreement, public_key, private_key, 
 def test_key_agreement(algorithm_name, generate_keypair, key_agreement, 
                        iterations=1024, key_size=32):
     print("Beginning {} unit test...".format(algorithm_name))
-    print("Generating {} keypairs...".format(iterations))    
-    before = default_timer()
-    for count in range(iterations):
-        public_key, private_key = generate_keypair()        
-    after = default_timer()
-    print("...done")
-    print("Time required: {}".format(after - before))
+    #print("Generating {} keypairs...".format(iterations))    
+    #before = default_timer()
+    #for count in range(iterations):
+    #    public_key, private_key = generate_keypair()        
+    #after = default_timer()
+    #print("...done")
+    #print("Time required: {}".format(after - before))
                
     print("Validating correctness...")    
     for count in range(iterations):
@@ -198,7 +198,7 @@ def test_key_agreement(algorithm_name, generate_keypair, key_agreement,
         public_key2, private_key2 = generate_keypair()
         key = key_agreement(public_key2, private_key)
         _key = key_agreement(public_key, private_key2)
-        assert key == _key, (key, _key)
+        assert key == _key, (count, key, _key)
     print("...done")
     
     test_key_agreement_time(iterations, key_agreement, public_key2, private_key, key_size=key_size)
@@ -207,7 +207,7 @@ def test_key_agreement(algorithm_name, generate_keypair, key_agreement,
     private_sizes = determine_key_size(private_key)
     print("Public key size : {}".format(sum(public_sizes)))
     print("Private key size: {}".format(sum(private_sizes)))
-    print("Key size : {}".format(size_in_bits(key)))
+    print("Key size : {}".format(sum(determine_key_size(key))))
     print("(sizes are in bits)")
     print("{} unit test passed".format(algorithm_name))
     

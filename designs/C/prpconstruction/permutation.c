@@ -22,7 +22,7 @@ void print128(__m128i var){
     print128(c);\
     print128(d);})
     
-#define mix_columns(a, b, c, d) {a += b; c += d; b ^= c; d ^= a;}    
+#define mix_columns(a, b, c, d) {a += b; c += d; b += c; d += a;}    
 #define little_swap(a, shuf_mask) {a = _mm_shuffle_epi8(a, shuf_mask);}
 #define shift_rows(b, c, d) {b = _mm_shuffle_epi32(b, 0b10010011); c = _mm_shuffle_epi32(c, 0b01001110); d = _mm_shuffle_epi32(d, 0b00111001);}
 #define mix_slice(a, b, c, d)({mix_columns(a, b, c, d);\
@@ -43,7 +43,7 @@ void print128(__m128i var){
 #define unshift_rows(b, c, d) {b = _mm_shuffle_epi32(b, 0b00111001); c = _mm_shuffle_epi32(c, 0b01001110); d = _mm_shuffle_epi32(d, 0b10010011);}
                                                        
 #define unswap(a, shuf_mask) {a = _mm_shuffle_epi8(a, shuf_mask);}
-#define unmix_columns(a, b, c, d) {d ^= a; b ^= c; c -= d; a -= b;} 
+#define unmix_columns(a, b, c, d) {d -= a; b -= c; c -= d; a -= b;} 
 #define unmix_slice(a, b, c, d)({unmix_columns(a, b, c, d);\
                                  unmix_columns(a, b, c, d);})                               
 #define remove_constant(a, t)({a -= t; t = _mm_srli_epi32(t, 1);})   
@@ -73,7 +73,7 @@ void test_permutation(){
     b = _mm_set_epi32(0xb3, 0xb2, 0xb1, 0xb0);
     c = _mm_set_epi32(0xc3, 0xc2, 0xc1, 0xc0);
     d = _mm_set_epi32(0xd3, 0xd2, 0xd1, 0xd0);
-    print_state(a, b, c, d);    
+    //print_state(a, b, c, d);    
     
     clock_t begin = clock();
     for (_index = 0; _index < 3000000; _index++){            
@@ -82,7 +82,7 @@ void test_permutation(){
     
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;    
     printf("Time required: %.2fs\n", time_spent);    
-    print_state(a, b, c, d);
+    //print_state(a, b, c, d);
     
     for (_index = 0; _index < 3000000; _index++){
         inverse_permutation(a, b, c, d, ROUNDS);}

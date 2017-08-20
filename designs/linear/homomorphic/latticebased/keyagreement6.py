@@ -30,16 +30,32 @@ from crypto.utilities import big_prime, random_integer
 # am bn co dp
 # aw bx cy dz
 
+# m(aw bx cy dz)     n(aw bx cy dz)   o(aw bx cy dz)    p(aw bx cy dz)
+# maw mbx mcy mdz   naw nbx ncy ndz   oaw obx ocy odz   paw pbx pcy pdz
+# aw(m n o p)   bx(m n o p)   cy(m n o p)  dz(m n o p)
+# m n o p (aw bx cy dz)
+
+# w(am bn co dp)  x(am bn co dp)  y(am bn co dp)  z(am bn co dp)
+# am(w x y z) bn(w x y z) co(w x y z) dp(w x y z)
+# 
+
 SIZE = 32
 P = big_prime(SIZE + 1)
 DIMENSION = 4
 POINTS = [random_integer(32) for count in range(DIMENSION)]
 
-def generate_private_key(size=SIZE, dimension=DIMENSION):
+def generate_private_key(size=SIZE, points, dimension=DIMENSION):
     return [random_integer(size) for count in range(dimension)]
     
+def mul(values):    
+    output = 1    
+    for value in values:
+        output *= value
+    return output
+        
 def generate_public_key(private_key, points=POINTS, p=P):
     return sum(private_key[index] * points[index] for index in range(len(points))) % p
+    #return mul(pow(points[index], private_key[index], p) for index in range(len(points))) % p
     
 def generate_keypair(size=SIZE, dimension=DIMENSION, points=POINTS, p=P):
     private_key = generate_private_key(size, dimension)
@@ -47,9 +63,12 @@ def generate_keypair(size=SIZE, dimension=DIMENSION, points=POINTS, p=P):
     return public_key, private_key
     
 def key_agreement(public_key, private_key, points=POINTS, p=P):    
-    key = public_key
+    return (sum(private_key) * public_key) % p
+    
     for index, value in enumerate(private_key):
-        key += points[index] * value
+        key += value
+        #key += points[index] * value
+        key = (key * pow(points[index], value, p)) % p
     return key % p
     
 def test_key_agreement():
@@ -58,7 +77,7 @@ def test_key_agreement():
     
     secret1 = key_agreement(public2, private1)
     secret2 = key_agreement(public1, private2)
-    assert secret1 == secret2
+    assert secret1 == secret2, ('\n'.join(('\n' + format(number, 'b')[:80] for number in (secret1, secret2))))
     print("Public1: {}".format(public1))
     print("Public2: {}".format(public2))
     print("secret : {}".format(secret1))
