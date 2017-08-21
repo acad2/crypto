@@ -42,7 +42,40 @@ void hash_function(WORDSIZE* hash_input, WORDSIZE input_length, WORDSIZE* output
     
     store_register(a, output, 0);
     store_register(b, output, 4);}
-                    
+                 
+void keyed_hash_function(WORDSIZE* key, WORDSIZE* hash_input, WORDSIZE input_length, WORDSIZE* output){
+    REGISTER a, b, c, d, t;
+    unsigned long index, block_number = 0, number_of_blocks;
+    
+    number_of_blocks = input_length / 8;      
+    if (input_length % 8 == 0){
+        if (number_of_blocks >= 1){
+            number_of_blocks -= 1;}}
+    
+    a ^= a; b ^= b; c ^= c; d ^= d;
+    absorb(a, b, c, d, t, key, 0);
+    if (number_of_blocks > 0){        
+        for (block_number = 0; block_number < number_of_blocks; block_number++){      
+            absorb(a, b, c, d, t, hash_input, block_number);}}
+        
+    int amount = input_length % 8;    
+    if (amount == 0){
+        amount = 8;}    
+        
+    if (amount < 5){
+        load_register(t, hash_input, (block_number * 8));
+        a ^= t;}
+    else{
+        load_register(t, hash_input, (block_number * 8));
+        a ^= t;
+        load_register(t, hash_input, (block_number * 8) + 4);
+        b ^= t;}       
+    a[0] ^= 0xFFFFFFFF ^ block_number;
+    permutation(a, b, c, d);
+    
+    store_register(a, output, 0);
+    store_register(b, output, 4);}
+    
 void test_hash(){    
     #define message_size 8
 	WORDSIZE message[message_size];
