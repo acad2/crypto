@@ -12,7 +12,7 @@
     b ^= t;\
     load_register(c, key, 0);\
     load_register(d, key, 4);\
-    permutation(a, b, c, d, t, ENCRYPTION_ROUNDS);})    
+    permutation(a, b, c, d);})    
         
 void encrypt(WORDSIZE* data, WORDSIZE* key, WORDSIZE* iv, WORDSIZE* extra_data, WORDSIZE* tag,
              unsigned long data_size, unsigned long extra_data_size){
@@ -24,7 +24,7 @@ void encrypt(WORDSIZE* data, WORDSIZE* key, WORDSIZE* iv, WORDSIZE* extra_data, 
     for (block_number = 0; block_number < data_size / 8; block_number++){        
         load_register(a, data, (block_number * 8));
         load_register(b, data, ((block_number * 8) + 4));        
-        permutation(a, b, c, d, t, ENCRYPTION_ROUNDS);
+        permutation(a, b, c, d);
         store_register(a, data, (block_number * 8));
         store_register(b, data, ((block_number * 8) + 4));}          
     
@@ -50,7 +50,7 @@ int decrypt(WORDSIZE* data, WORDSIZE* key, WORDSIZE* iv, WORDSIZE* extra_data, W
     while (block_number-- > 0){        
         load_register(a, data, (block_number * 8));
         load_register(b, data, (block_number * 8) + 4);
-        invert_permutation(a, b, c, d, t, ENCRYPTION_ROUNDS);
+        inverse_permutation(a, b, c, d);
         store_register(a, data, (block_number * 8));
         store_register(b, data, (block_number * 8) + 4);}          
             

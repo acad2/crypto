@@ -1,3 +1,4 @@
+from crypto.utilities import words_to_bytes, bytes_to_words
 
 class Register(object):
     
@@ -50,27 +51,23 @@ class Register(object):
             
     def little_swap(self):
         word_size = self.word_size
-        words = self.words
-        for index, word in enumerate(words):
-            _word = ((word >> 24) | 
-                     ((word >> 16) & 255 << 8) |
-                     ((word >> 8) & 255 << 16) |
-                     ((word & 255) << 24))            
-            words[index] = _word
-            
+        words = self.words        
+        in_bytes = words_to_bytes(words, 4)        
+        shuffled_bytes = [in_bytes[index] for index in (7, 12, 14, 9, 2, 1, 5, 15, 11, 6, 13, 0, 4, 8, 10, 3)]        
+        self.words[:] = bytes_to_words(shuffled_bytes, 4)
             
 def mix_columns(a, b, c, d):
     a += b           #   ab
     c += d        
-    b ^= c
-    d ^= a      
+    b += c
+    d += a      
     return a, b, c, d
               
 def permutation(a, b, c, d, 
                 e, f, g, h,
                 i, j, k, l,
                 m, n, o, p,
-                word_size=32, mask=0xFFFFFFFF, rounds=32):
+                word_size=32, mask=0xFFFFFFFF, rounds=1):
     a = Register((a, b, c, d), word_size, mask)
     b = Register((e, f, g, h), word_size, mask)
     c = Register((i, j, k, l), word_size, mask)
@@ -78,19 +75,20 @@ def permutation(a, b, c, d,
     round_constant = Register((1, 1, 1, 1), word_size, mask);
     #shuf_mask = Register((13,12, 15,14,  9,8, 11,10,  5,4, 7,6,  1,0, 3,2);\
     for round in range(1, rounds + 1): 
-        a += round_constant
-        round_constant += round_constant                
-      #  a, b, c, d = mix_columns(a, b, c, d)
-      #  a, b, c, d = mix_columns(a, b, c, d)    
-      #  a.little_swap()        
-      #b.shift_rows(1)
-      #c.shift_rows(2)
-      #d.shift_rows(3)
+      #  a += round_constant
+      #  round_constant += round_constant                
+        a, b, c, d = mix_columns(a, b, c, d)
+        a, b, c, d = mix_columns(a, b, c, d)    
+        a.little_swap()   
+       # c.little_swap()
+        b.shift_rows(1)
+        #c.shift_rows(2)
+        #d.shift_rows(3)
     return a.words + b.words + c.words + d.words
     
 def visualize_permutation():
     from crypto.analysis.visualization import test_16x32_function
-    state = ([0] * 15) + [0]
+    state = [1] + ([0] * 15) 
     test_16x32_function(permutation, state)
     
 if __name__ == "__main__":

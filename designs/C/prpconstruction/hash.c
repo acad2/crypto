@@ -9,7 +9,7 @@
     load_register(t, hash_input, ((block_number * 8) + 4));\
     b ^= t;\
     a[0] ^= block_number;\
-    permutation(a, b, c, d, t, HASHING_ROUNDS);})
+    permutation(a, b, c, d);})
     
 void hash_function(WORDSIZE* hash_input, WORDSIZE input_length, WORDSIZE* output){
     REGISTER a, b, c, d, t;
@@ -38,7 +38,7 @@ void hash_function(WORDSIZE* hash_input, WORDSIZE input_length, WORDSIZE* output
         load_register(t, hash_input, (block_number * 8) + 4);
         b ^= t;}       
     a[0] ^= 0xFFFFFFFF ^ block_number;
-    permutation(a, b, c, d, t, HASHING_ROUNDS);
+    permutation(a, b, c, d);
     
     store_register(a, output, 0);
     store_register(b, output, 4);}
@@ -50,9 +50,10 @@ void test_hash(){
     unsigned long index;
     
     zero_out(message, message_size);
+    zero_out(hash_result, 8);
     clock_t begin = clock();
     for (index = 0; index < 3000000; index++){
-        hash_function(message, message_size, hash_result);}
+        hash_function(hash_result, message_size, hash_result);}
     clock_t end = clock();
     
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;    
