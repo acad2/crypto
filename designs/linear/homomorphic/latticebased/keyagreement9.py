@@ -12,7 +12,7 @@ def generate_public_key(private_key, points=POINTS, p=P):
     x, y = private_key
     a, b = points
     point1 = (a * x) + (b * y)
-    point2 = (a * y) + (b * x)
+    point2 = (a * y) + (b * y)
     return point1 % p, point2 % p
     
 def generate_keypair(size=SIZE, points=POINTS):

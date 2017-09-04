@@ -20,6 +20,9 @@ def _print_state(inputs, bits):
         print("{} ({}/{})".format(bit_string, weight, bits))
     print("{} ({}/{})".format(' ' * bits, weight_total, (bits * len(inputs))))
     
+def print_state4x32_encrypt(inputs):
+    _print_state(inputs[:4], 32)
+    
 def print_state_4x4x8(inputs):
     print_4x4_state(inputs, 8)
     
@@ -44,6 +47,11 @@ def print_state_4x32_128_as_4x32(inputs, message=''):
 def print_state_16x32_as_4x32(inputs, message=''):
     if message:
         print message    
+    _print_state(inputs[3::4], 32)
+    
+def print_state_12x32_as_4x32(inputs, message=''):
+    if message:
+        print message
     _print_state(inputs[3::4], 32)
     
 def print_state_4x32_128_as_8x16(inputs):    
@@ -89,6 +97,9 @@ def test_4x32_function(function, inputs, print_function=print_state_4x32_128_as_
 def test_16x32_function(function, inputs, print_function=print_state_16x32_as_4x32):
     test_function(function, inputs, print_function)
     
+def test_12x32_cipher(function, inputs, print_function=print_state_12x32_as_4x32):
+    test_function(function, inputs, print_function)
+    
 def test_8x32_function(function, inputs, print_function=print_state_4x32_128_as_4x32):
     test_function(function, inputs, print_function)
     
@@ -103,7 +114,10 @@ def test_64x6_function(function, inputs, print_function=print_state_64x6):
     
 def test_4x4x8_function(function, inputs, print_function=print_state_4x4x8):
     test_function(function, inputs, print_function)                 
-            
+
+def test_4x32_cipher(encrypt, inputs, print_function=print_state4x32_encrypt):
+    test_function(encrypt, inputs, print_function)
+    
 def test_function(function, inputs, print_function):
    # print("Testing {} with inputs: ".format(function))
    # print_function(inputs)

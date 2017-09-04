@@ -3,18 +3,18 @@
 # b += c   bcd   abbccddd
 # d += a   dab   aabbbcdd
 
+
 #  a  b 0c 0d
 # 0a  b  c  d
 # 0a 0b  c  d
 #  a  b 0c  d
   
-
 #  a 2b  c  d
 #  a  b  c 2d
 #  a 2b 2c 3d
 # 2a 3b  c 2d
 
-# 2a 4b 3c 4d
+# 2a 4b 3c 4d   
 # 3a 4b 2c 4d
 # 4a 6b 4c 7d
 # 4a 7b 4c 6d
@@ -23,6 +23,28 @@
 # 11a 17b 10c 17d
 # 8a 13b 8c 13d
 # 9a 15b 9c 14d
+
+
+# 2(5a 8b 5c 8d)    4(11a 17b 10c 17d)   3(8a 13b 8c 13d)     4(9a 15b 9c 14d)        
+# 10a 16b 10c 16d     44a 68b 40c 68b      24a 39b 24c 39d    36a 60b 36c 56d   = 114a 183b 110c 179d
+
+# 5(2a 4b 3c 4d)    8(3a 4b 2c 4d)   5(4a 6b 4c 7d)  8(4a 7b 4c 6d)
+# 10a 20b 15c 20d     24a 32b 16c 32d    20a 30b 20c 35d   32a 56b 32c 48d      = 86a 138b 83c 135d
+
+
+
+#10a 16b 10c 16d
+#44a 68b 40c 68d
+#24a 39b 24c 39d
+#36a 60b 36c 56d
+
+# 5(2a 4b 3c 4d)          10a 20b 15c 20d
+# 8(3a 4b 2c 4d)          24a 32b 16c 32d
+# 5(4a 6b 4c 7d)          20a 30b 20c 35d
+# 8(4a 7b 4c 6d)          32a 56b 32c 48d
+
+
+# 5(2a 4b 3c 4d)  8(
 
 
 

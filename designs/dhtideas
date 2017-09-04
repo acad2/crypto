@@ -56,6 +56,12 @@ when a key:None request is received, lookup the key in the local store
 if it is found, then broadcast a key:data message in response
 if it is not, then decrement the hop counter and forward the request onward
 
+when a key:data pair is received, check whether or not the key:data pair was requested
+if it was requested, check the hash against the key and recover the data
+if it was not, then store the data 
+finally, decrement the hop counter and forward the message onward
+   
+
 to avoid being seen broadcasting a key:None request:
   - bundle the desired key up into a type 1 request
   - relay the request by sending it via type 3 requests to a peer
@@ -123,3 +129,5 @@ if recipient (somehow) does not receive original broadcast:
         
     
     
+    
+       

@@ -78,14 +78,16 @@ void keyed_hash_function(WORDSIZE* key, WORDSIZE* hash_input, WORDSIZE input_len
     
 void test_hash(){    
     #define message_size 8
+    #define QUANTITY 3000000
 	WORDSIZE message[message_size];
     WORDSIZE hash_result[8];
     unsigned long index;
     
     zero_out(message, message_size);
     zero_out(hash_result, 8);
+    printf("Applying %lu sequential hashes (%luMB)...\n", QUANTITY, (QUANTITY * 32) / (1024 * 1024));
     clock_t begin = clock();
-    for (index = 0; index < 3000000; index++){
+    for (index = 0; index < QUANTITY; index++){
         hash_function(hash_result, message_size, hash_result);}
     clock_t end = clock();
     
@@ -93,7 +95,7 @@ void test_hash(){
     printf("Time required: %.2fs\n", time_spent);
     printf("%lu%lu%lu%lu%lu%lu%lu%lu\n", hash_result[0], hash_result[1], hash_result[2], hash_result[3], hash_result[4], hash_result[5], hash_result[6], hash_result[7]);}
     
-/*int main(){
+int main(){
     test_hash();
-    return 0;}*/
+    return 0;}
     
