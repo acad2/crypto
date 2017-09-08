@@ -7,10 +7,10 @@
 #include "unittests.h"
 
 void print128(__m128i var){
-    uint32_t *val = (uint32_t*) &var;
+    WORDSIZE *val = (WORDSIZE*) &var;
     printf("%lx %lx %lx %lx \n", val[0], val[1], val[2], val[3]);}
     
-#define print_state(a, b, c, d)({print128(a); print128(b); print128(c); print128(d);})
+#define print_state(a, b, c, d) print128(a); print128(b); print128(c); print128(d);
     
 void _permutation_unit_test(){    
     printf("Beginning permutation unit test\n");

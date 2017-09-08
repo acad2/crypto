@@ -23,9 +23,6 @@
     REGISTER c_mask =  _mm_set_epi8(c_rot); REGISTER d_mask =  _mm_set_epi8(d_rot);\
     REGISTER a, b, c, d; load_register(a, state, 0); load_register(b, state, 4);\
                          load_register(c, state, 8); load_register(d, state, 12);
-#define store_state(state, a, b, c, d)\
-    store_register(a, state, 0); store_register(b, state, 4);\
-    store_register(c, state, 8); store_register(d, state, 12);
     
 void _permutation(WORDSIZE* state){
     unsigned long index;
