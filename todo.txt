@@ -158,6 +158,37 @@ modular stuff
 
 
 
+# c1 := km + kn
+# c2 := xy + xz
+# c3 := c1 + c2      km + kn + xy + xz
+# c4 = (c3 * modular_inverse(x, P)) % P   xi(km + kn) + y + z               
+#                                         xi(m + n) + ki(y + z)
+#                                         xi + miniki(y + z)       32    33 32 32      97
+#                                         
+
+
+# ax + by, ay + bxy
+# am + bn, an + bmn
+
+# x(am + bn) + y(an + bmn) == xam + nay + ybmn + xbn == a(xm + ny) + b(mny + nx)
+# m(ax + by) + n(ay + bxy) == xam + nay + ybxn + mby == a(xm + ny) + b(xny + my)
+
+
+# ax + by, ax^2 + by^2
+# am + bn, am^2 + an^2
+
+# x(am + bn) + y(am^2 + bn^2) == xam + xbn + yam^2 + ybn^2 == a(xm + ym^2) + b(xn + yn^2)
+# m(ax + by) + n(ax^2 + by^2) == xam + mby + nax^2 + nby^2 == a(xm + xn^2) + b(my + ny^2)
+
+
+# ax + bxi
+# ay + byi
+
+# x(ay + byi) == axy + bxyi == x(y(a + yi^2))
+# y(ax + bxi) == axy + byxi == y(x(a + xi^2))
+
+
+
 
 (k1 * r1) + m1
 k2 * hash(m1)
@@ -408,3 +439,73 @@ given a board configuration, it appears hard to find the sequence of moves that 
 
 
 self similar error correcting codes
+
+
+
+
+
+# (a * b) xor c
+# approximately equal to (a * b) + c
+#   some carries do not propagate, leaving a + b == a ^ b in subsections of the word
+
+
+
+"Minicrypt: One-way functions exist but we do not have public-key cryptography."
+
+We can create a random-walk/key-agreement cryptosystem via iterating an arbitrary function
+    - assuming that the function is deterministic, then correctness of the shared value is guaranteed            
+    - different functions offer different levels of relationships:
+        - all provide addition 
+        - some provide multiplication as well as addition    
+    - not all functions are secure
+        - security requires:
+            - "hard" to obtain the number of function iterations k given the output of successive applications of the function via f_k(f_k-1(f_k-2(...(f_0(g)))))
+                - not sufficient for security
+                    - knowledge of k may not be required to produce the shared value for 2 public keys
+            - "hard"/not possible to use 2 public keys to produce the corresponding shared secret (without knowing k)
+            - "efficiently" shortcut-able
+                - Otherwise can only obtain a level of security proportionate to how many iterations are applied
+                    - adversary has more computing power
+                        - no shortcut = no security
+                        
+Given a One-Way Function:
+    - if it is not efficiently shortcut-able, then key agreement via it is not (securely) possible
+        - if it is efficiently shortcut-able, then:
+            - prove that it is hard to obtain the number of function iterations k, given the output of successive function applications
+                - i.e. the discrete logarithm problem 
+            - prove that it is hard to use 2 public keys without the corresponding private keys to arrive at the shared secret
+            
+            if both can be proven, then key agreement is possible using the One-Way Function
+                - then minicrypt == cryptomania and public key cryptography exists
+                
+                
+                
+#slow function where password facilitates a shortcut
+    
+# apply hash cracking cipher technique on prf(password || nonce)
+# to generate a challenge for which the password provides a shortcut:
+#    random_string = prf(salt || password) # prf(salt || data?)
+#    challenge = ''
+#    for character in random_string:
+#       challenge += hash(salt || challenge || character)
+#    return challenge, random_string
+# to solve the challenge without the password:
+#    response = ''
+#    for block in slide(challenge, hash_output_size):
+#       character = brute_force(hash, prefix=salt || challenge[:progress])
+#       response += character
+#    return response
+# to solve the challenge with the password:
+#    return prf(salt || password )
+
+# make challenge prohibitively difficult
+# publish (challenge, identifier) as public key to network
+# sign data using signature = hash(random_string || identifier || data || timestamp) and publish (signature, identifier, data, timestamp) to network
+# wait until signature is received by the network
+# release information that makes solving the challenge feasible
+# solving the challenge allows verification of the signature
+#   - it also allows forging other signatures
+#   ! but the one valid signature has already been accepted by the network
+
+
+# H(H(salt || data) || data)                

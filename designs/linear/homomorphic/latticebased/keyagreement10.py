@@ -13,7 +13,16 @@ def generate_public_key(private_key, points=POINTS, p=P):
         a, b = ((a * x) + (b * y)) % p, ((a * y) + (b * x)) % p
     return a, b
     
-    # ax + by
+    # ax + by, ay + bx
+    # x(ax + by) + y(ay + bx), y(ax + by) + x(ay + bx) == axx + bxy + ayy + bxy, axy + byy + axy + bxx
+    #                                                  == a(xx + yy) + b(xy + xy), a(xy + xy) + b(xx + yy)
+    #                                                  == a(x(x) + yy) + b(x(2y)), a(x(2y)) + b(x(x) + yy)
+    
+    #                                                     a(xxx + xyy) + b(xxy + xxy) + a(xyy + xyy) + b(xxy + yyy)
+    #                                                  == a(xxx + xyy + xyy + xyy) + b(xxy + xxy + xxv + yyy)
+    #                                                  == a(x(xx + 3yy)) + b(y(3xx + yy))
+    
+    #                                                     
 def generate_keypair(size=SIZE, points=POINTS):
     private_key = generate_private_key(size)
     public_key = generate_public_key(private_key, points)
