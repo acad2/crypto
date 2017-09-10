@@ -22,8 +22,8 @@
     REGISTER a_mask =  _mm_set_epi8(a_rot); REGISTER b_mask =  _mm_set_epi8(b_rot);\
     REGISTER c_mask =  _mm_set_epi8(c_rot); REGISTER d_mask =  _mm_set_epi8(d_rot);\
     REGISTER a, b, c, d; load_state(state, a, b, c, d);
-    
-void permutation(WORDSIZE* state){
+  
+void crypto_prp_permutation(WORDSIZE* state){
     unsigned long index;
     initialize_state(state, INITIAL_CONSTANTS, ROT_DOWN, ROL_8, ROL_16, ROL_24);   
     for (index = 0; index < ROUNDS; index++){
@@ -31,15 +31,10 @@ void permutation(WORDSIZE* state){
         mix_slices(a, b, c, d);}
     store_state(state, a, b, c, d);}      
                                                          
-void inverse_permutation(WORDSIZE* state){
+void crypto_prp_inverse_permutation(WORDSIZE* state){
     unsigned long index;
     initialize_state(state, INVERSE_INITIAL_CONSTANTS, ROT_UP, ROR_8, ROR_16, ROR_24);    
     for (index = 0; index < ROUNDS; index++){
         unmix_slices(a, b, c, d);
         remove_constant(a, round_constants);}
     store_state(state, a, b, c, d);}
-                   
-const struct _permutation_library permutation = {
-    .permutation = permutation,
-    .inverse_permutation = inverse_permutation};
-    
