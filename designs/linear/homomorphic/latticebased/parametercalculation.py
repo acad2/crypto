@@ -15,6 +15,25 @@
 
 # 32 32 128   160
 
+
+# ax + y
+#sax + sy + e
+#sx + ai(sy + e)   #   32 32    65 32 32  1   130
+#                      s = 32, e = 64     P = 130
+#                      
+def calculate_parameters2(security_level=32, e_modulus_ratio=.66):  
+    assert 0 < e_modulus_ratio < 1, e_modulus_ratio
+    s_size = security_level
+    inverse_size = (security_level * 2) + 1
+    e_size = (security_level * 2)
+    modulus_size = float(inverse_size + e_size)
+    coverage =  e_size / modulus_size
+    while coverage < e_modulus_ratio:
+        e_size += 1
+        modulus_size += 1
+        coverage = (e_size / modulus_size)
+    return s_size, inverse_size, e_size, modulus_size, coverage
+
 def calculate_parameters(security_level=31, e_modulus_ratio=.66):  
     assert 0 < e_modulus_ratio < 1, e_modulus_ratio
     s_size = security_level
@@ -28,9 +47,9 @@ def calculate_parameters(security_level=31, e_modulus_ratio=.66):
         coverage = (e_size / modulus_size)
     return s_size, inverse_size, e_size, modulus_size, coverage
     
-def display_parameter_calculation(security_level, e_modulus_ratio=.66):
+def display_parameter_calculation(security_level, e_modulus_ratio=.66, calculate_function=calculate_parameters):
     (s_size, inverse_size, e_size, 
-     modulus_size, coverage) = calculate_parameters(security_level, e_modulus_ratio)    
+     modulus_size, coverage) = calculate_function(security_level, e_modulus_ratio)    
     print("s size      : {}".format(s_size))
     print("inverse size: {}".format(inverse_size))
     print("e size      : {}".format(e_size))
@@ -38,7 +57,8 @@ def display_parameter_calculation(security_level, e_modulus_ratio=.66):
     print("e/modulus   : {} coverage".format(coverage))
     
 def test_calculate_parameters():
-    display_parameter_calculation(31, .95)
+    #display_parameter_calculation(31, .95)
+    display_parameter_calculation(31, .99, calculate_parameters2)
     
 if __name__ == "__main__":
     test_calculate_parameters()

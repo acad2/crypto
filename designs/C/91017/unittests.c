@@ -42,5 +42,17 @@ void crypto_prp_permutation_unit_test(){
         crypto_prp_inverse_permutation(state);}
     printf("Final state:\n");
     load_state(state, a, b, c, d);
-    print_state(a, b, c, d);}
+    print_state(a, b, c, d);
+    
+    printf("Permuting 3,000,000 64-byte blocks (~183MB...) with optimized code\n");
+    begin = clock();    
+    initialize_rotation_masks(ROT_DOWN, ROL_8, ROL_16, ROL_24);
+    for (_index = 0; _index < 3000000; _index++){            
+        initialize_constants(INITIAL_CONSTANTS);
+        crypto_prp_permutation_inline(a, b, c, d);}
+    end = clock();    
+    double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;    
+    printf("Time required: %.2fs\n", time_spent); 
+    
+    }
        

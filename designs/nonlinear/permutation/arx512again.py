@@ -204,57 +204,25 @@ def mix_columns(a, b, c, d):
     d ^= a ^ b  # ac
     a.rotate_down()     
     
-     
-     
-    #a ^= b #ab
-    #c ^= d #cd
-    #b ^= c #bcd
-    #d ^= a ^ b #ac
-    #a += c
-    #a = mix2(a, b)    
-    #c = mix2(c, d)    
-    #b = mix2(b, c)    
-    #d = mix2(d, a)    
+    a += b
+    c ^= d
+    b ^= c
+    d ^= a ^ b         
+    b.rotate_left1()   
+#    c.rotate_left2()       
+#    d.rotate_left3()       
+    
     a += b
     c ^= d
     b ^= c
     d ^= a ^ b        
-    b.rotate_left1()   
     c.rotate_left2()       
+    
+    a += b
+    c ^= d
+    b ^= c
+    d ^= a ^ b        
     d.rotate_left3()       
-    #c += d
-    #
-    #for count in range(8):
-    #    a += b
-    #    b += c
-    #    c ^= a
-    #    d ^= b    
-    #c.shift_left_and_down2()
-    #
-    #for count in range(8):
-    #    a += b
-    #    b += c
-    #    c ^= a
-    #    d ^= b    
-    #d.shift_left_and_down3()
- #   for count in range(4):
- #       a += b
- #       c += d
- #       b ^= c
- #       d ^= a    
- #   b.little_swap()
-    #d.little_swap()
-    #a += d
-    #t = b * c
-    #   
-    #a += t
-    #t = (c * d)
-    #
-    #a.little_swap()
-    #b += t
-    #
-    #b += a
-    #t = (
     return a, b, c, d
               
 def permutation(a, b, c, d, 
@@ -269,8 +237,8 @@ def permutation(a, b, c, d,
     round_constant = Register(generate_initial_constants(), word_size, mask);
     #shuf_mask = Register((13,12, 15,14,  9,8, 11,10,  5,4, 7,6,  1,0, 3,2);\
     for round in range(1, rounds + 1): 
-        a ^= round_constant
-        round_constant += round_constant                      
+        #a ^= round_constant
+        #round_constant += round_constant                      
         a, b, c, d = mix_columns(a, b, c, d)
         print '\n'.join(format(word, 'b').zfill(32) for word in a.words)
         print '\n'.join(format(word, 'b').zfill(32) for word in b.words)
