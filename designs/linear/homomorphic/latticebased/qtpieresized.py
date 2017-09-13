@@ -1,12 +1,6 @@
 # sx + aie
 #                64  32    96  32       128     128 + 32 == 160
 
-# s(ax + y) + e
-#sax + sy + e
-# sx + a_i(sy + e)  64 32   96 64 32  =  192    128 + 64 == 192
-#                   96 32  128 96 32  =  256    192 + 128 == 320
-
-
 from crypto.utilities import random_integer, modular_inverse, big_prime
 
 SECURITY_LEVEL = 32
