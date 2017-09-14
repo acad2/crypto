@@ -1,16 +1,24 @@
 # a, b
 # s1a + s2b
 # s1b_i + s2a_i     # 32 32  32 64   96
-from crypto.utilities import modular_inverse, random_integer, big_prime
+from crypto.utilities import modular_inverse, random_integer, gcd
 
 SECURITY_LEVEL = 32
 
 def generate_private_key(security_level=SECURITY_LEVEL):
     p_size = security_level * 3
-    p = big_prime(p_size + 1)
-    a_i = random_integer((security_level * 2) + 1) >> 7 # adds 1 extra bit
-    b_i = random_integer(security_level)
-    ab_i = (a_i * b_i) % p
+    p = random_integer(p_size)
+    a_i = random_integer((security_level * 2) - 1) 
+    b_i = random_integer(security_level - 2)
+    while gcd(a_i, p) != 1 or gcd(b_i, p) != 1:
+        p = random_integer(p_size )
+        a_i = random_integer((security_level * 2) - 1) 
+        b_i = random_integer(security_level - 2) 
+    #assert gcd(a_i, p) == 1, gcd(a_i, p)
+    #assert gcd(b_i, p) == 1, gcd(b_i, p)
+    #assert modular_inverse(a_i, p)    
+    #assert modular_inverse(b_i, p)
+    ab_i = (a_i * b_i) % p    
     return a_i, b_i, ab_i, p
     
 def generate_public_key(private_key):
