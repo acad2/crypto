@@ -28,11 +28,11 @@ def generate_keypair(security_level=SECURITY_LEVEL, points=POINTS):
     public_key = generate_public_key(private_key, points, security_level)
     return public_key, private_key
     
-def key_agreement(public_key, private_key):
+def key_agreement(public_key, private_key, shift=530):
     a, b = public_key
     x, y = private_key
-    n = (a * x) + (b * y)
-    return int(format(n, 'b')[:233], 2)
+    n = (a * x) + (b * y)    
+    return n >> shift
     
 def test_key_agreement():
     from unittesting import test_key_agreement
