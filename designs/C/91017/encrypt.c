@@ -1,8 +1,8 @@
 #include "hash.c" 
         
-void encrypt(WORDSIZE* data, WORDSIZE* keyr, WORDSIZE* keym, 
-             WORDSIZE* extra_data, WORDSIZE* tag, WORDSIZE* decryption_iv,
-             unsigned long data_size, unsigned long extra_data_size){
+void crypto_aead_encrypt(WORDSIZE* data, WORDSIZE* keyr, WORDSIZE* keym, 
+                         WORDSIZE* extra_data, WORDSIZE* tag, WORDSIZE* decryption_iv,
+                         unsigned long data_size, unsigned long extra_data_size){
     REGISTER a, b, c, d, t;    
     unsigned long index;
     
@@ -23,9 +23,9 @@ void encrypt(WORDSIZE* data, WORDSIZE* keyr, WORDSIZE* keym,
     store_register(c, decryption_iv, 0); 
     store_register(d, decryption_iv, 4);}
         
-int decrypt(WORDSIZE* data, WORDSIZE* decryption_iv, WORDSIZE* keym, 
-            WORDSIZE* extra_data, WORDSIZE* tag, 
-             unsigned long data_size, unsigned long extra_data_size){
+int crypto_aead_decrypt(WORDSIZE* data, WORDSIZE* decryption_iv, WORDSIZE* keym, 
+                        WORDSIZE* extra_data, WORDSIZE* tag, 
+                        unsigned long data_size, unsigned long extra_data_size){
     REGISTER a, b, c, d, t;    
     unsigned long index;
     load_register(d, decryption_iv, 4);

@@ -15,12 +15,12 @@
 
 # 32 32 128   160
 
-
 # ax + y
 #sax + sy + e
 #sx + ai(sy + e)   #   32 32    65 32 32  1   130
 #                      s = 32, e = 64     P = 130
-#                      
+#           
+    
 def calculate_parameters2(security_level=32, e_modulus_ratio=.66):  
     assert 0 < e_modulus_ratio < 1, e_modulus_ratio
     s_size = security_level
