@@ -7,6 +7,8 @@
 # sax + sby + tay + tbx + se1 + te2
 # sax + tbx + tay + sby + xe3 + ye4        32 32 32   96                  32 32      
 #                                          64 32 64   160             64 64  128
+
+# 
 from crypto.utilities import random_integer
 
 SECURITY_LEVEL = 32
@@ -32,7 +34,7 @@ def generate_keypair(security_level=SECURITY_LEVEL, points=POINTS):
 def key_agreement(public_key, private_key, shift=1040):
     a, b = public_key
     x, y = private_key
-    n = (a * x) + (b * y)    
+    n = (a * x) + (b * y)  
     return n >> shift
     
 def test_key_agreement():
