@@ -10,7 +10,7 @@
 from crypto.utilities import random_integer
 
 SECURITY_LEVEL = 32
-POINTS = [random_integer(SECURITY_LEVEL) for count in range(2)]
+POINTS = [random_integer(SECURITY_LEVEL / 2) for count in range(2)]
 
 def generate_private_key(security_level=SECURITY_LEVEL):
     s = random_integer(security_level)
@@ -18,7 +18,7 @@ def generate_private_key(security_level=SECURITY_LEVEL):
     
 def generate_public_key(private_key, points=POINTS, security_level=SECURITY_LEVEL):
     s = private_key
-    e = random_integer(security_level * 2)
+    e = random_integer(security_level)
     a, b = points
     return ((a * (s ** 2)) + (b * s) + e)
     
@@ -27,7 +27,7 @@ def generate_keypair(security_level=SECURITY_LEVEL, points=POINTS):
     public_key = generate_public_key(private_key, points, security_level)
     return public_key, private_key
     
-def key_agreement(public_key, private_key, shift=1043):
+def key_agreement(public_key, private_key, shift=910):
     s = private_key
     approximate_shared_point = ((s ** 2) * public_key)
     output = approximate_shared_point >> shift
