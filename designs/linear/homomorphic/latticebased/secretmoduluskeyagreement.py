@@ -50,10 +50,10 @@ def test_key_agreement():
     from unittesting import test_key_agreement
     test_key_agreement("secretmoduluskeyagreement", generate_keypair, key_agreement, iterations=10000)
     
-# as mod n == s(a - n) == sa - sp
-# as mod pq == s(a - pq) == sa - spq
+# as mod n == s(a - n) == sa - sn
+# as mod nq == s(a - nq) == sa - snq
 
-# as + k mod pq
+# as + k mod nq
 # as + k - as mod n == k mod n
     
 if __name__ == "__main__":

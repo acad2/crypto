@@ -1,5 +1,11 @@
 # k(r1 || m) mod p * r2
 # concatenation == (x * 2^n) + y
+# a = 2^n
+# ar + m
+# kar + km
+# m = 0
+# kar1, kar2, kar3...
+# kx, ky, kz, ...
 from crypto.utilities import random_integer, modular_inverse
 
 SECURITY_LEVEL = 32

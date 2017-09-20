@@ -27,11 +27,10 @@ def determine_key_size(key):
     
 def test_encrypt_decrypt_time(iterations, encrypt, decrypt, public_key, private_key, plaintext_size):    
     print("Encrypting {} {}-byte messages...".format(iterations, plaintext_size))    
-    message = int('11111111' * plaintext_size, 2)#
+    message = int('11111111' * plaintext_size, 2)
     
     before = default_timer()
-    for count in range(iterations):                 
-        #message = random_integer(plaintext_size)
+    for count in range(iterations):                         
         ciphertext = encrypt(message, public_key)                
     after = default_timer()
     print("Time required: {}".format(after - before))
