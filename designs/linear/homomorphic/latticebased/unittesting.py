@@ -107,12 +107,13 @@ def test_exchange_key_recover_key_time(iterations, exchange_key, recover_key, pu
 def test_key_exchange(algorithm_name, generate_keypair, exchange_key, recover_key, 
                       iterations=1024, key_size=32):
     print("Beginning {} unit test...".format(algorithm_name))
-    print("Generating keypair...")
-    public_key, private_key = generate_keypair()
-    print("...done")
+    #print("Generating keypair...")
+    #
+    #print("...done")
     
     print("Validating correctness...")
     for count in range(iterations):
+        public_key, private_key = generate_keypair()
         ciphertext, key = exchange_key(public_key)
         _key = recover_key(ciphertext, private_key)
         if _key != key:

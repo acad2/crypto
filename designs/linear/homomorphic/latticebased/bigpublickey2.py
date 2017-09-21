@@ -3,7 +3,7 @@
 from crypto.utilities import modular_inverse, random_integer
 
 SECURITY_LEVEL = 32
-PUBLIC_KEY_SIZE = SECURITY_LEVEL ** 2
+PUBLIC_KEY_SIZE = SECURITY_LEVEL
 
 def generate_private_key(security_level=SECURITY_LEVEL):
     while True:
@@ -27,11 +27,10 @@ def generate_keypair(security_level=SECURITY_LEVEL, public_key_size=PUBLIC_KEY_S
     public_key = generate_public_key(private_key, security_level, public_key_size)
     return public_key, private_key
     
-def encapsulate_key(public_key, security_level=SECURITY_LEVEL, public_key_size=PUBLIC_KEY_SIZE,
-                    rng=lambda: random_integer(2) >> 6):    
-    ciphertext = 0
+def encapsulate_key(public_key, security_level=SECURITY_LEVEL):    
+    ciphertext = 0 #sum((public_key[count] * random_integer(security_level) for count in range(security_level)))    
     for count in range(security_level):
-        public_key_element = public_key[rng()]
+        public_key_element = public_key[count]
         ciphertext += (public_key_element * random_integer(security_level))
     e = random_integer(security_level)
     ciphertext += e        
@@ -43,7 +42,7 @@ def recover_key(ciphertext, private_key):
     
 def test_encapsulate_key_recover_key():
     from unittesting import test_key_exchange
-    test_key_exchange("bigpublickey", generate_keypair, encapsulate_key, recover_key, iterations=10000)
+    test_key_exchange("bigpublickey2", generate_keypair, encapsulate_key, recover_key, iterations=10000)
     
 if __name__ == "__main__":
     test_encapsulate_key_recover_key()
