@@ -1,15 +1,19 @@
-# as + se
+#s(a + e)
+#x(a + y)
+# as + se                       48  64
 # ax + xy
 #se(ax + xy) == axse + xyse
-#xy(as + se) == asxy + xyse     16 32 32 48    32 48 32 48        160 - 128 == 32
+#xy(as + se) == asxy + xyse     
+#                               16 32 32 32    32 32 32 32        128 - 112 = 16
+#                               32 64 64 64    64 64 64 64        256 - 224 = 32
 from crypto.utilities import random_integer
 
-SECURITY_LEVEL = 16
-A = random_integer(SECURITY_LEVEL / 2)
+SECURITY_LEVEL = 32
+A = random_integer(SECURITY_LEVEL)
 
 def generate_private_key(security_level=SECURITY_LEVEL):
-    s = random_integer(security_level)
-    e = random_integer(security_level + (security_level / 2))
+    s = random_integer(security_level * 2)
+    e = random_integer(security_level * 2)
     return s, e, (s * e)
     
 def generate_public_key(private_key, security_level=SECURITY_LEVEL, a=A):
@@ -21,7 +25,7 @@ def generate_keypair(security_level=SECURITY_LEVEL, a=A):
     public_key = generate_public_key(private_key, security_level, a)
     return public_key, private_key
     
-def key_agreement(public_key, private_key, shift=SECURITY_LEVEL * 4 * 8):
+def key_agreement(public_key, private_key, shift=SECURITY_LEVEL * 7 * 8):
     return (public_key * private_key[2]) >> (shift + 16)
     
 def unit_test():
