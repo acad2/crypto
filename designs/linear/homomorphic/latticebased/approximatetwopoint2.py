@@ -64,7 +64,7 @@ def test_key_exchange():
         
 def test_key_agreement():
     from unittesting import test_key_agreement
-    test_key_agreement("approximatesquared", generate_keypair, key_agreement, iterations=10000)
+    test_key_agreement("approximatetwopoint2", generate_keypair, key_agreement, iterations=10000)
     
 if __name__ == "__main__":
     test_key_agreement()
