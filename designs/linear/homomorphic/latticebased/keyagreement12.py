@@ -1,10 +1,12 @@
-# as + ny
-from crypto.utilities import random_integer
+# as + (y << n) == as + y*(2**n)
+# 32 32   32 32    64  64
+from crypto.utilities import random_integer, big_prime
 
 SECURITY_LEVEL = 32
 SECURITY_LEVEL_BITS = 32 * 8
 A = random_integer(SECURITY_LEVEL)
 N = 2 ** (SECURITY_LEVEL_BITS)
+P = big_prime(SECURITY_LEVEL + 1)
 
 def generate_private_key(security_level=SECURITY_LEVEL):
     s = random_integer(security_level)
