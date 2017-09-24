@@ -3,13 +3,12 @@
 #x(e || as) == xe  asx     32 32     32 32 32   96  
 #s(y || ax) == sy  asx
 
-from crypto.utilities import random_integer, big_prime
+from crypto.utilities import random_integer
 
 SECURITY_LEVEL = 32
 SECURITY_LEVEL_BITS = 32 * 8
 A = random_integer(SECURITY_LEVEL)
 N = 2 ** (SECURITY_LEVEL_BITS)
-P = big_prime((SECURITY_LEVEL * 2))
 
 def generate_private_key(security_level=SECURITY_LEVEL):
     s = random_integer(security_level)
@@ -18,15 +17,15 @@ def generate_private_key(security_level=SECURITY_LEVEL):
 def generate_public_key(private_key, security_level=SECURITY_LEVEL, a=A, shift=SECURITY_LEVEL_BITS):
     s = private_key
     e = random_integer(security_level)
-    return ((a * s) + (e << shift)) % P
+    return (a * s) + (e << shift)
     
 def generate_keypair(security_level=SECURITY_LEVEL, a=A, shift=SECURITY_LEVEL_BITS):
     private_key = generate_private_key(security_level)
     public_key = generate_public_key(private_key, security_level, a, shift)
     return public_key, private_key
     
-def key_agreement(public_key, private_key, mask=(N >> 224) - 1):
-    return ((public_key * private_key) % P) & mask
+def key_agreement(public_key, private_key, mask=N - 1):
+    return (public_key * private_key) & mask
     
 def unit_test():
     from unittesting import test_key_agreement
