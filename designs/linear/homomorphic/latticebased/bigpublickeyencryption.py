@@ -40,7 +40,7 @@ def generate_private_key(security_level=SECURITY_LEVEL):
 def generate_public_key(private_key, security_level=SECURITY_LEVEL, public_key_size=PUBLIC_KEY_SIZE):
     short_inverse, modulus = private_key
     a = modular_inverse(short_inverse, modulus)
-    return [(a * random_integer(security_level)) % modulus for count in range(public_key_size)]
+    return [(a * (random_integer(security_level))) % modulus for count in range(public_key_size)]
     
 def generate_keypair(security_level=SECURITY_LEVEL, public_key_size=PUBLIC_KEY_SIZE):
     private_key = generate_private_key(security_level)

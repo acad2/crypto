@@ -1,8 +1,4 @@
 # as + (y << n) == as + y*(2**n)    32 32   32 32    64  64
-# e || as
-#x(e || as) == xe  asx     32 32     32 32 32   96  
-#s(y || ax) == sy  asx
-
 from crypto.utilities import random_integer
 
 SECURITY_LEVEL = 32
