@@ -2,20 +2,23 @@
 #x(a + y)
 # as + se                       16 32  48    32 48  80
 # ax + xy
-#se(ax + xy) == axse + xyse
-#xy(as + se) == asxy + xyse     
+#se(ax + xy) == axse + xyse  == xs(ae + ye)  
+#xy(as + se) == asxy + xyse  == xs(ay + ye)
 #                               24 32 32 32    32 32 32 32        128 - 120 = 8
 #                               48 64 64 64    64 64 64 64        256 - 240 = 16
 #                               96 128 128 128  128 128 128 128   512 - 480 = 32
 
-#                               31 32 32 32    32 32 32 32        128 - 127
-#                               30 32 32 32    32 32 32 32        128 - 126
+#                               31 32 32 32    32 32 32 32        128 - 127 = 1
+#                               30 32 32 32    32 32 32 32        128 - 126 = 2
 
-#                               18 32 32 32    32 32 32 32        128 - 114
-#                               17 32 32 32    32 32 32 32        128 - 106
+#                               18 32 32 32    32 32 32 32        128 - 114 = 14
+#                               17 32 32 32    32 32 32 32        128 - 113 = 15
+
+#                               31x ,  32x
+#                               62 64 64 64    64 64 64 64        256 - 254 = 2
+#                               992 1024 1024 1024  1024 1024 1024 1024    4096 - 4064 = 32
 from crypto.utilities import random_integer
-
-SECURITY_LEVEL = 32 + 1
+SECURITY_LEVEL = 32 + 1   # + 1 to make sure we have enough after we shift some bits away
 A = random_integer(SECURITY_LEVEL * 3)
 
 def generate_private_key(security_level=SECURITY_LEVEL):

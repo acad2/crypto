@@ -27,6 +27,24 @@ def unit_test():
     from unittesting import test_key_agreement
     test_key_agreement("highekeyagreement", generate_keypair, key_agreement, iterations=10000)
     
+def test_lower_bits_correlation():
+    from crypto.utilities import integer_to_bytes
+    outputs = []
+    for test_number in range(10000):
+        public1, private1 = generate_keypair()
+        public2, private2 = generate_keypair()
+        share = key_agreement(public1, private2)
+        test = (public1 * public2) % N
+        outputs.append(str(integer_to_bytes((public1 ^ public2), 32))) 
+    random_data = ''.join(outputs)
+        
+    from crypto.analysis.metrics import test_randomness, test_bias_of_data
+    test_randomness(random_data)
+    test_bias_of_data(random_data)
+    
+    assert ((public1 * public2) / (A + 1)) % N != key_agreement(public1, private2)
+    
 if __name__ == "__main__":
     unit_test()
+    test_lower_bits_correlation()
     
