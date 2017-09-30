@@ -17,7 +17,7 @@
 # sx(a + e) approx == sx(a + y)
 # the difference between the size of `a` and `e` (and `y`) can be used create an approximate key agreement scheme
 
-#s(a + e) + f
+#s(a + e) + f       32 32      64    
 #r(a + t) + n
 #sr(a + e) + rf     32 32 32   32 32 31   32 32
 #sr(a + t) + sn
@@ -28,7 +28,7 @@
 #                   6  6  6    6  6  2    6  6         18  14 12
 from crypto.utilities import random_integer
 
-SIZE_DIFFERENCE = 8
+SIZE_DIFFERENCE = 1
 SECURITY_LEVEL = 32
 PADDING_AMOUNT = 2
 
@@ -61,6 +61,16 @@ def generate_keypair(security_level=SECURITY_LEVEL, a=A, s_size=S_SIZE, e_size=E
 def key_agreement(public_key, private_key, shift=SHIFT): 
     return (public_key * private_key) >> shift
     
+def test_break():
+    public1, private1 = generate_keypair()
+    test_value = random_integer(S_SIZE / 2)
+    while test_value != private1:
+        while test_value < private1:
+            test_value *= 2
+        while test_value > private1:
+            test_value = int(sqrt(test_value))
+        
+        
 def unit_test():
     public1, private1 = generate_keypair()
     public2, private2 = generate_keypair()
@@ -70,7 +80,7 @@ def unit_test():
         return int(''.join(char for char in reversed(format(integer, 'b'))), 2) & ((1 << 256) - 1)
     assert f(share) != f(test), "Broken"        
     from unittesting import test_key_agreement
-    test_key_agreement("s(a + e) key agreement b", generate_keypair, key_agreement, iterations=100000, key_size=SECURITY_LEVEL)
+    test_key_agreement("s(a + e) key agreement b", generate_keypair, key_agreement, iterations=1000, key_size=SECURITY_LEVEL)
     
 if __name__ == "__main__":
     unit_test()
