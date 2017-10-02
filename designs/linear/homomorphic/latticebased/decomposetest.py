@@ -28,7 +28,7 @@ def generate_public_key(private_key, security_level=SECURITY_LEVEL, modulus=MODU
     a = modular_inverse(private_key, modulus)
     public_key = []
     for point in range(dimension):
-        public_key.append(generate_short_output(a, security_level, modulus))
+        public_key.append((random_integer(security_level) * ai)(a, security_level, modulus))
     return public_key
     
 def generate_keypair(security_level=SECURITY_LEVEL, modulus=MODULUS, dimension=DIMENSION):
@@ -49,12 +49,16 @@ def unit_test():
     from unittesting import test_asymmetric_encrypt_decrypt
     test_asymmetric_encrypt_decrypt("decomposetest", generate_keypair, encrypt, decrypt, iterations=10000)
         
-def generate_short_output(a, security_level=SECURITY_LEVEL, modulus=MODULUS):   
+def generate_short_output(a, security_level=SECURITY_LEVEL, modulus=MODULUS):
+    # modulus - a == short_side
+    # target = N - random_integer(security_level)
+    # 
+    # ax = p
+    # x = aip
+    
     s = 0
     ai = modular_inverse(a, modulus)
-    target = random_integer(security_level)
-    e = random_integer(security_level)
-    t = modular_subtraction(target, e, modulus)    
+    t = random_integer(security_level)
     while t > ai:
         t = (t * ai) % modulus
     print t

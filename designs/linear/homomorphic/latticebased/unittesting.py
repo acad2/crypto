@@ -25,7 +25,8 @@ def determine_key_size(key):
                 sizes.append(size_in_bits(item))    
     return sizes
     
-def test_encrypt_decrypt_time(iterations, encrypt, decrypt, public_key, private_key, plaintext_size):    
+def test_encrypt_decrypt_time(iterations, encrypt, decrypt, public_key, private_key, plaintext_size):  
+    print("Beginning encrypt/decrypt time test")
     print("Encrypting {} {}-byte messages...".format(iterations, plaintext_size))    
     message = int('11111111' * plaintext_size, 2)
     
@@ -41,15 +42,19 @@ def test_encrypt_decrypt_time(iterations, encrypt, decrypt, public_key, private_
         plaintext = decrypt(ciphertext, private_key)       
     after = default_timer()
     print("Time required: {}".format(after - before))
-    
-    assert plaintext == message, '\n'.join(str(item) for item in ('\n', plaintext, message))
-    
+            
 def test_asymmetric_encrypt_decrypt(algorithm_name, generate_keypair, encrypt, decrypt,
                                     iterations=1024, plaintext_size=32):    
-    print("Beginning {} unit test".format(algorithm_name))
-    print("Generating keypair...")
-    public_key, private_key = generate_keypair()
-    print("...done.")    
+    print("Beginning {} unit test".format(algorithm_name))           
+    print("Validating correctness...")
+    for count in range(iterations):
+        public_key, private_key = generate_keypair()
+        message = random_integer(plaintext_size)
+        ciphertext = encrypt(message, public_key)
+        plaintext = decrypt(ciphertext, private_key)
+        if plaintext != message:
+            raise Warning("Unit test failed after {} successful tests".format(count))
+    print("...done")
     
     test_encrypt_decrypt_time(iterations, encrypt, decrypt, public_key, private_key, plaintext_size)
     
@@ -117,7 +122,7 @@ def test_key_exchange(algorithm_name, generate_keypair, exchange_key, recover_ke
         ciphertext, key = exchange_key(public_key)
         _key = recover_key(ciphertext, private_key)
         if _key != key:
-            raise BaseException("Unit test failed")
+            raise BaseException("Unit test failed (after {} successful exchanges)".format(count))
     print("...done")
     
     test_exchange_key_recover_key_time(iterations, exchange_key, recover_key, public_key, private_key, key_size)
