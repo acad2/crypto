@@ -163,7 +163,7 @@ def test_sign_verify(algorithm_name, generate_keypair, sign, verify,
         message = random_integer(message_size)
         signature = sign(message, private_key)
         if not verify(signature, message, public_key):        
-            raise BaseException("Unit test failed")
+            raise BaseException("Unit test failed after {} successful signature verifications".format(count))
     print("...done")
     
     test_sign_verify_time(iterations, sign, verify, public_key, private_key, message_size)
