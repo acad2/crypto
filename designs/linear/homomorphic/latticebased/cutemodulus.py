@@ -82,7 +82,7 @@ def verify(signature, message, public_key, shift=SHIFT, max_signature_size=2 ** 
             
 def unit_test():
     from unittesting import test_key_exchange, test_sign_verify
-    #test_key_exchange("cutemodulus", generate_keypair, encapsulate_key, recover_key, iterations=10000)
+    test_key_exchange("cutemodulus", generate_keypair, encapsulate_key, recover_key, iterations=10000)
     test_sign_verify("cutemodulus", generate_keypair, sign, verify, iterations=10000, message_size=P_SIZE - 4)
     
 if __name__ == "__main__":

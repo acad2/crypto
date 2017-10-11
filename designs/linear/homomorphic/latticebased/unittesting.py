@@ -4,9 +4,15 @@ from crypto.utilities import random_integer, size_in_bits
 
 def test_for_homomorphism(ciphertext1, ciphertext2, decrypt, key, m1, m2):    
     if decrypt(ciphertext1 + ciphertext2, key) == m1 + m2:
-        print("Ciphertexts support addition: D(E(m1) + E(m2)) == m1 + m2")
-    if decrypt(ciphertext1 * ciphertext2, key) == m1 * m2:
-        print("Ciphertexts support multiplication: D(E(m1) * E(m2)) == m1 * m2")
+        print("Ciphertexts support addition: D(E(m1) + E(m2)) == m1 + m2")        
+        
+    try:
+        if decrypt(ciphertext1 * ciphertext2, key, depth=2) == m1 * m2:
+            print("Ciphertexts support multiplication: D(E(m1) * E(m2)) == m1 * m2")
+    except TypeError:
+        if decrypt(ciphertext1 * ciphertext2, key) == m1 * m2:
+            print("Ciphertexts support multiplication: D(E(m1) * E(m2)) == m1 * m2") 
+            
     if decrypt(ciphertext1 ^ ciphertext2, key) == m1 ^ m2:
         print("Ciphertexts support XOR: D(E(m1) ^ E(m2)) == m1 ^ m2")
     if decrypt(ciphertext1 & ciphertext2, key) == m1 & m2:
