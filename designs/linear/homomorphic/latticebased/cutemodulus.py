@@ -69,6 +69,7 @@ def recover_key(ciphertext, private_key):
     return ((ciphertext * ai) % modulus) % ai
 
 def sign(message, private_key):
+
     return recover_key(message, private_key)
     
 def verify(signature, message, public_key, shift=SHIFT, max_signature_size=2 ** (8 * INVERSE_SIZE)):
