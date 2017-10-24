@@ -21,7 +21,7 @@ def test_invert():
     pub, priv = generate_keypair()
     c, s = encapsulate_key(pub)
     a, p = pub
-    output = invert(c, a, p, E_SIZE )
+    output = invert(c, a, p, E_SIZE * 8)
    # output = [[(p + item) % p for item in row] for row in output]
     print [s in row for row in output]
     print s

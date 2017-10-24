@@ -1,0 +1,19 @@
+Ok so first you have to write the modulus as an odd number times a power of two
+Which any integer can be written as
+
+So p+r = m * 2^n
+An easy way could be to just take r = -p (mod 2^n)
+And retry until m is odd(edited)
+
+So you compute a*s+e (mod p+r) as usual, but then you use CRT and split it up into mod m and mod 2^n
+When working on a number in CRT representation, always do the same operation to all channels
+So to clear the LSBs, subtract the a*s+e (mod 2^n) from both itself  and the mod m value
+
+So you only need to compute the mod m term as a*s+e - (a*s+e (mod 2^n)) (mod m)
+Then you can recover the full value mod p+r by combining the mod m part with an assumed zero
+Mod(x * 2^n * ModInv(2^n, m), p+r)
+
+
+
+
+

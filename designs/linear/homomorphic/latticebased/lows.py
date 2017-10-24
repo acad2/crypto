@@ -10,6 +10,12 @@
 #                     256  256      192     256 224   160
 #                          256   32 192     256
 #                        512                  480
+
+#                     512  512      448    512 480   416
+                    
+                    
+#                       128 64       32
+#                           64    64 32                    
 from crypto.utilities import random_integer, modular_inverse
 
 SECURITY_LEVEL = 32
