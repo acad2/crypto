@@ -1,3 +1,22 @@
+key generation:
+    ai = random_integer(inverse_size)
+    q = random_integer(q_size)
+    private_key = ai, q
+    
+    a = modular_inverse(ai, q)
+    r = random_integer(r_size)
+    q_r = q + r
+    public_key = a, q_r
+    
+public key operation:
+    s = random_integer(s_size)
+    e = random_integer(e_size)
+    ciphertext = (a * s) + (s * s * e) mod q_r
+    secret = s & low_bits
+    
+private key operation:
+    secret = ((ai * ciphertext) % q) & mask
+
 # as + s^2e         160 32    64 32
 #  s + ai(s^2e)       32     64 64 32
 
@@ -6,10 +25,6 @@
 
 #                  288 96    192 32  
 #                     96     64 192 32
-
-#                 352 128    256 32     
-#                   128      64 256 32
-
 from crypto.utilities import random_integer, modular_inverse
 
 SECURITY_LEVEL = 32

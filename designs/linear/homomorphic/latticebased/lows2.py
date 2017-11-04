@@ -1,3 +1,18 @@
+#key generation:
+#    a^-1 = random_integer(inverse_size) << shift
+#    q = random_integer(q_size)
+#    
+#    a = modular_inverse(a^-1, q)
+#    r = random_integer(r_size)
+#    q_r = q + r
+#    private_key = (a^-1, q)
+#    public_key = (a, q_r)
+#    
+#public key operation:
+#    c = (a * s) + e mod q_r
+#private key operation:    
+#    s_lsb = ((c * a^-1) mod q) & mask
+    
 # 320  96       256     320  160
 #      96    64 256     320
 from crypto.utilities import modular_inverse, random_integer
@@ -40,9 +55,9 @@ def generate_public_key(private_key, r_size=R_SIZE):
         
         Returns the integer(s) that constitute a public key. """
     ai, modulus = private_key
-    q = random_integer(r_size)
+    r = random_integer(r_size)
     a = modular_inverse(ai, modulus)
-    return a, modulus + q
+    return a, modulus + r
     
 def generate_keypair(inverse_size=INVERSE_SIZE, q_size=Q_SIZE, r_size=R_SIZE):
     """ usage: generate_keypair(invers_size=INVERSE_SIZE, 
