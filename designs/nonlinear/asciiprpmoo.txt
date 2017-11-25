@@ -1,0 +1,43 @@
+                              C0    Px                 Cx
+                              /|\    |                 /|\
+                      PRP      |     |         PRP      |
+                     ------    | ... |       ------     |
+  P0  ------------> | L    | ---     -----> | L    | ----
+                    |      |                |      |
+                     ------                  ------
+                    |      |                |      |
+  K0  ------------> | R    | -K1--...-----> | R    | ---> Kx  
+   |                 ------                  ------       |
+   |                                                      |
+   |                                                      |
+ ------                                                   + --- Km
+| Hash |<---- associated data                             |
+| HMAC |                                                  |
+ ------                                                   |
+   |                                                      |
+   |                                                      |
+  \|/                                                    \|/
+  tag                                                decryption key
+  
+Legend
+-------
+P0, P1, ... Px = plaintext blocks
+C0, C1, ... Cx = ciphertext blocks
+K0, K1, ... Kx = keys (random)
+Km = key (master)
+PRP = psuedorandom permutation
+Hash = cryptographic hash function
+HMAC = Hash Based Message Authentication Code  
+
+Advantages
+------
+Performance:
+single pass authenticated encryption
+    - MAC and encryption can be performed in parallel
+    - computing the MAC only requires hashing a key and the associated data
+        - Time taken to calculate MAC is independent of the message length
+    
+Security:
+misuse resistant
+    - worst case failure only leaks whether or not two messages are identical
+   

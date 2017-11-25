@@ -60,7 +60,7 @@ def generate_private_key(inverse_size=INVERSE_SIZE, r_size=R_SIZE, q=Q, shift=SH
         Returns the integer(s) that constitute a private key. """
     while True:
         inverse = random_integer(inverse_size) << shift
-        r = 0#random_integer(r_size)
+        r = random_integer(r_size)
         try:
             modular_inverse(inverse, q + r)
         except ValueError:

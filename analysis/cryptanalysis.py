@@ -27,7 +27,7 @@ def summarize_sbox(sbox, differential_types=STANDARD_DIFFERENTIAL):
     print "Linearity: {} ({})".format(linearity[1], linearity[0])
     
 def test_cryptanalyze_sbox_worst_case():
-    from crypto.designs.blockcipher.aes_procedures import S_BOX       
+    from crypto.designs.nonlinear.blockcipher.standardized.aes_procedures import S_BOX       
     summarize_sbox(S_BOX)
     
 def test_random_sbox():

@@ -5,22 +5,27 @@ from crypto.utilities import modular_inverse, random_integer
 SECURITY_LEVEL = 32
 PADDING = 4
 
-def msb(n, bits):
-    return (n >> bits) << bits
-    
+def msb(n, mask):
+    return n & mask
+        
 def lsb(n, mask):
     return n & mask
-    
+        
 def generate_parameter_sizes(security_level=SECURITY_LEVEL, padding=PADDING):
     q_size = security_level * 6
+    q_mask = (2 ** (q_size * 8)) - 1
     
     d_size = security_level
-    k_size = security_level 
-    e_msb = (security_level * 8) - (padding * 8)
+    k_size = security_level     
+    e_shift = (k_size - padding) * 8
+    e_msb = (q_mask >> e_shift) << e_shift
     
-    s_size = security_level * 3
+    s_size = security_level * 3    
     s_lsb = (2 ** (security_level * 8)) - 1
-    ciphertext_msb = (q_size - (security_level * 4) - padding) * 8    
+    
+    
+    shift = ((security_level * 4) - padding) * 8
+    ciphertext_msb = (q_mask >> shift) << shift
     return q_size, d_size, k_size, e_msb, s_size, ciphertext_msb, s_lsb
     
 Q_SIZE, D_SIZE, K_SIZE, E_MSB, S_SIZE, CIPHERTEXT_MSB, S_LSB = generate_parameter_sizes(SECURITY_LEVEL)

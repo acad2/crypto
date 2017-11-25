@@ -591,7 +591,65 @@ This works argues that the ideal order of operations is as follows:
     
     
     
-# trapdoors                     ax + by
+# trapdoors (short inverse)     ax + by * ai == x + aiby
 # random-walk key agreements    f(f(f(f(f(...)))))
+# approximate key agreement     axy + xe2 == axy + ye1 (upper bits are identical)
 # function composition          f(g(f(x)))
     
+    
+    
+    
+    
+    
+mod k - not having to explicitly store the used random values
+approximate values
+short inverses
+noisy modulus
+
+
+g = 3
+modulus = 10
+
+ 0   1   2   3   4   5   6   7   8   9 
+             ^                             1
+             \-----------^                 2
+                         \-----------^     3
+---------^                           \-    4
+         \-----------^                     5
+                     \------------^        6
+-----^                             \----   7
+     \-----------^                         8
+                 \-----------^             9
+-^                           \----------  10
+ \-----------^                            11
+ 
+ 0   
+ 
+     3   6   9   
+  
+     2   5   8
+     
+     1   4   7
+ 
+row number = value % g    
+
+
+ 
+     0   3   6   9
+     1   4   7   10
+     2   5   8
+ 
+ 
+   0
+     3   6   9  12
+     2   5   8  11   
+     1   4   7  10   
+ 
+ 
+ 0   1   2   3   4   5   6   7   8   9 
+             ^           ^           ^
+         ^           ^           ^   
+     ^           ^           ^
+ ^     
+ 
+     

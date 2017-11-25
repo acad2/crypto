@@ -1,0 +1,56 @@
+notation:
+    << denotes binary left shift or equivalently multiplication by a power of two    
+    + and * indicate integer addition and multiplication, respectively
+    MSB, LSB mean "Most Significant Bits" and "Least Significant Bits", respectively
+    mod indicates the modulo operation
+            
+public parameters:
+    q = random_integer(big) 
+    
+key generation:
+    d = random_integer(small) << n
+    k = random_integer(medium)
+    e = MSB(modular_inverse(d, q + k))
+    public_key = e
+    private_key = (d, k)
+
+public key operation:
+    s = random_integer(small) 
+    c = MSB(e * s mod q)
+    secret = LSB(s)
+    
+private key operation:
+    secret = LSB(d * c mod q + k)
+    
+optimizations:
+    taking the MSB is an optimization over the addition of random noise
+        - requires 1 less bignum addition as well as 1 less random number generated
+    q can be a power of 2       
+        - x mod 2 ** n == LSB(x)
+        - no modular reduction circuit required for evaluating public key operation
+        - requires negligible space to store q when not in use
+    e, c only require storage of the most significant bits
+        - the least significant bits consist of all 0s which can be compressed/decompressed by simple left/right shifting
+        - `MSB(x)` is much faster then `x + random_integer()`
+    CRT speed up ??
+    
+parameter sizes:
+    padding is utilized to obtain an acceptable probability of decryption failure
+        - n bits of padding provides a probability of failure equivalent to about 1/2 ** n
+        - at least 32 bits of padding should be used 
+        
+    for a 32-byte secret value:
+        - q size: 640 bytes        
+        - d size: 32 bytes        
+        - k size: 480 - padding bytes
+        - s size: 96 bytes
+        - tolerates noise up to 576 bytes in size 
+    
+    for a 16-byte secret value:
+        - q size: 320 bytes
+        - d size: 16 bytes
+        - k size: 240 - padding bytes
+        - s size: 48 bytes
+        - tolerates noise up to 256 bytes in size
+        
+    
